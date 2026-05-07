@@ -17,7 +17,10 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml } from './engine'
+import { applyMarkdownShortcut } from './engine/markdownShortcuts'
+import { highlight } from './engine/highlight'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
+import DskWysiwygSlashMenu from './DskWysiwygSlashMenu.vue'
 
 interface Props {
   modelValue?: string
@@ -47,6 +50,14 @@ const emit = defineEmits<{
 }>()
 
 const hostRef = ref<HTMLElement | null>(null)
+const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
+/** State slash-меню: при вводе `/` открываем popup. */
+const slashOpen = ref<boolean>(false)
+const slashQuery = ref<string>('')
+const slashTop = ref<number>(0)
+const slashLeft = ref<number>(0)
+/** Range, на котором был набран `/` — нужен для удаления при выборе. */
+let slashRange: Range | null = null
 // shallowRef — EditorController не должен быть deep-proxy'нут, иначе
 // Vue теряет приватные fields (history). Класс остаётся raw.
 const controller = shallowRef<EditorController | null>(null)
@@ -90,10 +101,141 @@ watch(
 )
 
 function onInput(): void {
-  if (!controller.value) return
-  controller.value.history.commitThrottled()
+  if (!controller.value || !hostRef.value) return
+  // Markdown shortcuts: после input проверяем не нужно ли заменить
+  // префикс блока на heading/list/quote/codeblock.
+  const shortcut = applyMarkdownShortcut(hostRef.value)
+  if (shortcut.applied) {
+    controller.value.history.commit()
+  } else {
+    controller.value.history.commitThrottled()
+  }
+  // Slash-menu detection: ищем `/...` в текущем блоке от начала строки.
+  updateSlashMenu()
   isEmpty.value = controller.value.isEmpty()
   emit('update:modelValue', controller.value.getHTML())
+}
+
+/**
+ * Обновляет state slash-меню на основе текущего caret.
+ * Открывает popup, если в текущем блоке текст начинается с `/` и каретка
+ * стоит сразу после введённого `/query`. Закрывает иначе.
+ */
+function updateSlashMenu(): void {
+  const sel = window.getSelection()
+  if (! sel || sel.rangeCount === 0 || ! hostRef.value) {
+    closeSlashMenu()
+    return
+  }
+  const range = sel.getRangeAt(0)
+  if (! range.collapsed) { closeSlashMenu(); return }
+  if (! hostRef.value.contains(range.startContainer)) { closeSlashMenu(); return }
+  // Берём текущий блок (li/p/h1/…) и его текст до caret'а.
+  const blockEl = findBlockAncestor(range.startContainer)
+  if (! blockEl) { closeSlashMenu(); return }
+
+  const beforeText = textBeforeCaret(blockEl, range)
+  const match = beforeText.match(/^\/([\w-]*)$/)
+  if (! match) { closeSlashMenu(); return }
+
+  slashQuery.value = match[1]
+  // Запоминаем range, который стоит на конце `/query` — его удаляем при выборе.
+  slashRange = document.createRange()
+  slashRange.setStart(blockEl, 0)
+  slashRange.setEnd(range.endContainer, range.endOffset)
+
+  // Позиционируем popup под caret'ом.
+  const rect = caretRect(range)
+  if (rect) {
+    slashTop.value = rect.bottom + 4
+    slashLeft.value = rect.left
+  }
+  slashOpen.value = true
+}
+
+function closeSlashMenu(): void {
+  if (! slashOpen.value) return
+  slashOpen.value = false
+  slashQuery.value = ''
+  slashRange = null
+}
+
+function findBlockAncestor(node: Node): HTMLElement | null {
+  let n: Node | null = node
+  while (n && n !== hostRef.value) {
+    if (n instanceof HTMLElement) {
+      const tag = n.tagName.toLowerCase()
+      if (['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'td', 'th'].includes(tag)) {
+        return n
+      }
+    }
+    n = n.parentNode
+  }
+  return null
+}
+
+function textBeforeCaret(blockEl: HTMLElement, range: Range): string {
+  const r = document.createRange()
+  r.selectNodeContents(blockEl)
+  r.setEnd(range.endContainer, range.endOffset)
+  return r.toString()
+}
+
+function caretRect(range: Range): DOMRect | null {
+  const rects = range.getClientRects()
+  if (rects.length > 0) return rects[0]
+  // Collapsed range без rects — вставляем zero-width span.
+  const span = document.createElement('span')
+  span.appendChild(document.createTextNode('​'))
+  range.insertNode(span)
+  const rect = span.getBoundingClientRect()
+  span.remove()
+  return rect
+}
+
+function onSlashSelect(cmd: { apply: (c: EditorController) => void }): void {
+  if (! controller.value || ! hostRef.value || ! slashRange) {
+    closeSlashMenu()
+    return
+  }
+  // Удаляем `/query` текст перед применением команды.
+  slashRange.deleteContents()
+  const sel = window.getSelection()
+  if (sel) {
+    sel.removeAllRanges()
+    sel.addRange(slashRange)
+  }
+  closeSlashMenu()
+  cmd.apply(controller.value)
+  controller.value.history.commit()
+  emit('update:modelValue', controller.value.getHTML())
+}
+
+/**
+ * Apply syntax-highlight ко всем <pre><code class="language-X">…</code></pre>
+ * блокам после blur'а — на input делать нельзя, sets innerHTML ломает caret.
+ */
+function onBlur(): void {
+  if (!hostRef.value || !controller.value) return
+  // mousedown.prevent в slash-меню сохраняет селекцию, поэтому
+  // закрытие на blur для слэш-меню безопасно — выбор уже произошёл.
+  closeSlashMenu()
+  const codes = hostRef.value.querySelectorAll<HTMLElement>('pre > code[class*="language-"]')
+  let dirty = false
+  for (const code of Array.from(codes)) {
+    const cls = code.className.match(/language-([\w-]+)/)
+    if (! cls) continue
+    const lang = cls[1]
+    const text = code.textContent ?? ''
+    const newHtml = highlight(text, lang)
+    if (code.innerHTML !== newHtml) {
+      code.innerHTML = newHtml
+      dirty = true
+    }
+  }
+  if (dirty) {
+    emit('update:modelValue', controller.value.getHTML())
+  }
 }
 
 function onPaste(e: ClipboardEvent): void {
@@ -136,6 +278,19 @@ function insertAtCaret(html: string): void {
 
 function onKeydown(e: KeyboardEvent): void {
   if (!controller.value) return
+  // Slash-menu navigation перехватываем до hotkeys.
+  if (slashOpen.value && slashMenuRef.value) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); slashMenuRef.value.moveDown(); return }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); slashMenuRef.value.moveUp(); return }
+    if (e.key === 'Enter')     {
+      if (slashMenuRef.value.hasItems()) {
+        e.preventDefault()
+        slashMenuRef.value.selectActive()
+        return
+      }
+    }
+    if (e.key === 'Escape')    { e.preventDefault(); closeSlashMenu(); return }
+  }
   const meta = e.metaKey || e.ctrlKey
   if (!meta) return
   const k = e.key.toLowerCase()
@@ -175,8 +330,19 @@ defineExpose({
       aria-multiline="true"
       :spellcheck="true"
       @input="onInput"
+      @blur="onBlur"
       @paste="onPaste"
       @keydown="onKeydown"
+    />
+    <DskWysiwygSlashMenu
+      ref="slashMenuRef"
+      :open="slashOpen"
+      :controller="controller"
+      :query="slashQuery"
+      :top="slashTop"
+      :left="slashLeft"
+      @select="onSlashSelect"
+      @close="closeSlashMenu"
     />
   </div>
 </template>

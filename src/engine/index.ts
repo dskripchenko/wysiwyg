@@ -24,6 +24,17 @@ import {
   rangeWithinHost,
 } from './selection'
 import { sanitizeHtml } from './sanitize'
+import {
+  addColumnAfter,
+  addColumnBefore,
+  addRowAfter,
+  addRowBefore,
+  insertTable,
+  isInTable,
+  removeColumn,
+  removeRow,
+  removeTable,
+} from './table'
 
 export { sanitizeHtml } from './sanitize'
 
@@ -42,6 +53,14 @@ export interface ChainAPI {
   setLink(url: string | null): ChainAPI
   setImage(src: string, alt?: string): ChainAPI
   horizontalRule(): ChainAPI
+  insertTable(rows: number, cols: number): ChainAPI
+  addRowAfter(): ChainAPI
+  addRowBefore(): ChainAPI
+  addColumnAfter(): ChainAPI
+  addColumnBefore(): ChainAPI
+  removeRow(): ChainAPI
+  removeColumn(): ChainAPI
+  removeTable(): ChainAPI
   undo(): ChainAPI
   redo(): ChainAPI
   focus(): ChainAPI
@@ -62,7 +81,7 @@ export class EditorController {
 
   isActive(name: 'bold' | 'italic' | 'underline' | 'strike' | 'code' | 'link'): boolean
   isActive(name: 'heading', attrs: { level: 1 | 2 | 3 }): boolean
-  isActive(name: 'bulletList' | 'orderedList' | 'blockquote' | 'codeBlock' | 'paragraph'): boolean
+  isActive(name: 'bulletList' | 'orderedList' | 'blockquote' | 'codeBlock' | 'paragraph' | 'table'): boolean
   isActive(name: string, attrs?: Record<string, unknown>): boolean {
     if (name === 'bold') return isFormatActive(this.host, ['strong', 'b'])
     if (name === 'italic') return isFormatActive(this.host, ['em', 'i'])
@@ -75,6 +94,7 @@ export class EditorController {
       return currentBlockTag(this.host) === `h${level}`
     }
     if (name === 'paragraph') return currentBlockTag(this.host) === 'p'
+    if (name === 'table') return isInTable(this.host)
     if (name === 'blockquote') return currentBlockTag(this.host) === 'blockquote'
     if (name === 'codeBlock') return currentBlockTag(this.host) === 'pre'
     if (name === 'bulletList' || name === 'orderedList') {
@@ -118,6 +138,14 @@ export class EditorController {
       setLink: (url) => { setLink(this.host, url); dirty = true; return api },
       setImage: (src, alt) => { insertImage(this.host, src, alt); dirty = true; return api },
       horizontalRule: () => { insertHorizontalRule(this.host); dirty = true; return api },
+      insertTable: (rows, cols) => { insertTable(this.host, rows, cols); dirty = true; return api },
+      addRowAfter: () => { addRowAfter(this.host); dirty = true; return api },
+      addRowBefore: () => { addRowBefore(this.host); dirty = true; return api },
+      addColumnAfter: () => { addColumnAfter(this.host); dirty = true; return api },
+      addColumnBefore: () => { addColumnBefore(this.host); dirty = true; return api },
+      removeRow: () => { removeRow(this.host); dirty = true; return api },
+      removeColumn: () => { removeColumn(this.host); dirty = true; return api },
+      removeTable: () => { removeTable(this.host); dirty = true; return api },
       undo: () => { this.history.undo(); return api },
       redo: () => { this.history.redo(); return api },
       focus: () => { this.host.focus(); return api },

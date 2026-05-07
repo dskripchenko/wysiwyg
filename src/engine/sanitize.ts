@@ -28,12 +28,21 @@ const ALLOWED_TAGS = new Set([
   'br',
   'hr',
   'span',
+  // Tables.
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
 ])
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
   a: new Set(['href', 'target', 'rel', 'title']),
   img: new Set(['src', 'alt', 'title', 'width', 'height']),
+  // language-* class на <code> нужен для syntax-highlight'а; dsk-tok-* на
+  // <span> — для рендера токенов.
+  code: new Set(['class']),
+  span: new Set(['class']),
 }
+
+/** Whitelist префиксов классов которые сохраняются на code/span. */
+const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-']
 
 export function sanitizeHtml(input: string): string {
   if (typeof DOMParser === 'undefined') return input
@@ -51,6 +60,17 @@ function cleanNode(node: Element): void {
   for (const attr of Array.from(node.attributes)) {
     if (! allowed.has(attr.name)) {
       node.removeAttribute(attr.name)
+      continue
+    }
+    // class-атрибут: фильтруем values, оставляя только whitelisted-prefixes.
+    if (attr.name === 'class') {
+      const kept = attr.value
+        .split(/\s+/)
+        .filter((c) => ALLOWED_CLASS_PREFIXES.some((p) => c.startsWith(p)))
+        .join(' ')
+      if (kept === '') node.removeAttribute('class')
+      else node.setAttribute('class', kept)
+      continue
     }
     // Защита от javascript: в href/src.
     if ((attr.name === 'href' || attr.name === 'src') && /^\s*javascript:/i.test(attr.value)) {

@@ -20,6 +20,7 @@ export type ToolbarItem =
   | 'blockquote' | 'code-block'
   | 'link' | 'image'
   | 'horizontal-rule'
+  | 'table'
   | 'undo' | 'redo'
   | '|'
 
@@ -38,7 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
     'h1', 'h2', 'h3', 'paragraph', '|',
     'bullet-list', 'ordered-list', 'blockquote', 'code-block', '|',
     'link', 'image', '|',
-    'horizontal-rule', '|',
+    'horizontal-rule', 'table', '|',
     'undo', 'redo',
   ],
   disabled: false,
@@ -88,6 +89,7 @@ async function loadIcons(): Promise<void> {
       Link2: mod.Link2,
       Image: mod.Image,
       Minus: mod.Minus,
+      Table: mod.Table,
       Undo: mod.Undo,
       Redo: mod.Redo,
     }
@@ -327,6 +329,20 @@ function onImage(): void {
       >
         <component v-if="icons.Minus" :is="UidIcon" :icon="icons.Minus" :size="14" />
         <span v-else>—</span>
+      </button>
+
+      <button
+        v-else-if="item === 'table'"
+        type="button"
+        :disabled="disabled || !isReady"
+        :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('table') }]"
+        title="Вставить таблицу 3×3"
+        @click="exec(() => isActive('table')
+          ? controller?.chain().focus().addRowAfter().run()
+          : controller?.chain().focus().insertTable(3, 3).run())"
+      >
+        <component v-if="icons.Table" :is="UidIcon" :icon="icons.Table" :size="14" />
+        <span v-else>▦</span>
       </button>
 
       <button

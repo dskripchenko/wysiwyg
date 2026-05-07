@@ -147,6 +147,19 @@
   color: inherit;
   padding: 0;
 }
+
+/* Code-syntax highlighting tokens (см. engine/highlight.ts).
+   Цвета подобраны для тёмного фона <pre>. Kit-host'ы могут переопределить
+   через свои селекторы / темы. */
+.dsk-wysiwyg__content .dsk-tok-keyword  { color: #c084fc; }
+.dsk-wysiwyg__content .dsk-tok-string   { color: #86efac; }
+.dsk-wysiwyg__content .dsk-tok-comment  { color: #71717a; font-style: italic; }
+.dsk-wysiwyg__content .dsk-tok-number   { color: #fbbf24; }
+.dsk-wysiwyg__content .dsk-tok-tag      { color: #f87171; }
+.dsk-wysiwyg__content .dsk-tok-attr     { color: #60a5fa; }
+.dsk-wysiwyg__content .dsk-tok-function { color: #38bdf8; }
+.dsk-wysiwyg__content .dsk-tok-punct    { color: #d4d4d8; }
+
 .dsk-wysiwyg__content a {
   color: var(--dsk-wysiwyg-link-color);
   text-decoration: underline;
@@ -160,6 +173,23 @@
   border: 0;
   border-top: 1px solid var(--dsk-wysiwyg-border);
   margin: 1em 0;
+}
+.dsk-wysiwyg__content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+}
+.dsk-wysiwyg__content th,
+.dsk-wysiwyg__content td {
+  padding: 6px 10px;
+  border: 1px solid var(--dsk-wysiwyg-border);
+  vertical-align: top;
+  min-width: 40px;
+}
+.dsk-wysiwyg__content th {
+  background: var(--dsk-wysiwyg-toolbar-bg);
+  font-weight: 600;
+  text-align: left;
 }
 /* Placeholder — рендерится только когда .dsk-wysiwyg--empty (контент пуст). */
 .dsk-wysiwyg--empty .dsk-wysiwyg__content::before {

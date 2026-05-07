@@ -183,22 +183,87 @@ const safe = sanitizeHtml(unsafeUserInput)
 
 Dark-вариант через `@media (prefers-color-scheme: dark)` встроен.
 
+## Markdown shortcuts
+
+В начале блока автоматически срабатывают:
+
+| Ввод | Результат |
+|---|---|
+| `# ` / `## ` / `### ` | Heading 1/2/3 |
+| `- ` или `* ` | Bullet list |
+| `1. ` | Ordered list |
+| `> ` | Blockquote |
+| ` ``` ` (3 backticks + space) | Code block |
+
+## Slash-commands
+
+Введите `/` в начале блока — откроется popup со списком команд
+(headings, lists, quote, code-block, hr, table). Стрелки/Enter/Esc
+для навигации. Query-фильтр после `/` (например `/h2`, `/list`).
+
+## HTML → Markdown
+
+```ts
+import { htmlToMarkdown } from '@dskripchenko/wysiwyg'
+
+const md = htmlToMarkdown('<h1>Hello</h1><p><strong>World</strong></p>')
+// → "# Hello\n\n**World**"
+```
+
+Поддержка: p, h1-h3, strong/b, em/i, u, s, code, pre, ul/ol/li,
+blockquote, a, img, hr, br.
+
+## Code syntax highlighting
+
+`<pre><code class="language-js">…</code></pre>` блоки автоматически
+подсвечиваются на blur'е. Поддержка: `js`, `ts`, `tsx`, `jsx`, `php`,
+`html`, `css`, `json`. Token-based regex (без AST), ~1 KB gzip.
+
+```ts
+import { highlight } from '@dskripchenko/wysiwyg'
+
+const html = highlight('const x = 42', 'js')
+// → '<span class="dsk-tok-keyword">const</span> x = <span class="dsk-tok-number">42</span>'
+```
+
+## Tables
+
+Toolbar-кнопка `table` вставляет 3×3 таблицу. Когда курсор внутри
+таблицы — повторное нажатие добавляет строку снизу. Программные
+команды:
+
+```ts
+controller.chain().insertTable(rows, cols).run()
+controller.chain().addRowAfter().run()
+controller.chain().addRowBefore().run()
+controller.chain().addColumnAfter().run()
+controller.chain().addColumnBefore().run()
+controller.chain().removeRow().run()
+controller.chain().removeColumn().run()
+controller.chain().removeTable().run()
+```
+
 ## Архитектура
 
 ```
 src/
 ├── engine/
-│   ├── selection.ts     — Selection/Range helpers + saveRange/restoreRange
-│   ├── commands.ts      — toggleInlineMark / setBlockTag / toggleList / setLink / …
-│   ├── history.ts       — undo/redo stack (snapshot innerHTML, throttle)
-│   ├── sanitize.ts      — DOMParser-based sanitize
-│   └── index.ts         — EditorController + chain() API
-├── DskWysiwyg.vue       — root (contenteditable + paste/keydown)
-├── DskWysiwygToolbar.vue — toolbar (lazy-loaded UidIcon из ui-kit'а)
-└── style.css            — CSS-переменные
+│   ├── selection.ts        — Selection/Range helpers + saveRange/restoreRange
+│   ├── commands.ts         — toggleInlineMark / setBlockTag / toggleList / setLink / …
+│   ├── history.ts          — undo/redo stack (snapshot innerHTML, throttle)
+│   ├── sanitize.ts         — DOMParser-based sanitize
+│   ├── markdownShortcuts.ts — `# `, `- `, `1. `, `> `, ` ``` ` → block-format
+│   ├── htmlToMarkdown.ts   — HTML → MD конвертер
+│   ├── highlight.ts        — token-regex syntax highlighter
+│   ├── table.ts            — table insert/edit команды
+│   └── index.ts            — EditorController + chain() API
+├── DskWysiwyg.vue          — root (contenteditable + paste/keydown)
+├── DskWysiwygToolbar.vue   — toolbar (lazy-loaded UidIcon из ui-kit'а)
+├── DskWysiwygSlashMenu.vue — slash-commands popup
+└── style.css               — CSS-переменные
 ```
 
-Размер бандла: ~6.95 KB gzip ESM, без peer-deps.
+Размер бандла: ~12 KB gzip ESM, без peer-deps.
 
 ## Browser support
 
