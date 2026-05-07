@@ -100,6 +100,27 @@
   white-space: pre-wrap;
   cursor: text;
 }
+
+/* Source-mode: monospace textarea с raw-HTML. */
+.dsk-wysiwyg__source {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  border: 0;
+  padding: var(--dsk-wysiwyg-padding);
+  min-height: var(--dsk-wysiwyg-min-height, 200px);
+  max-height: var(--dsk-wysiwyg-max-height, none);
+  resize: vertical;
+  background: var(--dsk-wysiwyg-code-bg);
+  color: var(--dsk-wysiwyg-fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+}
 .dsk-wysiwyg__content p { margin: 0 0 0.75em; }
 .dsk-wysiwyg__content p:last-child { margin-bottom: 0; }
 .dsk-wysiwyg__content h1,

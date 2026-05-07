@@ -22,6 +22,7 @@ export type ToolbarItem =
   | 'horizontal-rule'
   | 'table'
   | 'undo' | 'redo'
+  | 'source'
   | '|'
 
 interface Props {
@@ -31,6 +32,8 @@ interface Props {
   /** Versioning trigger — внешний counter для force re-evaluation
    *  is-active state'а. Передаётся из DskWysiwyg при selectionchange. */
   selectionVersion?: number
+  /** Active-state для 'source' кнопки (host управляет). */
+  sourceActive?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,15 +43,18 @@ const props = withDefaults(defineProps<Props>(), {
     'bullet-list', 'ordered-list', 'blockquote', 'code-block', '|',
     'link', 'image', '|',
     'horizontal-rule', 'table', '|',
-    'undo', 'redo',
+    'undo', 'redo', '|',
+    'source',
   ],
   disabled: false,
   selectionVersion: 0,
+  sourceActive: false,
 })
 
 const emit = defineEmits<{
   'image-request': []
   'link-request': [currentUrl: string | null]
+  'toggle-source': []
 }>()
 
 /**
@@ -92,6 +98,7 @@ async function loadIcons(): Promise<void> {
       Table: mod.Table,
       Undo: mod.Undo,
       Redo: mod.Redo,
+      FileCode: mod.FileCode2 ?? mod.FileCode,
     }
   } catch {
     icons.value = {}
@@ -366,6 +373,18 @@ function onImage(): void {
       >
         <component v-if="icons.Redo" :is="UidIcon" :icon="icons.Redo" :size="14" />
         <span v-else>↷</span>
+      </button>
+
+      <button
+        v-else-if="item === 'source'"
+        type="button"
+        :disabled="disabled"
+        :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': sourceActive }]"
+        :title="sourceActive ? 'Назад в редактор' : 'Исходный код (HTML)'"
+        @click="emit('toggle-source')"
+      >
+        <component v-if="icons.FileCode" :is="UidIcon" :icon="icons.FileCode" :size="14" />
+        <span v-else>&lt;/&gt;</span>
       </button>
     </template>
   </div>

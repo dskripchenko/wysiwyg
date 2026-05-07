@@ -51,6 +51,9 @@ const emit = defineEmits<{
 
 const hostRef = ref<HTMLElement | null>(null)
 const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
+/** Source-mode: показываем raw-HTML в textarea, hostRef скрыт. */
+const sourceMode = ref<boolean>(false)
+const sourceValue = ref<string>('')
 /** State slash-меню: при вводе `/` открываем popup. */
 const slashOpen = ref<boolean>(false)
 const slashQuery = ref<string>('')
@@ -250,6 +253,36 @@ function onBlur(): void {
   }
 }
 
+/**
+ * Toggle между WYSIWYG и raw-HTML.
+ * - В source: getHTML() → textarea, hostRef скрывается.
+ * - Назад в WYSIWYG: setContent(textarea) с sanitize, history-snapshot.
+ */
+function toggleSource(): void {
+  if (! controller.value) return
+  if (! sourceMode.value) {
+    sourceValue.value = controller.value.getHTML()
+    sourceMode.value = true
+    return
+  }
+  const next = sourceValue.value
+  controller.value.setContent(next)
+  // setContent делает history.reset, но мы хотим сохранить undo через chain.
+  controller.value.history.commit()
+  isEmpty.value = controller.value.isEmpty()
+  emit('update:modelValue', controller.value.getHTML())
+  sourceMode.value = false
+}
+
+function onSourceInput(e: Event): void {
+  sourceValue.value = (e.target as HTMLTextAreaElement).value
+  // В source-режиме v-model обновляется по live-вводу — content уже HTML,
+  // но без sanitize. Делаем lightweight sanitize при getHTML→emit?
+  // Проще: emit live с сырым значением, sanitize сработает только при
+  // toggle обратно. Это как в Tiptap source-view'ах.
+  emit('update:modelValue', sourceValue.value)
+}
+
 function onPaste(e: ClipboardEvent): void {
   if (!controller.value || !e.clipboardData) return
   const html = e.clipboardData.getData('text/html')
@@ -412,10 +445,21 @@ defineExpose({
       :controller="controller"
       :items="toolbarItems"
       :selection-version="selectionVersion"
+      :source-active="sourceMode"
       @image-request="emit('image-request')"
       @link-request="(url) => emit('link-request', url)"
+      @toggle-source="toggleSource"
+    />
+    <textarea
+      v-if="sourceMode"
+      class="dsk-wysiwyg__source"
+      :value="sourceValue"
+      :placeholder="placeholder"
+      spellcheck="false"
+      @input="onSourceInput"
     />
     <div
+      v-show="!sourceMode"
       ref="hostRef"
       class="dsk-wysiwyg__content"
       :contenteditable="!readonly"

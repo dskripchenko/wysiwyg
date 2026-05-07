@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 — 2026-05-07
+
+### Added
+- **Source-mode toggle** — toolbar-кнопка `source` (иконка FileCode) переключает редактор между WYSIWYG и raw-HTML editor (textarea с monospace). При возврате обратно HTML проходит через `sanitizeHtml()` + history-snapshot. Полезно для прямой правки разметки. По умолчанию добавлена в конец default-toolbar после undo/redo.
+
 ## 0.2.2 — 2026-05-07
 
 ### Fixed
