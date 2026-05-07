@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.7 — 2026-05-07
+
+### Added
+- **Resize-handle на корневом контейнере** (`<DskWysiwyg>`). Пользователь тянет за маркер в правом нижнем углу, виджет меняет высоту. Min/max задаются через props `minHeight` (default `'200px'`) и `maxHeight` (default `undefined` = без ограничения). Управляется prop `resizable` (default `true`).
+- В source-mode resize применяется к корневому контейнеру; textarea/pre внутри flex-grow заполняют доступное пространство. В readonly-режиме resize отключается автоматически.
+
+### Breaking
+- CSS `min-height`/`max-height` переехали с `.dsk-wysiwyg__content` на корневой `.dsk-wysiwyg`. Если host напрямую задавал высоту через селектор `.dsk-wysiwyg__content { min-height: ... }` — теперь нужно ставить на `.dsk-wysiwyg`. Через CSS-переменные `--dsk-wysiwyg-min-height` / `--dsk-wysiwyg-max-height` всё работает по-старому.
+
 ## 0.2.6 — 2026-05-07
 
 ### Added

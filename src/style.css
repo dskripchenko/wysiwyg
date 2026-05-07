@@ -10,6 +10,14 @@
  */
 
 .dsk-wysiwyg {
+  /* Высота контейнера: min/max задаются через CSS-переменные
+     из props (DskWysiwyg.vue → wrapStyle). При resizable=true
+     корень получает resize: vertical — пользователь тянет за
+     handle в правом нижнем углу. Content/source-wrap внутри
+     flex-grow заполняют всё доступное пространство. */
+  min-height: var(--dsk-wysiwyg-min-height, 200px);
+  max-height: var(--dsk-wysiwyg-max-height, none);
+
   /* tokens (light theme defaults) */
   --dsk-wysiwyg-bg: #ffffff;
   --dsk-wysiwyg-fg: #1f2937;
@@ -51,6 +59,12 @@
 }
 .dsk-wysiwyg:focus-within {
   border-color: var(--dsk-wysiwyg-border-focus);
+}
+.dsk-wysiwyg--resizable {
+  resize: vertical;
+  /* resize требует не-visible overflow; у нас и так hidden, но дублируем
+     для явности на случай если host переопределил overflow. */
+  overflow: hidden;
 }
 .dsk-wysiwyg--readonly {
   background: var(--dsk-wysiwyg-toolbar-bg);
@@ -102,8 +116,10 @@
 .dsk-wysiwyg__content {
   outline: none;
   padding: var(--dsk-wysiwyg-padding);
-  min-height: var(--dsk-wysiwyg-min-height, 200px);
-  max-height: var(--dsk-wysiwyg-max-height, none);
+  /* Flex-grow внутри корневого .dsk-wysiwyg (display:flex column).
+     min-height:0 нужен чтобы content корректно сжимался при resize. */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -113,20 +129,20 @@
 /* Source-mode: monospace textarea с raw-HTML + overlay для подсветки. */
 .dsk-wysiwyg__source-wrap {
   position: relative;
-  min-height: var(--dsk-wysiwyg-min-height, 200px);
-  max-height: var(--dsk-wysiwyg-max-height, none);
+  flex: 1 1 auto;
+  min-height: 0;
   background: var(--dsk-wysiwyg-code-bg);
 }
-/* font/padding/lineheight ОБЩИЕ для textarea и pre — иначе caret уплывёт. */
+/* font/padding/lineheight ОБЩИЕ для textarea и pre — иначе caret уплывёт.
+   Высота — 100% flex-родителя, min/max берутся с корневого .dsk-wysiwyg. */
 .dsk-wysiwyg__source,
 .dsk-wysiwyg__source-highlight {
   display: block;
   margin: 0;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
   padding: var(--dsk-wysiwyg-padding);
-  min-height: var(--dsk-wysiwyg-min-height, 200px);
-  max-height: var(--dsk-wysiwyg-max-height, none);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 13px;
   line-height: 1.5;
@@ -150,7 +166,7 @@
   z-index: 1;
   outline: none;
   border: 0;
-  resize: vertical;
+  resize: none;
   background: transparent;
   color: transparent;
   caret-color: var(--dsk-wysiwyg-fg);

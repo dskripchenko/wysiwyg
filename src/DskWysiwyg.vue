@@ -31,6 +31,8 @@ interface Props {
   readonly?: boolean
   minHeight?: string
   maxHeight?: string
+  /** Можно ли пользователю менять высоту виджета (resize-handle снизу). */
+  resizable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,6 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   minHeight: '200px',
   maxHeight: undefined,
+  resizable: true,
 })
 
 const emit = defineEmits<{
@@ -453,7 +456,7 @@ defineExpose({
 </script>
 
 <template>
-  <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty }]" :style="wrapStyle">
+  <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly }]" :style="wrapStyle">
     <DskWysiwygToolbar
       v-if="toolbar && !readonly"
       :controller="controller"
