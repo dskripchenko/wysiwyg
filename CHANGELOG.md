@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4 — 2026-05-07
+
+### Added
+- **Beautify в source-view**: при переключении в source-mode HTML форматируется (\n + 2-space indent между блочными тегами, inline-теги остаются на одной строке). Содержимое `<pre>`/`<code>`/`<script>`/`<style>` сохраняется как есть.
+- **Minify при возврате/save**: при toggle обратно в WYSIWYG (или live-эмите v-model из source) HTML проходит через `minifyHtml` — убирает whitespace между блочными тегами, в БД попадает компактный HTML.
+- Public API: `beautifyHtml(html)` и `minifyHtml(html)` экспортируются.
+
 ## 0.2.3 — 2026-05-07
 
 ### Added

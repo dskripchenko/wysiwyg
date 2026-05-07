@@ -19,6 +19,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { EditorController, sanitizeHtml } from './engine'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { highlight } from './engine/highlight'
+import { beautifyHtml, minifyHtml } from './engine/format'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
 import DskWysiwygSlashMenu from './DskWysiwygSlashMenu.vue'
 
@@ -261,13 +262,15 @@ function onBlur(): void {
 function toggleSource(): void {
   if (! controller.value) return
   if (! sourceMode.value) {
-    sourceValue.value = controller.value.getHTML()
+    // В source: показываем beautified-HTML для удобного чтения/правки.
+    sourceValue.value = beautifyHtml(controller.value.getHTML())
     sourceMode.value = true
     return
   }
-  const next = sourceValue.value
-  controller.value.setContent(next)
-  // setContent делает history.reset, но мы хотим сохранить undo через chain.
+  // Назад в WYSIWYG: minify (схлопываем whitespace между блочными
+  // тегами) → setContent (sanitize) → emit. В БД попадает компактный HTML.
+  const compact = minifyHtml(sourceValue.value)
+  controller.value.setContent(compact)
   controller.value.history.commit()
   isEmpty.value = controller.value.isEmpty()
   emit('update:modelValue', controller.value.getHTML())
@@ -276,11 +279,10 @@ function toggleSource(): void {
 
 function onSourceInput(e: Event): void {
   sourceValue.value = (e.target as HTMLTextAreaElement).value
-  // В source-режиме v-model обновляется по live-вводу — content уже HTML,
-  // но без sanitize. Делаем lightweight sanitize при getHTML→emit?
-  // Проще: emit live с сырым значением, sanitize сработает только при
-  // toggle обратно. Это как в Tiptap source-view'ах.
-  emit('update:modelValue', sourceValue.value)
+  // В source-mode эмитим minified-вариант — host видит компактный HTML
+  // в v-model даже до toggle обратно. Visual в textarea остаётся
+  // beautified (контролируется sourceValue).
+  emit('update:modelValue', minifyHtml(sourceValue.value))
 }
 
 function onPaste(e: ClipboardEvent): void {
