@@ -1,0 +1,76 @@
+{
+    "name": "@dskripchenko/wysiwyg",
+    "version": "0.1.0",
+    "publishConfig": {
+        "access": "public"
+    },
+    "description": "Vue 3 WYSIWYG-редактор без сторонних editor-движков. Собственный contenteditable-engine, selection API, sanitize, history. UI на @dskripchenko/ui.",
+    "license": "MIT",
+    "author": "Denis Skripchenko <denskrp90@gmail.com>",
+    "homepage": "https://github.com/dskripchenko/wysiwyg#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dskripchenko/wysiwyg.git"
+    },
+    "bugs": {
+        "url": "https://github.com/dskripchenko/wysiwyg/issues"
+    },
+    "keywords": [
+        "vue",
+        "vue3",
+        "wysiwyg",
+        "rich-text",
+        "editor",
+        "contenteditable",
+        "zero-dependencies",
+        "dskripchenko"
+    ],
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        },
+        "./style.css": "./dist/style.css"
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc --noEmit && vite build",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "lint": "eslint . --ext .ts,.vue",
+        "typecheck": "vue-tsc --noEmit"
+    },
+    "peerDependencies": {
+        "vue": "^3.4",
+        "@dskripchenko/ui": "^1.0"
+    },
+    "peerDependenciesMeta": {
+        "@dskripchenko/ui": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@dskripchenko/ui": "^1.1.1",
+        "@types/node": "^22.10.0",
+        "@vitejs/plugin-vue": "^5.2.1",
+        "@vue/test-utils": "^2.4.6",
+        "jsdom": "^25.0.1",
+        "lucide-vue-next": "^0.469.0",
+        "typescript": "^5.6.3",
+        "vite": "^7.0.0",
+        "vite-plugin-dts": "^4.3.0",
+        "vitest": "^3.0.0",
+        "vue": "^3.5.13",
+        "vue-tsc": "^2.1.10"
+    }
+}

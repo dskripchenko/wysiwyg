@@ -1,0 +1,185 @@
+/*
+ * @dskripchenko/wysiwyg — стили editor'а через CSS-переменные.
+ *
+ * Все цвета/паддинги/радиусы настраиваются через `--dsk-wysiwyg-*`
+ * без !important — host может перебить любую переменную или class
+ * напрямую (нет scoped-стилей).
+ *
+ * Default-палитра подобрана нейтрально: работает и в light- и в
+ * dark-теме, если host подменит `--dsk-wysiwyg-bg` / `-fg` / `-border`.
+ */
+
+.dsk-wysiwyg {
+  /* tokens */
+  --dsk-wysiwyg-bg: #ffffff;
+  --dsk-wysiwyg-fg: #1f2937;
+  --dsk-wysiwyg-fg-muted: #6b7280;
+  --dsk-wysiwyg-border: #e5e7eb;
+  --dsk-wysiwyg-border-focus: #2dd4bf;
+  --dsk-wysiwyg-radius: 8px;
+  --dsk-wysiwyg-padding: 12px 16px;
+  --dsk-wysiwyg-toolbar-bg: #f9fafb;
+  --dsk-wysiwyg-btn-active-bg: rgba(45, 212, 191, 0.16);
+  --dsk-wysiwyg-btn-active-fg: #0d9488;
+  --dsk-wysiwyg-btn-hover-bg: rgba(0, 0, 0, 0.05);
+  --dsk-wysiwyg-link-color: #2563eb;
+  --dsk-wysiwyg-code-bg: #f3f4f6;
+  --dsk-wysiwyg-code-fg: #b91c1c;
+  --dsk-wysiwyg-blockquote-border: #d1d5db;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--dsk-wysiwyg-border);
+  border-radius: var(--dsk-wysiwyg-radius);
+  background: var(--dsk-wysiwyg-bg);
+  color: var(--dsk-wysiwyg-fg);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow: hidden;
+  transition: border-color 120ms ease;
+}
+.dsk-wysiwyg:focus-within {
+  border-color: var(--dsk-wysiwyg-border-focus);
+}
+.dsk-wysiwyg--readonly {
+  background: var(--dsk-wysiwyg-toolbar-bg);
+}
+
+/* Toolbar */
+.dsk-wysiwyg-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--dsk-wysiwyg-toolbar-bg);
+  border-bottom: 1px solid var(--dsk-wysiwyg-border);
+}
+.dsk-wysiwyg-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--dsk-wysiwyg-fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 80ms ease, color 80ms ease;
+}
+.dsk-wysiwyg-toolbar__btn:hover:not(:disabled) {
+  background: var(--dsk-wysiwyg-btn-hover-bg);
+}
+.dsk-wysiwyg-toolbar__btn.is-active {
+  background: var(--dsk-wysiwyg-btn-active-bg);
+  color: var(--dsk-wysiwyg-btn-active-fg);
+}
+.dsk-wysiwyg-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.dsk-wysiwyg-toolbar__divider {
+  width: 1px;
+  margin: 4px 4px;
+  background: var(--dsk-wysiwyg-border);
+}
+
+/* Contenteditable host */
+.dsk-wysiwyg__content {
+  outline: none;
+  padding: var(--dsk-wysiwyg-padding);
+  min-height: var(--dsk-wysiwyg-min-height, 200px);
+  max-height: var(--dsk-wysiwyg-max-height, none);
+  overflow-y: auto;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  cursor: text;
+}
+.dsk-wysiwyg__content p { margin: 0 0 0.75em; }
+.dsk-wysiwyg__content p:last-child { margin-bottom: 0; }
+.dsk-wysiwyg__content h1,
+.dsk-wysiwyg__content h2,
+.dsk-wysiwyg__content h3 {
+  margin: 1em 0 0.5em;
+  line-height: 1.25;
+  font-weight: 600;
+}
+.dsk-wysiwyg__content h1 { font-size: 1.6em; }
+.dsk-wysiwyg__content h2 { font-size: 1.35em; }
+.dsk-wysiwyg__content h3 { font-size: 1.15em; }
+.dsk-wysiwyg__content ul,
+.dsk-wysiwyg__content ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.dsk-wysiwyg__content li { margin: 0.2em 0; }
+.dsk-wysiwyg__content blockquote {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--dsk-wysiwyg-blockquote-border);
+  color: var(--dsk-wysiwyg-fg-muted);
+}
+.dsk-wysiwyg__content code {
+  padding: 1px 4px;
+  background: var(--dsk-wysiwyg-code-bg);
+  color: var(--dsk-wysiwyg-code-fg);
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.92em;
+}
+.dsk-wysiwyg__content pre {
+  margin: 0.5em 0;
+  padding: 12px 14px;
+  background: #18181b;
+  color: #f4f4f5;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.9em;
+}
+.dsk-wysiwyg__content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.dsk-wysiwyg__content a {
+  color: var(--dsk-wysiwyg-link-color);
+  text-decoration: underline;
+}
+.dsk-wysiwyg__content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.dsk-wysiwyg__content hr {
+  border: 0;
+  border-top: 1px solid var(--dsk-wysiwyg-border);
+  margin: 1em 0;
+}
+/* Placeholder — рендерится только когда .dsk-wysiwyg--empty (контент пуст). */
+.dsk-wysiwyg--empty .dsk-wysiwyg__content::before {
+  content: attr(data-placeholder);
+  color: var(--dsk-wysiwyg-fg-muted);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Dark-friendly overrides — host подменяет переменные через тему. */
+@media (prefers-color-scheme: dark) {
+  .dsk-wysiwyg {
+    --dsk-wysiwyg-bg: #18181b;
+    --dsk-wysiwyg-fg: #e5e7eb;
+    --dsk-wysiwyg-fg-muted: #9ca3af;
+    --dsk-wysiwyg-border: #3f3f46;
+    --dsk-wysiwyg-toolbar-bg: #27272a;
+    --dsk-wysiwyg-btn-hover-bg: rgba(255, 255, 255, 0.06);
+    --dsk-wysiwyg-code-bg: #27272a;
+    --dsk-wysiwyg-code-fg: #f87171;
+    --dsk-wysiwyg-blockquote-border: #52525b;
+  }
+}
