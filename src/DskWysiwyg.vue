@@ -55,6 +55,18 @@ const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
 /** Source-mode: показываем raw-HTML в textarea, hostRef скрыт. */
 const sourceMode = ref<boolean>(false)
 const sourceValue = ref<string>('')
+const sourceHighlightRef = ref<HTMLElement | null>(null)
+/** Подсвеченный HTML для overlay-pre под textarea. Trailing \n удерживает
+ *  пустую последнюю строку, чтобы pre/textarea не расходились по высоте. */
+const highlightedSource = computed<string>(() => highlight(sourceValue.value + '\n', 'html'))
+
+function onSourceScroll(e: Event): void {
+  const ta = e.target as HTMLTextAreaElement
+  if (sourceHighlightRef.value) {
+    sourceHighlightRef.value.scrollTop = ta.scrollTop
+    sourceHighlightRef.value.scrollLeft = ta.scrollLeft
+  }
+}
 /** State slash-меню: при вводе `/` открываем popup. */
 const slashOpen = ref<boolean>(false)
 const slashQuery = ref<string>('')
@@ -452,14 +464,22 @@ defineExpose({
       @link-request="(url) => emit('link-request', url)"
       @toggle-source="toggleSource"
     />
-    <textarea
-      v-if="sourceMode"
-      class="dsk-wysiwyg__source"
-      :value="sourceValue"
-      :placeholder="placeholder"
-      spellcheck="false"
-      @input="onSourceInput"
-    />
+    <div v-if="sourceMode" class="dsk-wysiwyg__source-wrap">
+      <pre
+        ref="sourceHighlightRef"
+        class="dsk-wysiwyg__source-highlight"
+        aria-hidden="true"
+        v-html="highlightedSource"
+      />
+      <textarea
+        class="dsk-wysiwyg__source"
+        :value="sourceValue"
+        :placeholder="placeholder"
+        spellcheck="false"
+        @input="onSourceInput"
+        @scroll="onSourceScroll"
+      />
+    </div>
     <div
       v-show="!sourceMode"
       ref="hostRef"

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5 — 2026-05-07
+
+### Added
+- **Syntax highlighting в source-view** (overlay pattern): `<pre>` с подсвеченным HTML рендерится позади textarea с прозрачным текстом. Синхронный scroll. Использует существующий `highlight(html, 'html')`. Палитра — VS-style для светлого фона: теги (#2563eb), атрибуты (#b45309), строки (#16a34a), комментарии italic gray.
+
 ## 0.2.4 — 2026-05-07
 
 ### Added

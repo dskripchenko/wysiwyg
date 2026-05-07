@@ -101,25 +101,59 @@
   cursor: text;
 }
 
-/* Source-mode: monospace textarea с raw-HTML. */
-.dsk-wysiwyg__source {
+/* Source-mode: monospace textarea с raw-HTML + overlay для подсветки. */
+.dsk-wysiwyg__source-wrap {
+  position: relative;
+  min-height: var(--dsk-wysiwyg-min-height, 200px);
+  max-height: var(--dsk-wysiwyg-max-height, none);
+  background: var(--dsk-wysiwyg-code-bg);
+}
+/* font/padding/lineheight ОБЩИЕ для textarea и pre — иначе caret уплывёт. */
+.dsk-wysiwyg__source,
+.dsk-wysiwyg__source-highlight {
   display: block;
+  margin: 0;
   width: 100%;
   box-sizing: border-box;
-  outline: none;
-  border: 0;
   padding: var(--dsk-wysiwyg-padding);
   min-height: var(--dsk-wysiwyg-min-height, 200px);
   max-height: var(--dsk-wysiwyg-max-height, none);
-  resize: vertical;
-  background: var(--dsk-wysiwyg-code-bg);
-  color: var(--dsk-wysiwyg-fg);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 13px;
   line-height: 1.5;
   tab-size: 2;
-  white-space: pre;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.dsk-wysiwyg__source-highlight {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsk-wysiwyg-fg);
+  pointer-events: none;
+  overflow: hidden;
+}
+.dsk-wysiwyg__source {
+  position: relative;
+  z-index: 1;
+  outline: none;
+  border: 0;
+  resize: vertical;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--dsk-wysiwyg-fg);
   overflow: auto;
+}
+.dsk-wysiwyg__source::selection {
+  background: rgba(45, 212, 191, 0.3);
+  color: transparent;
+}
+.dsk-wysiwyg__source::placeholder {
+  color: var(--dsk-wysiwyg-fg-muted);
+  opacity: 0.6;
 }
 .dsk-wysiwyg__content p { margin: 0 0 0.75em; }
 .dsk-wysiwyg__content p:last-child { margin-bottom: 0; }
@@ -170,8 +204,9 @@
 }
 
 /* Code-syntax highlighting tokens (см. engine/highlight.ts).
-   Цвета подобраны для тёмного фона <pre>. Kit-host'ы могут переопределить
-   через свои селекторы / темы. */
+   Применяются и в `<pre><code>` внутри editor'а (тёмные акценты), и
+   в source-overlay (светлый фон, VS-style палитра). Распределение —
+   через :where() для одинаковой специфичности; host может перекрыть. */
 .dsk-wysiwyg__content .dsk-tok-keyword  { color: #c084fc; }
 .dsk-wysiwyg__content .dsk-tok-string   { color: #86efac; }
 .dsk-wysiwyg__content .dsk-tok-comment  { color: #71717a; font-style: italic; }
@@ -180,6 +215,15 @@
 .dsk-wysiwyg__content .dsk-tok-attr     { color: #60a5fa; }
 .dsk-wysiwyg__content .dsk-tok-function { color: #38bdf8; }
 .dsk-wysiwyg__content .dsk-tok-punct    { color: #d4d4d8; }
+
+.dsk-wysiwyg__source-highlight .dsk-tok-keyword  { color: #7c3aed; }
+.dsk-wysiwyg__source-highlight .dsk-tok-string   { color: #16a34a; }
+.dsk-wysiwyg__source-highlight .dsk-tok-comment  { color: #6b7280; font-style: italic; }
+.dsk-wysiwyg__source-highlight .dsk-tok-number   { color: #b45309; }
+.dsk-wysiwyg__source-highlight .dsk-tok-tag      { color: #2563eb; }
+.dsk-wysiwyg__source-highlight .dsk-tok-attr     { color: #b45309; }
+.dsk-wysiwyg__source-highlight .dsk-tok-function { color: #0891b2; }
+.dsk-wysiwyg__source-highlight .dsk-tok-punct    { color: #6b7280; }
 
 .dsk-wysiwyg__content a {
   color: var(--dsk-wysiwyg-link-color);
