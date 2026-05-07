@@ -165,6 +165,13 @@ function closeSlashMenu(): void {
   slashRange = null
 }
 
+/** Блок считается пустым, если textContent состоит из пробелов/ZWSP, и нет img/hr внутри. */
+function isEmptyBlock(el: HTMLElement): boolean {
+  if (el.querySelector('img, hr')) return false
+  const text = (el.textContent ?? '').replace(/[​\s]/g, '')
+  return text === ''
+}
+
 function findBlockAncestor(node: Node): HTMLElement | null {
   let n: Node | null = node
   while (n && n !== hostRef.value) {
@@ -299,8 +306,34 @@ function handleEnter(e: KeyboardEvent): boolean {
   const block = findBlockAncestor(range.startContainer)
   if (! block) return false
   const tag = block.tagName.toLowerCase()
-  // Внутри li/pre/td — пусть Chrome делит сам (там его дефолт правильный).
-  if (tag === 'li' || tag === 'pre' || tag === 'td' || tag === 'th') return false
+
+  // Внутри пустого <li> на двойной Enter — выходим из списка:
+  // создаём <p> после <ul>/<ol>, удаляем пустой li.
+  if (tag === 'li') {
+    if (isEmptyBlock(block)) {
+      const list = block.parentElement
+      if (list && (list.tagName.toLowerCase() === 'ul' || list.tagName.toLowerCase() === 'ol')) {
+        e.preventDefault()
+        block.remove()
+        const p = document.createElement('p')
+        p.appendChild(document.createElement('br'))
+        list.after(p)
+        if (list.children.length === 0) list.remove()
+        const r = document.createRange()
+        r.setStart(p, 0)
+        r.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(r)
+        hostRef.value.dispatchEvent(new InputEvent('input', { bubbles: true }))
+        return true
+      }
+    }
+    // Непустой li — пусть Chrome создаст новый <li> сам.
+    return false
+  }
+
+  // Внутри pre/td/th — пусть Chrome делит сам.
+  if (tag === 'pre' || tag === 'td' || tag === 'th') return false
 
   e.preventDefault()
   if (! range.collapsed) range.deleteContents()

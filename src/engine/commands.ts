@@ -137,7 +137,44 @@ export function setBlockTag(host: HTMLElement, targetTag: string): void {
     return
   }
   for (const block of blocks) {
-    if (block.tagName.toLowerCase() === final) continue
+    const blockTag = block.tagName.toLowerCase()
+    if (blockTag === final) continue
+    // Если block — <li>, нельзя просто заменить tag (будет <ul><h2>…</h2></ul> —
+    // невалидный HTML). Извлекаем li из ul/ol: создаём <final> с содержимым
+    // li и кладём его сразу ПОСЛЕ родительского ul/ol. Если li последний
+    // в списке — список разрезается; если первый — список оставляется выше.
+    if (blockTag === 'li') {
+      const list = block.parentElement
+      if (list && (list.tagName.toLowerCase() === 'ul' || list.tagName.toLowerCase() === 'ol')) {
+        const replacement = document.createElement(final)
+        while (block.firstChild) replacement.appendChild(block.firstChild)
+        // Разрезаем список: всё после block уезжает в новый ul/ol.
+        const tailItems: Element[] = []
+        let next: Element | null = block.nextElementSibling
+        while (next) {
+          tailItems.push(next)
+          next = next.nextElementSibling
+        }
+        block.remove()
+        list.after(replacement)
+        if (tailItems.length > 0) {
+          const tailList = document.createElement(list.tagName.toLowerCase())
+          for (const item of tailItems) tailList.appendChild(item)
+          replacement.after(tailList)
+        }
+        if (list.children.length === 0) list.remove()
+        // Каретку — в начало replacement.
+        const r = document.createRange()
+        r.selectNodeContents(replacement)
+        r.collapse(true)
+        const sel = window.getSelection()
+        if (sel) {
+          sel.removeAllRanges()
+          sel.addRange(r)
+        }
+        continue
+      }
+    }
     const replacement = document.createElement(final)
     while (block.firstChild) replacement.appendChild(block.firstChild)
     block.replaceWith(replacement)

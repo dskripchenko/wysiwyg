@@ -38,6 +38,16 @@ import {
 
 export { sanitizeHtml } from './sanitize'
 
+/**
+ * Удаляет zero-width spaces (U+200B) из HTML — в DOM они нужны как
+ * caret-target для пустых inline-mark'ов и exit-cursor'ов, но в
+ * финальном HTML это мусор: невидимы пользователю, ломают сравнения,
+ * раздувают БД. Применяется только при экспорте через getHTML().
+ */
+function vacuumZwsp(html: string): string {
+  return html.replace(/​/g, '')
+}
+
 export interface ChainAPI {
   bold(): ChainAPI
   italic(): ChainAPI
@@ -112,7 +122,7 @@ export class EditorController {
   canUndo(): boolean { return this.history.canUndo }
   canRedo(): boolean { return this.history.canRedo }
 
-  getHTML(): string { return this.host.innerHTML }
+  getHTML(): string { return vacuumZwsp(this.host.innerHTML) }
 
   isEmpty(): boolean {
     const text = this.host.textContent?.trim() ?? ''
@@ -159,6 +169,14 @@ export class EditorController {
   /** Установить контент (sanitized) + reset history. */
   setContent(html: string): void {
     this.host.innerHTML = sanitizeHtml(html)
+    // Если editor пустой — гарантируем хотя бы один блочный <p><br>,
+    // чтобы пользовательский ввод сразу попадал в block-context.
+    // Без этого markdown-shortcuts/handleEnter не могут найти blockAncestor.
+    if (this.host.firstElementChild === null && (this.host.textContent ?? '') === '') {
+      const p = document.createElement('p')
+      p.appendChild(document.createElement('br'))
+      this.host.appendChild(p)
+    }
     this.history.reset(this.host.innerHTML)
   }
 

@@ -83,4 +83,27 @@ describe('EditorController', () => {
     expect(host.innerHTML).toContain('<img')
     expect(host.innerHTML).toContain('https://example.com/x.png')
   })
+
+  it('getHTML strips ZWSP (U+200B) from output', () => {
+    const host = setupHost('<p>before<strong>​bold</strong>​ end</p>')
+    const c = new EditorController(host)
+    expect(host.innerHTML).toContain('​')
+    expect(c.getHTML()).not.toContain('​')
+    expect(c.getHTML()).toContain('<strong>bold</strong> end')
+  })
+
+  it('setBlockTag on <li> extracts to new block after list (B5b)', () => {
+    const host = setupHost('<ul><li>first</li><li>second</li><li>third</li></ul>')
+    const c = new EditorController(host)
+    // Caret в середине второго li.
+    const secondLi = host.querySelectorAll('li')[1]
+    const range = document.createRange()
+    range.selectNodeContents(secondLi)
+    const sel = window.getSelection()!
+    sel.removeAllRanges()
+    sel.addRange(range)
+    c.chain().heading(2).run()
+    // Ожидаем: <ul><li>first</li></ul><h2>second</h2><ul><li>third</li></ul>
+    expect(host.innerHTML).toMatch(/<ul><li>first<\/li><\/ul><h2>second<\/h2><ul><li>third<\/li><\/ul>/)
+  })
 })
