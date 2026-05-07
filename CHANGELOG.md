@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.6 — 2026-05-07
+
+### Added
+- **Поддержка тёмной темы через `data-theme="dark"` / `class="dark"`** на родительском элементе (или :root). Раньше editor реагировал только на `@media (prefers-color-scheme: dark)` и оставался светлым, если host управляет темой UI-переключателем (как в laravel-admin). Теперь работают:
+  - `[data-theme='dark']` / `:root[data-theme='dark']` (конвенция @dskripchenko/ui, laravel-admin)
+  - `:root.dark` / `[data-theme='dark']` (Tailwind-like конвенции)
+  - `@media (prefers-color-scheme: dark)` (OS-уровень, через `:where()` чтобы не побеждать host'ов light-override)
+  - `[data-theme='light']` принудительно возвращает светлую палитру даже при OS dark.
+  - Также можно поставить `class="dsk-wysiwyg--dark-theme"` напрямую на сам редактор.
+- **Унификация syntax-token цветов через CSS-переменные**: `--dsk-wysiwyg-tok-{keyword,string,comment,number,tag,attr,function,punct}`. Раньше у editor'а и source-overlay были разные хардкодом палитры; теперь обе следуют одной теме и host может перебить любой из 8 цветов.
+
 ## 0.2.5 — 2026-05-07
 
 ### Added

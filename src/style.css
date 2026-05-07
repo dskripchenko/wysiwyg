@@ -10,7 +10,7 @@
  */
 
 .dsk-wysiwyg {
-  /* tokens */
+  /* tokens (light theme defaults) */
   --dsk-wysiwyg-bg: #ffffff;
   --dsk-wysiwyg-fg: #1f2937;
   --dsk-wysiwyg-fg-muted: #6b7280;
@@ -26,6 +26,15 @@
   --dsk-wysiwyg-code-bg: #f3f4f6;
   --dsk-wysiwyg-code-fg: #b91c1c;
   --dsk-wysiwyg-blockquote-border: #d1d5db;
+  /* syntax-highlight token colors (light) */
+  --dsk-wysiwyg-tok-keyword: #7c3aed;
+  --dsk-wysiwyg-tok-string: #16a34a;
+  --dsk-wysiwyg-tok-comment: #6b7280;
+  --dsk-wysiwyg-tok-number: #b45309;
+  --dsk-wysiwyg-tok-tag: #2563eb;
+  --dsk-wysiwyg-tok-attr: #b45309;
+  --dsk-wysiwyg-tok-function: #0891b2;
+  --dsk-wysiwyg-tok-punct: #6b7280;
 
   position: relative;
   display: flex;
@@ -203,27 +212,17 @@
   padding: 0;
 }
 
-/* Code-syntax highlighting tokens (см. engine/highlight.ts).
-   Применяются и в `<pre><code>` внутри editor'а (тёмные акценты), и
-   в source-overlay (светлый фон, VS-style палитра). Распределение —
-   через :where() для одинаковой специфичности; host может перекрыть. */
-.dsk-wysiwyg__content .dsk-tok-keyword  { color: #c084fc; }
-.dsk-wysiwyg__content .dsk-tok-string   { color: #86efac; }
-.dsk-wysiwyg__content .dsk-tok-comment  { color: #71717a; font-style: italic; }
-.dsk-wysiwyg__content .dsk-tok-number   { color: #fbbf24; }
-.dsk-wysiwyg__content .dsk-tok-tag      { color: #f87171; }
-.dsk-wysiwyg__content .dsk-tok-attr     { color: #60a5fa; }
-.dsk-wysiwyg__content .dsk-tok-function { color: #38bdf8; }
-.dsk-wysiwyg__content .dsk-tok-punct    { color: #d4d4d8; }
-
-.dsk-wysiwyg__source-highlight .dsk-tok-keyword  { color: #7c3aed; }
-.dsk-wysiwyg__source-highlight .dsk-tok-string   { color: #16a34a; }
-.dsk-wysiwyg__source-highlight .dsk-tok-comment  { color: #6b7280; font-style: italic; }
-.dsk-wysiwyg__source-highlight .dsk-tok-number   { color: #b45309; }
-.dsk-wysiwyg__source-highlight .dsk-tok-tag      { color: #2563eb; }
-.dsk-wysiwyg__source-highlight .dsk-tok-attr     { color: #b45309; }
-.dsk-wysiwyg__source-highlight .dsk-tok-function { color: #0891b2; }
-.dsk-wysiwyg__source-highlight .dsk-tok-punct    { color: #6b7280; }
+/* Code-syntax highlighting tokens — палитра через CSS-переменные,
+   те же значения и в editor'е (`<pre><code>`), и в source-overlay.
+   Темы переопределяют переменные ниже. */
+.dsk-wysiwyg .dsk-tok-keyword  { color: var(--dsk-wysiwyg-tok-keyword); }
+.dsk-wysiwyg .dsk-tok-string   { color: var(--dsk-wysiwyg-tok-string); }
+.dsk-wysiwyg .dsk-tok-comment  { color: var(--dsk-wysiwyg-tok-comment); font-style: italic; }
+.dsk-wysiwyg .dsk-tok-number   { color: var(--dsk-wysiwyg-tok-number); }
+.dsk-wysiwyg .dsk-tok-tag      { color: var(--dsk-wysiwyg-tok-tag); }
+.dsk-wysiwyg .dsk-tok-attr     { color: var(--dsk-wysiwyg-tok-attr); }
+.dsk-wysiwyg .dsk-tok-function { color: var(--dsk-wysiwyg-tok-function); }
+.dsk-wysiwyg .dsk-tok-punct    { color: var(--dsk-wysiwyg-tok-punct); }
 
 .dsk-wysiwyg__content a {
   color: var(--dsk-wysiwyg-link-color);
@@ -264,9 +263,31 @@
   position: absolute;
 }
 
-/* Dark-friendly overrides — host подменяет переменные через тему. */
+/* Dark-theme palette — общий блок для всех способов активации dark.
+   Переменные общие — токены подсветки и базовая палитра. */
+.dsk-wysiwyg--dark-theme,
+:where(:root[data-theme='dark'], :root.dark, [data-theme='dark']) .dsk-wysiwyg {
+  --dsk-wysiwyg-bg: #18181b;
+  --dsk-wysiwyg-fg: #e5e7eb;
+  --dsk-wysiwyg-fg-muted: #9ca3af;
+  --dsk-wysiwyg-border: #3f3f46;
+  --dsk-wysiwyg-toolbar-bg: #27272a;
+  --dsk-wysiwyg-btn-hover-bg: rgba(255, 255, 255, 0.06);
+  --dsk-wysiwyg-code-bg: #27272a;
+  --dsk-wysiwyg-code-fg: #f87171;
+  --dsk-wysiwyg-blockquote-border: #52525b;
+  --dsk-wysiwyg-tok-keyword: #c084fc;
+  --dsk-wysiwyg-tok-string: #86efac;
+  --dsk-wysiwyg-tok-comment: #71717a;
+  --dsk-wysiwyg-tok-number: #fbbf24;
+  --dsk-wysiwyg-tok-tag: #f87171;
+  --dsk-wysiwyg-tok-attr: #60a5fa;
+  --dsk-wysiwyg-tok-function: #38bdf8;
+  --dsk-wysiwyg-tok-punct: #d4d4d8;
+}
+/* OS-уровневая dark-тема — только если host не переопределил явно. */
 @media (prefers-color-scheme: dark) {
-  .dsk-wysiwyg {
+  :where(.dsk-wysiwyg) {
     --dsk-wysiwyg-bg: #18181b;
     --dsk-wysiwyg-fg: #e5e7eb;
     --dsk-wysiwyg-fg-muted: #9ca3af;
@@ -276,5 +297,34 @@
     --dsk-wysiwyg-code-bg: #27272a;
     --dsk-wysiwyg-code-fg: #f87171;
     --dsk-wysiwyg-blockquote-border: #52525b;
+    --dsk-wysiwyg-tok-keyword: #c084fc;
+    --dsk-wysiwyg-tok-string: #86efac;
+    --dsk-wysiwyg-tok-comment: #71717a;
+    --dsk-wysiwyg-tok-number: #fbbf24;
+    --dsk-wysiwyg-tok-tag: #f87171;
+    --dsk-wysiwyg-tok-attr: #60a5fa;
+    --dsk-wysiwyg-tok-function: #38bdf8;
+    --dsk-wysiwyg-tok-punct: #d4d4d8;
   }
+}
+/* Light-override: если host явно ставит [data-theme='light'] — возвращаем
+   светлую палитру даже при OS dark. */
+:where(:root[data-theme='light'], :root.light, [data-theme='light']) .dsk-wysiwyg {
+  --dsk-wysiwyg-bg: #ffffff;
+  --dsk-wysiwyg-fg: #1f2937;
+  --dsk-wysiwyg-fg-muted: #6b7280;
+  --dsk-wysiwyg-border: #e5e7eb;
+  --dsk-wysiwyg-toolbar-bg: #f9fafb;
+  --dsk-wysiwyg-btn-hover-bg: rgba(0, 0, 0, 0.05);
+  --dsk-wysiwyg-code-bg: #f3f4f6;
+  --dsk-wysiwyg-code-fg: #b91c1c;
+  --dsk-wysiwyg-blockquote-border: #d1d5db;
+  --dsk-wysiwyg-tok-keyword: #7c3aed;
+  --dsk-wysiwyg-tok-string: #16a34a;
+  --dsk-wysiwyg-tok-comment: #6b7280;
+  --dsk-wysiwyg-tok-number: #b45309;
+  --dsk-wysiwyg-tok-tag: #2563eb;
+  --dsk-wysiwyg-tok-attr: #b45309;
+  --dsk-wysiwyg-tok-function: #0891b2;
+  --dsk-wysiwyg-tok-punct: #6b7280;
 }
