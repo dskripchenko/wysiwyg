@@ -68,6 +68,11 @@ let onSelectionChange: (() => void) | null = null
 
 onMounted(() => {
   if (!hostRef.value) return
+  // Подсказка Chrome'у — при splitе block'ов использовать <p>, а не <div>.
+  // execCommand deprecated, но defaultParagraphSeparator до сих пор
+  // единственный способ повлиять на default-Enter-поведение. Свой
+  // handleEnter ниже всё равно перехватывает большинство случаев.
+  try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch { /* no-op */ }
   const c = new EditorController(hostRef.value)
   c.setContent(props.modelValue)
   controller.value = c
@@ -276,6 +281,56 @@ function insertAtCaret(html: string): void {
   }
 }
 
+/**
+ * Собственный split-block для Enter. Делит текущий блок на caret'е,
+ * хвост уезжает в новый <p>. Активные inline-marks (<strong>/<em>/…)
+ * НЕ клонируются — новый блок начинается с чистого state'а.
+ *
+ * Возвращает true, если split произошёл (host.preventDefault уже вызван).
+ * False — пусть Chrome обработает (внутри <li>, <pre>, или нет селекции).
+ */
+function handleEnter(e: KeyboardEvent): boolean {
+  if (! hostRef.value || ! controller.value) return false
+  const sel = window.getSelection()
+  if (! sel || sel.rangeCount === 0) return false
+  const range = sel.getRangeAt(0)
+  if (! hostRef.value.contains(range.startContainer)) return false
+
+  const block = findBlockAncestor(range.startContainer)
+  if (! block) return false
+  const tag = block.tagName.toLowerCase()
+  // Внутри li/pre/td — пусть Chrome делит сам (там его дефолт правильный).
+  if (tag === 'li' || tag === 'pre' || tag === 'td' || tag === 'th') return false
+
+  e.preventDefault()
+  if (! range.collapsed) range.deleteContents()
+
+  // Вырезаем всё после caret в block'е.
+  const tail = document.createRange()
+  tail.setStart(range.endContainer, range.endOffset)
+  tail.setEnd(block, block.childNodes.length)
+  const tailFragment = tail.extractContents()
+
+  // Чистим pure-empty inline wrappers (например <strong></strong> от
+  // только что закрытой mark'и) — берём только текстовое содержимое.
+  const newBlock = document.createElement('p')
+  newBlock.appendChild(tailFragment)
+  if (newBlock.childNodes.length === 0 || newBlock.textContent === '') {
+    newBlock.replaceChildren(document.createElement('br'))
+  }
+  block.after(newBlock)
+
+  // Caret в начало newBlock.
+  const r = document.createRange()
+  r.setStart(newBlock, 0)
+  r.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(r)
+
+  hostRef.value.dispatchEvent(new InputEvent('input', { bubbles: true }))
+  return true
+}
+
 function onKeydown(e: KeyboardEvent): void {
   if (!controller.value) return
   // Slash-menu navigation перехватываем до hotkeys.
@@ -290,6 +345,12 @@ function onKeydown(e: KeyboardEvent): void {
       }
     }
     if (e.key === 'Escape')    { e.preventDefault(); closeSlashMenu(); return }
+  }
+  // Свой Enter handler: split block в новый <p> без клонирования
+  // inline-marks. Без этого Chrome тянет активный <strong>/<em>/… в
+  // следующую строку и каждая новая строка получается в bold.
+  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    if (handleEnter(e)) return
   }
   const meta = e.metaKey || e.ctrlKey
   if (!meta) return

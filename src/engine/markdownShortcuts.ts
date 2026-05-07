@@ -78,7 +78,10 @@ export function applyMarkdownShortcut(host: HTMLElement): ShortcutResult {
 }
 
 function blockAncestor(start: Node, host: HTMLElement): HTMLElement | null {
-  const blockTags = ['p', 'h1', 'h2', 'h3', 'blockquote', 'pre', 'li']
+  // div включён, потому что Chrome contenteditable по умолчанию делит
+  // блоки через div'ы (даже если мы храним <p>). Markdown-shortcut не
+  // должен зависеть от того, как браузер обозначил current-block.
+  const blockTags = ['p', 'div', 'h1', 'h2', 'h3', 'blockquote', 'pre', 'li']
   let n: Node | null = start
   while (n && n !== host) {
     if (n instanceof HTMLElement && blockTags.includes(n.tagName.toLowerCase())) {

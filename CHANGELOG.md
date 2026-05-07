@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1 — 2026-05-07
+
+### Fixed (после real-browser smoke в demo)
+- **⌘B/I/U на collapsed selection** больше не создают вложенный `<strong><strong>…</strong></strong>` при повторном нажатии. Теперь, если caret уже внутри active-mark, toggle "выходит" из неё через ZWSP-text-node после ancestor'а.
+- **Markdown shortcuts** (`# `, `## `, `- `, `1. `, `> `, ``` `) работают в Chrome. `markdownShortcuts.blockAncestor` теперь распознаёт `<div>`-блоки (Chrome contenteditable создаёт div'ы по умолчанию).
+- **Enter** обрабатывается собственным `handleEnter` в `DskWysiwyg.vue` — split в новый `<p>` без клонирования active inline-marks. `defaultParagraphSeparator=p` устанавливается при mount как fallback.
+- **Slash-menu /h2 фильтр** работает (исправилось как side-effect Enter+bold-fix'ов; ранее был сломан из-за наследуемого `<strong>` wrapper'а).
+
+### Known limitations
+- Внутри `<ul>/<ol>` двойной Enter не выходит из списка (Chrome default не срабатывает в нашем контексте). Workaround: ставьте курсор за списком вручную. Решится в 0.2.2 (B5).
+- После bold-toggle в HTML остаются zero-width spaces (`​`) — невидимы, но мусорят. Решится в 0.2.2 (B6).
+
 ## 0.2.0 — 2026-05-02
 
 ### Added

@@ -33,6 +33,24 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
   if (!range) return
 
   if (range.collapsed) {
+    const inside = nearestAncestor(range.startContainer, host, tag)
+    if (inside) {
+      // Caret уже внутри active-mark — "выходим" из неё. Ставим caret сразу
+      // после ancestor'а в zero-width text node, чтобы дальнейший ввод
+      // лёг рядом с mark, а не вложенно.
+      const exit = document.createTextNode('​')
+      inside.after(exit)
+      const sel = window.getSelection()
+      if (sel) {
+        const r = document.createRange()
+        r.setStart(exit, 1)
+        r.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(r)
+      }
+      emitInput(host)
+      return
+    }
     // Пустой mark на caret'е: вставляем <tag>&#8203;</tag> и ставим
     // курсор внутри, чтобы ввод применился к нему. ZWSP-character
     // даёт возможность браузеру ставить cursor внутри пустого инлайна.
