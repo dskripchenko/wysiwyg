@@ -51,8 +51,8 @@
         "typecheck": "vue-tsc --noEmit"
     },
     "peerDependencies": {
-        "vue": "^3.4",
-        "@dskripchenko/ui": "^1.0"
+        "@dskripchenko/ui": "^1.0",
+        "vue": "^3.4"
     },
     "peerDependenciesMeta": {
         "@dskripchenko/ui": {
@@ -62,7 +62,7 @@
     "devDependencies": {
         "@dskripchenko/ui": "^1.1.1",
         "@types/node": "^22.10.0",
-        "@vitejs/plugin-vue": "^5.2.1",
+        "@vitejs/plugin-vue": "^6.0.8",
         "@vue/test-utils": "^2.4.6",
         "jsdom": "^25.0.1",
         "lucide-vue-next": "^0.469.0",
