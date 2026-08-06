@@ -1,13 +1,13 @@
 # @dskripchenko/wysiwyg
 
-> 🌐 [English](README.md) · [Русский](README.ru.md) · **Deutsch** · [中文](README.zh.md)
+> 🌐 [English](../../README.md) · [Русский](../ru/README.md) · **Deutsch** · [中文](../zh/README.md)
 
 Ein vollständiger Vue 3 WYSIWYG-Editor mit **null Peer-Dependencies auf
 Editor-Bibliotheken** — kein Tiptap, kein ProseMirror, kein Quill,
 kein Slate. Aufgebaut auf `contenteditable` + Selection/Range API.
 
 [![npm](https://img.shields.io/npm/v/@dskripchenko/wysiwyg)](https://www.npmjs.com/package/@dskripchenko/wysiwyg)
-[![License](https://img.shields.io/npm/l/@dskripchenko/wysiwyg)](LICENSE)
+[![License](https://img.shields.io/npm/l/@dskripchenko/wysiwyg)](../../LICENSE)
 
 ~12 KB gzip. Verwendet optional `@dskripchenko/ui` für Toolbar-Icons.
 
@@ -65,12 +65,12 @@ const html = ref('<p>Hallo <strong>Welt</strong>!</p>')
 
 ## Dokumentation
 
-- [Erste Schritte](docs/en/getting-started.md) (en)
-- [Controller-API](docs/en/controller-api.md) (en)
-- [Erweiterungen](docs/en/extensions.md) (en)
-- [Anpassung](docs/en/customization.md) (en)
-- [Migration Guide](docs/en/migration-guide.md) (en)
+- [Erste Schritte](../../docs/en/getting-started.md) (en)
+- [Controller-API](../../docs/en/controller-api.md) (en)
+- [Erweiterungen](../../docs/en/extensions.md) (en)
+- [Anpassung](../../docs/en/customization.md) (en)
+- [Migration Guide](../../docs/en/migration-guide.md) (en)
 
 ## Lizenz
 
-[MIT](LICENSE) © Denis Skripchenko
+[MIT](../../LICENSE) © Denis Skripchenko

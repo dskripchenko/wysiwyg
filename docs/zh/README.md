@@ -1,13 +1,13 @@
 # @dskripchenko/wysiwyg
 
-> 🌐 [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · **中文**
+> 🌐 [English](../../README.md) · [Русский](../ru/README.md) · [Deutsch](../de/README.md) · **中文**
 
 完整的 Vue 3 WYSIWYG 编辑器，**对编辑器库零 peer 依赖** — 无 Tiptap、
 无 ProseMirror、无 Quill、无 Slate。基于 `contenteditable` +
 Selection/Range API 构建。
 
 [![npm](https://img.shields.io/npm/v/@dskripchenko/wysiwyg)](https://www.npmjs.com/package/@dskripchenko/wysiwyg)
-[![License](https://img.shields.io/npm/l/@dskripchenko/wysiwyg)](LICENSE)
+[![License](https://img.shields.io/npm/l/@dskripchenko/wysiwyg)](../../LICENSE)
 
 ~12 KB gzip。可选地使用 `@dskripchenko/ui` 提供工具栏图标。
 
@@ -64,12 +64,12 @@ const html = ref('<p>你好 <strong>世界</strong>！</p>')
 
 ## 文档
 
-- [快速开始](docs/en/getting-started.md) (en)
-- [控制器 API](docs/en/controller-api.md) (en)
-- [扩展](docs/en/extensions.md) (en)
-- [自定义](docs/en/customization.md) (en)
-- [迁移指南](docs/en/migration-guide.md) (en)
+- [快速开始](../../docs/en/getting-started.md) (en)
+- [控制器 API](../../docs/en/controller-api.md) (en)
+- [扩展](../../docs/en/extensions.md) (en)
+- [自定义](../../docs/en/customization.md) (en)
+- [迁移指南](../../docs/en/migration-guide.md) (en)
 
 ## 许可证
 
-[MIT](LICENSE) © Denis Skripchenko
+[MIT](../../LICENSE) © Denis Skripchenko

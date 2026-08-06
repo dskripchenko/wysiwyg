@@ -1,6 +1,6 @@
 # @dskripchenko/wysiwyg
 
-> 🌐 [English](README.md) · **Русский** · [Deutsch](README.de.md) · [中文](README.zh.md)
+> 🌐 [English](../../README.md) · **Русский** · [Deutsch](../de/README.md) · [中文](../zh/README.md)
 
 Полноценный Vue 3 WYSIWYG-редактор без сторонних editor-движков
 (не Tiptap, не ProseMirror, не Quill, не Slate). Собственная реализация

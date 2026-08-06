@@ -1,6 +1,6 @@
 # @dskripchenko/wysiwyg
 
-> 🌐 **English** · [Русский](README.ru.md) · [Deutsch](README.de.md) · [中文](README.zh.md)
+> 🌐 **English** · [Русский](docs/ru/README.md) · [Deutsch](docs/de/README.md) · [中文](docs/zh/README.md)
 
 A full-featured Vue 3 WYSIWYG editor with **zero peer dependencies on
 editor libraries** — no Tiptap, no ProseMirror, no Quill, no Slate.
