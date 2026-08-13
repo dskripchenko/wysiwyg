@@ -1,7 +1,7 @@
 /**
  * @dskripchenko/wysiwyg — public API.
  *
- * Минимальный пример:
+ * A minimal example:
  *
  *   <script setup>
  *   import { ref } from 'vue'
@@ -14,7 +14,7 @@
  *     <DskWysiwyg v-model="html" />
  *   </template>
  *
- * Programmatic-команды через ref на компонент → controller:
+ * Programmatic commands through a ref on the component → the controller:
  *
  *   const wysiwyg = ref(null)
  *   wysiwyg.value?.controller?.chain().focus().bold().run()

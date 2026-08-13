@@ -1,19 +1,19 @@
 <script setup lang="ts">
 /**
- * DskWysiwyg — Vue 3 WYSIWYG-редактор без сторонних editor-движков.
+ * DskWysiwyg — a Vue 3 WYSIWYG editor without any third-party editor engine.
  *
- * Внутри — contenteditable div + EditorController (см. ./engine).
- * v-model — HTML-string (sanitized).
+ * Inside there is a contenteditable div plus an EditorController (see ./engine).
+ * The v-model is an HTML string (sanitized).
  *
- * Архитектура:
- *   - Toolbar шлёт команды через `controller.chain()`.
- *   - Editable host эмитит native `input`-события при ручном вводе;
- *     onInput → throttled history snapshot → emit update:modelValue.
- *   - selectionchange (document) → инкремент selectionVersion → toolbar
- *     пересчитывает is-active.
- *   - paste → sanitize input → insertHTML.
- *   - Image: emit('image-request') host подключает upload, затем
- *     зовёт `controller.chain().focus().setImage(url).run()`.
+ * The architecture:
+ *   - the toolbar sends commands through `controller.chain()`;
+ *   - the editable host emits native `input` events on manual typing;
+ *     onInput → a throttled history snapshot → emit update:modelValue;
+ *   - selectionchange (on the document) → selectionVersion is incremented →
+ *     the toolbar recomputes is-active;
+ *   - paste → sanitize the input → insertHTML;
+ *   - images: emit('image-request'), the host wires up the upload and then
+ *     calls `controller.chain().focus().setImage(url).run()`.
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml } from './engine'
@@ -31,7 +31,7 @@ interface Props {
   readonly?: boolean
   minHeight?: string
   maxHeight?: string
-  /** Можно ли пользователю менять высоту виджета (resize-handle снизу). */
+  /** Whether the user may change the widget's height (the resize handle below). */
   resizable?: boolean
 }
 
@@ -55,12 +55,13 @@ const emit = defineEmits<{
 
 const hostRef = ref<HTMLElement | null>(null)
 const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
-/** Source-mode: показываем raw-HTML в textarea, hostRef скрыт. */
+/** Source mode: the raw HTML is shown in a textarea and hostRef is hidden. */
 const sourceMode = ref<boolean>(false)
 const sourceValue = ref<string>('')
 const sourceHighlightRef = ref<HTMLElement | null>(null)
-/** Подсвеченный HTML для overlay-pre под textarea. Trailing \n удерживает
- *  пустую последнюю строку, чтобы pre/textarea не расходились по высоте. */
+/** The highlighted HTML for the overlay pre under the textarea. The trailing
+ *  \n keeps the empty last line so that the pre and the textarea do not
+ *  diverge in height. */
 const highlightedSource = computed<string>(() => highlight(sourceValue.value + '\n', 'html'))
 
 function onSourceScroll(e: Event): void {
@@ -70,15 +71,15 @@ function onSourceScroll(e: Event): void {
     sourceHighlightRef.value.scrollLeft = ta.scrollLeft
   }
 }
-/** State slash-меню: при вводе `/` открываем popup. */
+/** The state of the slash menu: typing `/` opens the popup. */
 const slashOpen = ref<boolean>(false)
 const slashQuery = ref<string>('')
 const slashTop = ref<number>(0)
 const slashLeft = ref<number>(0)
-/** Range, на котором был набран `/` — нужен для удаления при выборе. */
+/** The range the `/` was typed on — needed to delete it on a selection. */
 let slashRange: Range | null = null
-// shallowRef — EditorController не должен быть deep-proxy'нут, иначе
-// Vue теряет приватные fields (history). Класс остаётся raw.
+// shallowRef — the EditorController must not be deep-proxied, otherwise Vue
+// loses the private fields (the history). The class stays raw.
 const controller = shallowRef<EditorController | null>(null)
 const selectionVersion = ref<number>(0)
 const isEmpty = ref<boolean>(true)
@@ -87,10 +88,10 @@ let onSelectionChange: (() => void) | null = null
 
 onMounted(() => {
   if (!hostRef.value) return
-  // Подсказка Chrome'у — при splitе block'ов использовать <p>, а не <div>.
-  // execCommand deprecated, но defaultParagraphSeparator до сих пор
-  // единственный способ повлиять на default-Enter-поведение. Свой
-  // handleEnter ниже всё равно перехватывает большинство случаев.
+  // A hint to Chrome: use <p> rather than <div> when splitting blocks.
+  // execCommand is deprecated, but defaultParagraphSeparator is still the only
+  // way to influence the default Enter behaviour. Our own handleEnter below
+  // intercepts most cases anyway.
   try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch { /* no-op */ }
   const c = new EditorController(hostRef.value)
   c.setContent(props.modelValue)
@@ -126,24 +127,24 @@ watch(
 
 function onInput(): void {
   if (!controller.value || !hostRef.value) return
-  // Markdown shortcuts: после input проверяем не нужно ли заменить
-  // префикс блока на heading/list/quote/codeblock.
+  // Markdown shortcuts: after an input we check whether the block's prefix
+  // should be replaced by a heading/list/quote/code block.
   const shortcut = applyMarkdownShortcut(hostRef.value)
   if (shortcut.applied) {
     controller.value.history.commit()
   } else {
     controller.value.history.commitThrottled()
   }
-  // Slash-menu detection: ищем `/...` в текущем блоке от начала строки.
+  // Slash-menu detection: we look for `/...` in the current block from the start of the line.
   updateSlashMenu()
   isEmpty.value = controller.value.isEmpty()
   emit('update:modelValue', controller.value.getHTML())
 }
 
 /**
- * Обновляет state slash-меню на основе текущего caret.
- * Открывает popup, если в текущем блоке текст начинается с `/` и каретка
- * стоит сразу после введённого `/query`. Закрывает иначе.
+ * Updates the slash menu's state from the current caret.
+ * It opens the popup when the text of the current block starts with `/` and the
+ * caret stands right after the typed `/query`. Otherwise it closes it.
  */
 function updateSlashMenu(): void {
   const sel = window.getSelection()
@@ -154,7 +155,7 @@ function updateSlashMenu(): void {
   const range = sel.getRangeAt(0)
   if (! range.collapsed) { closeSlashMenu(); return }
   if (! hostRef.value.contains(range.startContainer)) { closeSlashMenu(); return }
-  // Берём текущий блок (li/p/h1/…) и его текст до caret'а.
+  // We take the current block (li/p/h1/...) and its text up to the caret.
   const blockEl = findBlockAncestor(range.startContainer)
   if (! blockEl) { closeSlashMenu(); return }
 
@@ -163,12 +164,12 @@ function updateSlashMenu(): void {
   if (! match) { closeSlashMenu(); return }
 
   slashQuery.value = match[1]
-  // Запоминаем range, который стоит на конце `/query` — его удаляем при выборе.
+  // We remember the range at the end of `/query` — it is deleted on a selection.
   slashRange = document.createRange()
   slashRange.setStart(blockEl, 0)
   slashRange.setEnd(range.endContainer, range.endOffset)
 
-  // Позиционируем popup под caret'ом.
+  // The popup is positioned under the caret.
   const rect = caretRect(range)
   if (rect) {
     slashTop.value = rect.bottom + 4
@@ -184,7 +185,7 @@ function closeSlashMenu(): void {
   slashRange = null
 }
 
-/** Блок считается пустым, если textContent состоит из пробелов/ZWSP, и нет img/hr внутри. */
+/** A block counts as empty when its textContent is spaces or ZWSP and there is no img or hr inside. */
 function isEmptyBlock(el: HTMLElement): boolean {
   if (el.querySelector('img, hr')) return false
   const text = (el.textContent ?? '').replace(/[​\s]/g, '')
@@ -215,7 +216,7 @@ function textBeforeCaret(blockEl: HTMLElement, range: Range): string {
 function caretRect(range: Range): DOMRect | null {
   const rects = range.getClientRects()
   if (rects.length > 0) return rects[0]
-  // Collapsed range без rects — вставляем zero-width span.
+  // A collapsed range with no rects — we insert a zero-width span.
   const span = document.createElement('span')
   span.appendChild(document.createTextNode('​'))
   range.insertNode(span)
@@ -229,7 +230,7 @@ function onSlashSelect(cmd: { apply: (c: EditorController) => void }): void {
     closeSlashMenu()
     return
   }
-  // Удаляем `/query` текст перед применением команды.
+  // The `/query` text is deleted before the command is applied.
   slashRange.deleteContents()
   const sel = window.getSelection()
   if (sel) {
@@ -243,13 +244,14 @@ function onSlashSelect(cmd: { apply: (c: EditorController) => void }): void {
 }
 
 /**
- * Apply syntax-highlight ко всем <pre><code class="language-X">…</code></pre>
- * блокам после blur'а — на input делать нельзя, sets innerHTML ломает caret.
+ * Applies the syntax highlight to every <pre><code class="language-X">...</code></pre>
+ * block after a blur — it cannot be done on input, since setting innerHTML
+ * breaks the caret.
  */
 function onBlur(): void {
   if (!hostRef.value || !controller.value) return
-  // mousedown.prevent в slash-меню сохраняет селекцию, поэтому
-  // закрытие на blur для слэш-меню безопасно — выбор уже произошёл.
+  // mousedown.prevent in the slash menu preserves the selection, so closing on
+  // blur is safe for it — the choice has already been made.
   closeSlashMenu()
   const codes = hostRef.value.querySelectorAll<HTMLElement>('pre > code[class*="language-"]')
   let dirty = false
@@ -270,20 +272,21 @@ function onBlur(): void {
 }
 
 /**
- * Toggle между WYSIWYG и raw-HTML.
- * - В source: getHTML() → textarea, hostRef скрывается.
- * - Назад в WYSIWYG: setContent(textarea) с sanitize, history-snapshot.
+ * Toggling between WYSIWYG and raw HTML.
+ * - Into source: getHTML() → the textarea, hostRef is hidden.
+ * - Back into WYSIWYG: setContent(textarea) with a sanitize and a history
+ *   snapshot.
  */
 function toggleSource(): void {
   if (! controller.value) return
   if (! sourceMode.value) {
-    // В source: показываем beautified-HTML для удобного чтения/правки.
+    // In source mode we show beautified HTML, for comfortable reading and editing.
     sourceValue.value = beautifyHtml(controller.value.getHTML())
     sourceMode.value = true
     return
   }
-  // Назад в WYSIWYG: minify (схлопываем whitespace между блочными
-  // тегами) → setContent (sanitize) → emit. В БД попадает компактный HTML.
+  // Back into WYSIWYG: minify (the whitespace between block tags is collapsed)
+  // → setContent (sanitize) → emit. Compact HTML is what reaches the database.
   const compact = minifyHtml(sourceValue.value)
   controller.value.setContent(compact)
   controller.value.history.commit()
@@ -294,9 +297,9 @@ function toggleSource(): void {
 
 function onSourceInput(e: Event): void {
   sourceValue.value = (e.target as HTMLTextAreaElement).value
-  // В source-mode эмитим minified-вариант — host видит компактный HTML
-  // в v-model даже до toggle обратно. Visual в textarea остаётся
-  // beautified (контролируется sourceValue).
+  // In source mode we emit the minified variant — the host sees compact HTML in
+  // the v-model even before toggling back. What is visible in the textarea stays
+  // beautified (that is controlled by sourceValue).
   emit('update:modelValue', minifyHtml(sourceValue.value))
 }
 
@@ -339,12 +342,13 @@ function insertAtCaret(html: string): void {
 }
 
 /**
- * Собственный split-block для Enter. Делит текущий блок на caret'е,
- * хвост уезжает в новый <p>. Активные inline-marks (<strong>/<em>/…)
- * НЕ клонируются — новый блок начинается с чистого state'а.
+ * Our own block split for Enter. It divides the current block at the caret and
+ * the tail moves into a new <p>. The active inline marks (<strong>/<em>/...) are
+ * NOT cloned — the new block starts from a clean state.
  *
- * Возвращает true, если split произошёл (host.preventDefault уже вызван).
- * False — пусть Chrome обработает (внутри <li>, <pre>, или нет селекции).
+ * Returns true when a split happened (host.preventDefault has already been
+ * called). False means "let Chrome handle it" (inside a <li>, a <pre>, or with
+ * no selection).
  */
 function handleEnter(e: KeyboardEvent): boolean {
   if (! hostRef.value || ! controller.value) return false
@@ -357,8 +361,8 @@ function handleEnter(e: KeyboardEvent): boolean {
   if (! block) return false
   const tag = block.tagName.toLowerCase()
 
-  // Внутри пустого <li> на двойной Enter — выходим из списка:
-  // создаём <p> после <ul>/<ol>, удаляем пустой li.
+  // A double Enter inside an empty <li> leaves the list: we create a <p> after
+  // the <ul>/<ol> and delete the empty li.
   if (tag === 'li') {
     if (isEmptyBlock(block)) {
       const list = block.parentElement
@@ -378,24 +382,24 @@ function handleEnter(e: KeyboardEvent): boolean {
         return true
       }
     }
-    // Непустой li — пусть Chrome создаст новый <li> сам.
+    // For a non-empty li, let Chrome create the new <li> itself.
     return false
   }
 
-  // Внутри pre/td/th — пусть Chrome делит сам.
+  // Inside a pre/td/th, let Chrome do the splitting itself.
   if (tag === 'pre' || tag === 'td' || tag === 'th') return false
 
   e.preventDefault()
   if (! range.collapsed) range.deleteContents()
 
-  // Вырезаем всё после caret в block'е.
+  // Everything after the caret in the block is cut out.
   const tail = document.createRange()
   tail.setStart(range.endContainer, range.endOffset)
   tail.setEnd(block, block.childNodes.length)
   const tailFragment = tail.extractContents()
 
-  // Чистим pure-empty inline wrappers (например <strong></strong> от
-  // только что закрытой mark'и) — берём только текстовое содержимое.
+  // We clean out the purely empty inline wrappers (a <strong></strong> from a
+  // mark that has just been closed, say) — only the text content is taken.
   const newBlock = document.createElement('p')
   newBlock.appendChild(tailFragment)
   if (newBlock.childNodes.length === 0 || newBlock.textContent === '') {
@@ -403,7 +407,7 @@ function handleEnter(e: KeyboardEvent): boolean {
   }
   block.after(newBlock)
 
-  // Caret в начало newBlock.
+  // The caret goes to the start of newBlock.
   const r = document.createRange()
   r.setStart(newBlock, 0)
   r.collapse(true)
@@ -416,7 +420,7 @@ function handleEnter(e: KeyboardEvent): boolean {
 
 function onKeydown(e: KeyboardEvent): void {
   if (!controller.value) return
-  // Slash-menu navigation перехватываем до hotkeys.
+  // The slash-menu navigation is intercepted before the hotkeys.
   if (slashOpen.value && slashMenuRef.value) {
     if (e.key === 'ArrowDown') { e.preventDefault(); slashMenuRef.value.moveDown(); return }
     if (e.key === 'ArrowUp')   { e.preventDefault(); slashMenuRef.value.moveUp(); return }
@@ -429,9 +433,9 @@ function onKeydown(e: KeyboardEvent): void {
     }
     if (e.key === 'Escape')    { e.preventDefault(); closeSlashMenu(); return }
   }
-  // Свой Enter handler: split block в новый <p> без клонирования
-  // inline-marks. Без этого Chrome тянет активный <strong>/<em>/… в
-  // следующую строку и каждая новая строка получается в bold.
+  // Our own Enter handler: it splits the block into a new <p> without cloning
+  // the inline marks. Without this Chrome drags the active <strong>/<em>/... into
+  // the next line and every new line comes out bold.
   if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
     if (handleEnter(e)) return
   }

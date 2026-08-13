@@ -1,12 +1,14 @@
 <script setup lang="ts">
 /**
- * DskWysiwygSlashMenu — popup со списком команд при вводе `/`.
+ * DskWysiwygSlashMenu — the popup with the list of commands shown when `/` is
+ * typed.
  *
- * Принимает controller и абсолютную позицию caret'а. Позиционируется
- * через position:fixed (top/left). Стрелки/Enter/Esc навигация —
- * родительский DskWysiwyg перехватывает keydown и эмитит navigate-events.
+ * It takes the controller and the caret's absolute position. It is positioned
+ * through position:fixed (top/left). The arrow/Enter/Esc navigation is handled
+ * by the parent DskWysiwyg, which intercepts the keydown and emits navigate
+ * events.
  *
- * Список команд фильтруется по введённому query (текст после `/`).
+ * The list of commands is filtered by the typed query (the text after the `/`).
  */
 import { computed, ref, watch } from 'vue'
 import type { EditorController } from './engine'
@@ -15,18 +17,18 @@ export interface SlashCommand {
   key: string
   label: string
   hint?: string
-  /** Filter-tags для поиска (синонимы). */
+  /** The filter tags for the search (the synonyms). */
   aliases?: string[]
-  /** Действие — host получает controller, очищенный slash + query. */
+  /** The action — the host gets the controller, with the slash and the query already removed. */
   apply: (controller: EditorController) => void
 }
 
 export interface SlashMenuProps {
   open: boolean
   controller: EditorController | null
-  /** Текст после `/` для фильтра. */
+  /** The text after the `/`, used as the filter. */
   query: string
-  /** Позиция (caret). */
+  /** The position (of the caret). */
   top: number
   left: number
 }
@@ -34,7 +36,7 @@ export interface SlashMenuProps {
 const props = defineProps<SlashMenuProps>()
 
 const emit = defineEmits<{
-  /** Команда выбрана — host убирает `/` + query из document. */
+  /** A command was chosen — the host removes the `/` and the query from the document. */
   select: [command: SlashCommand]
   close: []
 }>()

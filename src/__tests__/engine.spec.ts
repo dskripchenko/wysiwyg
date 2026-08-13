@@ -10,9 +10,9 @@ function setupHost(html = ''): HTMLElement {
 }
 
 function selectAll(host: HTMLElement): void {
-  // Select inside first block child — это типичный сценарий когда юзер
-  // выделяет текст в параграфе. selectNodeContents(host) даёт startContainer=host,
-  // что не имеет block-ancestor'а внутри editor'а.
+  // A selection inside the first block child — the typical scenario of a user
+  // selecting text in a paragraph. selectNodeContents(host) gives
+  // startContainer=host, which has no block ancestor inside the editor.
   const target = host.firstElementChild ?? host
   const range = document.createRange()
   range.selectNodeContents(target)
@@ -95,7 +95,7 @@ describe('EditorController', () => {
   it('setBlockTag on <li> extracts to new block after list (B5b)', () => {
     const host = setupHost('<ul><li>first</li><li>second</li><li>third</li></ul>')
     const c = new EditorController(host)
-    // Caret в середине второго li.
+    // The caret in the middle of the second li.
     const secondLi = host.querySelectorAll('li')[1]
     const range = document.createRange()
     range.selectNodeContents(secondLi)
@@ -103,7 +103,7 @@ describe('EditorController', () => {
     sel.removeAllRanges()
     sel.addRange(range)
     c.chain().heading(2).run()
-    // Ожидаем: <ul><li>first</li></ul><h2>second</h2><ul><li>third</li></ul>
+    // Expected: <ul><li>first</li></ul><h2>second</h2><ul><li>third</li></ul>
     expect(host.innerHTML).toMatch(/<ul><li>first<\/li><\/ul><h2>second<\/h2><ul><li>third<\/li><\/ul>/)
   })
 })

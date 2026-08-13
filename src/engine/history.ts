@@ -1,18 +1,18 @@
 /**
- * History stack: snapshot'ы innerHTML editor'а с throttle'ом.
+ * The history stack: throttled snapshots of the editor's innerHTML.
  *
- * Browser-native undo для contenteditable нестабилен (особенно после
- * программных мутаций через DOM API), поэтому держим собственный stack.
+ * The browser-native undo for a contenteditable is unstable (especially after
+ * programmatic mutations through the DOM API), so we keep a stack of our own.
  *
- * Контракт:
+ * The contract:
  *   const h = new HistoryStack(host)
- *   h.commit()             // save snapshot после команды/ввода (auto throttled)
- *   h.undo() / h.redo()    // восстанавливают innerHTML
- *   h.canUndo / h.canRedo  // boolean флаги
+ *   h.commit()             // save a snapshot after a command or input (auto throttled)
+ *   h.undo() / h.redo()    // restore the innerHTML
+ *   h.canUndo / h.canRedo  // boolean flags
  *
- * Throttle: snapshot'ы реже чем каждые TYPING_THROTTLE мс при наборе текста
- * (чтобы не плодить snapshot на каждую keystroke). При commit вне throttle —
- * snapshot обязателен.
+ * The throttle: while text is being typed the snapshots are taken no more often
+ * than every TYPING_THROTTLE ms (so as not to breed a snapshot per keystroke).
+ * On a commit outside the throttle a snapshot is mandatory.
  */
 export class HistoryStack {
   private stack: string[] = []
@@ -29,11 +29,11 @@ export class HistoryStack {
     this.snapshot()
   }
 
-  /** Текущий snapshot (innerHTML). */
+  /** The current snapshot (the innerHTML). */
   snapshot(): void {
     const html = this.host.innerHTML
     if (this.cursor >= 0 && this.stack[this.cursor] === html) return
-    // Drop forward-history после current cursor (любая правка после undo).
+    // The forward history after the current cursor is dropped (any edit after an undo).
     this.stack = this.stack.slice(0, this.cursor + 1)
     this.stack.push(html)
     if (this.stack.length > this.maxSize) {
@@ -44,13 +44,13 @@ export class HistoryStack {
     this.lastCommitAt = Date.now()
   }
 
-  /** Throttled commit — для onInput при typing'е. */
+  /** A throttled commit — for onInput while typing. */
   commitThrottled(): void {
     if (Date.now() - this.lastCommitAt < this.throttleMs) return
     this.snapshot()
   }
 
-  /** Force commit — для команд после toolbar'а. */
+  /** A forced commit — for the commands coming from the toolbar. */
   commit(): void {
     this.snapshot()
   }

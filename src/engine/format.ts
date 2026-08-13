@@ -1,15 +1,15 @@
 /**
- * HTML beautify/minify — для source-view editor'а.
+ * The HTML beautify and minify used by the editor's source view.
  *
- * `beautifyHtml(html)` — добавляет переносы строк и indent между
- * блочными тегами (для удобного редактирования raw-HTML вручную).
- * Содержимое <pre> и <code class*="language-…"> сохраняется
- * как есть — внутри code/pre whitespace значимый.
+ * `beautifyHtml(html)` adds line breaks and indentation between the block tags
+ * (so that raw HTML is comfortable to edit by hand). The contents of <pre> and
+ * <code class*="language-..."> are preserved as they are — inside code and pre
+ * the whitespace is significant.
  *
- * `minifyHtml(html)` — обратное преобразование: удаляет whitespace
- * между блочными тегами, чтобы в БД попадал компактный HTML.
+ * `minifyHtml(html)` is the reverse: it removes the whitespace between the block
+ * tags so that compact HTML reaches the database.
  *
- * Реализация — DOMParser-based, без regex-monstrosity.
+ * The implementation is DOMParser-based, without any regex monstrosity.
  */
 
 const BLOCK_TAGS = new Set([
@@ -33,8 +33,8 @@ function isBlock(el: Element): boolean {
 }
 
 /**
- * Render одного DOM-узла рекурсивно с indent'ом. Внутри PRESERVE_TAGS
- * (pre/code) контент остаётся нетронутым.
+ * Renders one DOM node recursively, with indentation. Inside PRESERVE_TAGS
+ * (pre/code) the content is left untouched.
  */
 function render(node: Node, indent: number, insidePreserve: boolean): string {
   if (node.nodeType === Node.TEXT_NODE) {
@@ -60,7 +60,7 @@ function render(node: Node, indent: number, insidePreserve: boolean): string {
   openTag += '>'
   const closeTag = `</${tag}>`
 
-  // Inside preserve — нет переносов и indent'ов.
+  // Inside a preserved tag there are no line breaks and no indentation.
   if (preserve) {
     let inner = ''
     for (const child of Array.from(node.childNodes)) {
@@ -69,8 +69,8 @@ function render(node: Node, indent: number, insidePreserve: boolean): string {
     return block && ! insidePreserve ? `\n${pad}${openTag}${inner}${closeTag}` : `${openTag}${inner}${closeTag}`
   }
 
-  // Если у block-элемента детей нет блочных — рендерим в одну строку
-  // (так читабельнее: <li>текст</li>, <p>лорем ипсум</p>).
+  // When a block element has no block children we render it on one line (that
+  // reads better: <li>text</li>, <p>lorem ipsum</p>).
   const hasBlockChildren = Array.from(node.children).some(isBlock)
   if (block && ! hasBlockChildren) {
     let inner = ''
@@ -80,7 +80,7 @@ function render(node: Node, indent: number, insidePreserve: boolean): string {
     return `\n${pad}${openTag}${inner}${closeTag}`
   }
 
-  // Generic block: дети рендерятся с +1 indent, блок-теги на новых строках.
+  // A generic block: the children are rendered one indent deeper, the block tags on new lines.
   if (block) {
     let inner = ''
     for (const child of Array.from(node.childNodes)) {
@@ -89,7 +89,7 @@ function render(node: Node, indent: number, insidePreserve: boolean): string {
     return `\n${pad}${openTag}${inner}\n${pad}${closeTag}`
   }
 
-  // Inline-тег — без переносов.
+  // An inline tag — no line breaks.
   let inner = ''
   for (const child of Array.from(node.childNodes)) {
     inner += render(child, indent, false)
@@ -114,9 +114,9 @@ export function beautifyHtml(html: string): string {
 }
 
 /**
- * Удаляет whitespace-only text-nodes между блочными тегами. Внутри
- * pre/code/script/style whitespace оставляется. Возвращает
- * "компактный" HTML без переносов между `</p>` и `<p>`.
+ * Removes the whitespace-only text nodes between the block tags. Inside
+ * pre/code/script/style the whitespace is kept. Returns "compact" HTML with no
+ * line breaks between `</p>` and `<p>`.
  */
 export function minifyHtml(html: string): string {
   if (typeof DOMParser === 'undefined') return html
@@ -129,7 +129,7 @@ export function minifyHtml(html: string): string {
 
 function cleanWhitespace(el: Element): void {
   if (PRESERVE_TAGS.has(el.tagName.toLowerCase())) return
-  // Идём в обратном порядке, чтобы безопасно удалять text-nodes.
+  // We walk in reverse order so that the text nodes can be deleted safely.
   const children = Array.from(el.childNodes)
   for (const child of children) {
     if (child.nodeType === Node.TEXT_NODE) {
@@ -139,9 +139,9 @@ function cleanWhitespace(el: Element): void {
         const next = child.nextSibling
         const prevIsBlockOrNull = prev === null || (prev instanceof Element && isBlock(prev))
         const nextIsBlockOrNull = next === null || (next instanceof Element && isBlock(next))
-        // Удаляем whitespace-only text-node, если он граничит с
-        // блочным элементом (или находится в начале/конце контейнера,
-        // который сам блочный).
+        // A whitespace-only text node is deleted when it borders a block
+        // element (or sits at the start or the end of a container that is
+        // itself a block).
         if (prevIsBlockOrNull && nextIsBlockOrNull) {
           child.remove()
         } else if ((prevIsBlockOrNull && next === null) || (prev === null && nextIsBlockOrNull)) {

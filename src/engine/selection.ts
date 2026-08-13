@@ -1,19 +1,19 @@
 /**
- * Helpers поверх Selection API + Range API, специфичные для нашего
- * contenteditable-host'а.
+ * Helpers on top of the Selection and Range APIs, specific to our contenteditable
+ * host.
  *
- * Главные операции:
- *   - rangeWithinHost(host) — получает текущий Range, только если он
- *     находится внутри `host`. Иначе null (selection вне editor'а).
- *   - saveRange / restoreRange — сохранение/восстановление позиции
- *     каретки до и после команды (например, для модального диалога ссылки).
- *   - isFormatActive(tag) — проверяет, находится ли начало selection
- *     внутри тэга `tag` (для toolbar active-state).
- *   - splitParagraphAtCaret — на Enter создаёт <p> наследующий формат.
+ * The main operations:
+ *   - rangeWithinHost(host) — returns the current Range, but only when it lies
+ *     inside `host`. Otherwise null (the selection is outside the editor).
+ *   - saveRange / restoreRange — saving and restoring the caret's position
+ *     before and after a command (for a modal link dialog, for instance).
+ *   - isFormatActive(tag) — checks whether the start of the selection sits
+ *     inside the `tag` (for the toolbar's active state).
+ *   - splitParagraphAtCaret — on Enter it creates a <p> inheriting the format.
  *
- * Работаем без execCommand там, где можем — execCommand deprecated,
- * но для базовых форматов (bold/italic) браузер-нативная реализация
- * быстрее и корректнее. См. commands.ts.
+ * We work without execCommand wherever we can — it is deprecated, though for the
+ * basic formats (bold/italic) the browser-native implementation is faster and
+ * more correct. See commands.ts.
  */
 
 export function getActiveSelection(): Selection | null {
@@ -22,8 +22,9 @@ export function getActiveSelection(): Selection | null {
 }
 
 /**
- * Возвращает текущий Range, если selection целиком внутри `host` (или
- * collapsed, но anchor внутри host'а). null — если selection вне.
+ * Returns the current Range when the selection lies entirely inside `host` (or is
+ * collapsed with its anchor inside the host). null when the selection is
+ * outside.
  */
 export function rangeWithinHost(host: HTMLElement): Range | null {
   const sel = getActiveSelection()
@@ -36,9 +37,9 @@ export function rangeWithinHost(host: HTMLElement): Range | null {
 }
 
 /**
- * Сохраняем range через offset'ы относительно host'а — это переживает
- * перерендер innerHTML (что нативный Range не умеет, потому что узлы
- * пересоздаются).
+ * We save a range as offsets relative to the host — that survives a re-render of
+ * the innerHTML (which a native Range does not, because the nodes are
+ * recreated).
  */
 export interface SavedRange {
   start: number
@@ -69,8 +70,8 @@ export function restoreRange(host: HTMLElement, saved: SavedRange | null): void 
 }
 
 /**
- * Считает абсолютный текстовый offset от host'а до (node, offset).
- * Учитывает все text nodes по DFS-порядку.
+ * Computes the absolute text offset from the host to (node, offset). It counts
+ * every text node in DFS order.
  */
 function textOffsetTo(host: HTMLElement, target: Node, offset: number): number {
   let counter = 0
@@ -89,8 +90,8 @@ function textOffsetTo(host: HTMLElement, target: Node, offset: number): number {
   if (!found && target === host) {
     return counter
   }
-  // Если target — element, считаем offset как количество text-chars до
-  // ребёнка с индексом offset.
+  // When the target is an element, the offset is counted as the number of text
+  // characters before the child at index offset.
   if (!found && target instanceof Element) {
     const partial = countTextLength(target, offset)
     return partial
@@ -119,7 +120,7 @@ function positionAtTextOffset(host: HTMLElement, target: number): { node: Node; 
     counter += len
     node = walker.nextNode()
   }
-  // Конец host'а — last text node либо host сам.
+  // The end of the host is the last text node, or the host itself.
   const lastText = lastTextNode(host)
   if (lastText) return { node: lastText, offset: (lastText as Text).length }
   return { node: host, offset: host.childNodes.length }
@@ -137,9 +138,9 @@ function lastTextNode(host: HTMLElement): Text | null {
 }
 
 /**
- * Обходит ancestor'ов от текущей anchor-node до host'а и проверяет
- * наличие тега из набора `tags`. Используется toolbar'ом для
- * active-state кнопки Bold/Italic/etc.
+ * Walks the ancestors from the current anchor node up to the host and checks for
+ * a tag from the `tags` set. Used by the toolbar for the active state of the
+ * Bold/Italic/etc. buttons.
  */
 export function isFormatActive(host: HTMLElement, tags: string[]): boolean {
   const range = rangeWithinHost(host)
@@ -156,8 +157,8 @@ export function isFormatActive(host: HTMLElement, tags: string[]): boolean {
 }
 
 /**
- * Возвращает ближайший block-level элемент (p/h1-3/li/blockquote/pre)
- * вверх от current selection. Используется для toolbar:
+ * Returns the nearest block-level element (p/h1-3/li/blockquote/pre) upwards from
+ * the current selection. Used by the toolbar:
  * `currentBlockTag()` → 'h1' / 'p' / 'blockquote' / null.
  */
 export function currentBlockTag(host: HTMLElement): string | null {
@@ -177,7 +178,7 @@ export function currentBlockTag(host: HTMLElement): string | null {
 }
 
 /**
- * Получить ближайший <a> до host'а (для извлечения текущего href).
+ * Get the nearest <a> up to the host (to extract the current href).
  */
 export function findAncestorAnchor(host: HTMLElement): HTMLAnchorElement | null {
   const range = rangeWithinHost(host)

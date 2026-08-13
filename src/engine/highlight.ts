@@ -1,18 +1,18 @@
 /**
- * Compact syntax highlighter — простая token-based подсветка для типичных
- * языков (js/ts/php/html/css/json).
+ * A compact syntax highlighter — simple token-based highlighting for the typical
+ * languages (js/ts/php/html/css/json).
  *
- * НЕ полноценный AST-parser — regex-tokens с приоритетами. Для production
- * code-review лучше Shiki/Prism, но для inline-сниппетов в editor'е этого
- * достаточно. ~1.5 KB minified.
+ * It is NOT a full AST parser but regex tokens with priorities. For a production
+ * code review Shiki or Prism would be better, but for the inline snippets of an
+ * editor this is enough. About 1.5 KB minified.
  *
- * Использование (отдельная функция, чтобы host мог вызывать вручную):
+ * Usage (a separate function, so that a host can call it by hand):
  *
  *   import { highlight } from '@dskripchenko/wysiwyg'
  *   const html = highlight(code, 'js')   // → <span class="dsk-tok-keyword">…</span>
  *
- * В editor'е автоматически применяется когда `<pre>` имеет class
- * `language-js` (или `lang-js`). См. DskWysiwyg.vue.
+ * In the editor it is applied automatically when a `<pre>` has the class
+ * `language-js` (or `lang-js`). See DskWysiwyg.vue.
  */
 
 interface TokenRule {
@@ -65,15 +65,16 @@ const RULES: Record<string, TokenRule[]> = {
   ],
 }
 
-// ts uses same rules as js (typescript reuses keywords + adds type-only;
-// для compact-варианта delegirовать js достаточно).
+// ts uses the same rules as js (typescript reuses the keywords and adds
+// type-only ones; for a compact variant delegating to js is enough).
 RULES.ts = RULES.js
 RULES.tsx = RULES.js
 RULES.jsx = RULES.js
 
 /**
- * Подсветить code и вернуть HTML-string с <span class="dsk-tok-*">tokens</span>.
- * Если language не поддерживается — возвращаем escaped plain text.
+ * Highlights the code and returns an HTML string with
+ * <span class="dsk-tok-*">tokens</span>. When the language is not supported we
+ * return escaped plain text.
  */
 export function highlight(code: string, language?: string): string {
   const lang = (language ?? '').toLowerCase()

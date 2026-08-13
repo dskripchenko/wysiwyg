@@ -28,12 +28,13 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'vue',
-        // UidIcon из @dskripchenko/ui — peer-dep host'а, не bundle'им.
-        // Если host не использует ui-kit, импорт остаётся в run-time
-        // и компонент падает gracefully (см. fallback в DskWysiwygToolbar).
+        // UidIcon from @dskripchenko/ui is the host's peer dependency and is
+        // not bundled. When a host does not use the ui kit the import stays at
+        // run time and the component degrades gracefully (see the fallback in
+        // DskWysiwygToolbar).
         /^@dskripchenko\/ui($|\/)/,
-        // Lucide иконки используются через ui-kit; на случай direct-import
-        // тоже пометим external.
+        // The Lucide icons are used through the ui kit; in case of a direct
+        // import we mark them external as well.
         'lucide-vue-next',
       ],
       output: {

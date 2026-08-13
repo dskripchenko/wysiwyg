@@ -1,14 +1,15 @@
 /**
- * Команды editor'а — собственная реализация поверх Selection/Range API.
- * Не используем `document.execCommand` (deprecated, нестабильное
- * поведение между браузерами).
+ * The editor's commands — our own implementation on top of the Selection and
+ * Range APIs. We do not use `document.execCommand` (deprecated, with unstable
+ * behaviour across browsers).
  *
- * Каждая команда:
- *   1. Получает Range внутри host'а.
- *   2. Применяет DOM-мутацию (toggle-tag вокруг range / replace block-tag).
- *   3. Восстанавливает selection.
- *   4. Эмитит change через CustomEvent('input', {bubbles: true}) на host'е,
- *      чтобы Vue v-model подхватил.
+ * Every command:
+ *   1. gets a Range inside the host;
+ *   2. applies a DOM mutation (toggling a tag around the range, replacing a
+ *      block tag);
+ *   3. restores the selection;
+ *   4. emits a change through CustomEvent('input', {bubbles: true}) on the host,
+ *      so that Vue's v-model picks it up.
  */
 import {
   currentBlockTag,
@@ -25,8 +26,8 @@ function emitInput(host: HTMLElement): void {
 /* ------------------------------------------------------------------ */
 
 /**
- * Toggle inline-mark вокруг текущего range. Если selection пустой —
- * создаём пустой mark (cursor внутрь, дальнейший ввод будет marked).
+ * Toggles an inline mark around the current range. When the selection is empty
+ * we create an empty mark (the cursor goes inside and further typing is marked).
  */
 export function toggleInlineMark(host: HTMLElement, tag: string): void {
   const range = rangeWithinHost(host)
@@ -35,9 +36,9 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
   if (range.collapsed) {
     const inside = nearestAncestor(range.startContainer, host, tag)
     if (inside) {
-      // Caret уже внутри active-mark — "выходим" из неё. Ставим caret сразу
-      // после ancestor'а в zero-width text node, чтобы дальнейший ввод
-      // лёг рядом с mark, а не вложенно.
+      // The caret is already inside an active mark — we "leave" it. The caret
+      // goes right after the ancestor into a zero-width text node, so that
+      // further typing lands next to the mark rather than inside it.
       const exit = document.createTextNode('​')
       inside.after(exit)
       const sel = window.getSelection()
@@ -51,9 +52,9 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
       emitInput(host)
       return
     }
-    // Пустой mark на caret'е: вставляем <tag>&#8203;</tag> и ставим
-    // курсор внутри, чтобы ввод применился к нему. ZWSP-character
-    // даёт возможность браузеру ставить cursor внутри пустого инлайна.
+    // An empty mark at the caret: we insert <tag>&#8203;</tag> and put the
+    // cursor inside so that typing applies to it. The ZWSP character is what
+    // lets a browser place the cursor inside an empty inline.
     const el = document.createElement(tag)
     el.appendChild(document.createTextNode('​'))
     range.insertNode(el)
@@ -69,7 +70,7 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
     return
   }
 
-  // Если selection целиком внутри уже-окружающего <tag> — снимаем mark.
+  // When the selection lies entirely inside a surrounding <tag>, the mark is removed.
   const ancestor = nearestAncestor(range.startContainer, host, tag)
   if (ancestor && ancestor.contains(range.endContainer)) {
     unwrapElement(ancestor)
@@ -77,7 +78,7 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
     return
   }
 
-  // Иначе — оборачиваем содержимое selection в <tag>.
+  // Otherwise the selection's content is wrapped into a <tag>.
   const wrapper = document.createElement(tag)
   try {
     wrapper.appendChild(range.extractContents())
@@ -91,7 +92,7 @@ export function toggleInlineMark(host: HTMLElement, tag: string): void {
       sel.addRange(r)
     }
   } catch {
-    // Range спанит несколько block'ов — fallback: оборачиваем text-only.
+    // The range spans several blocks — the fallback wraps the text only.
     return
   }
   emitInput(host)
@@ -118,10 +119,10 @@ function unwrapElement(el: HTMLElement): void {
 /* ------------------------------------------------------------------ */
 
 /**
- * Устанавливает block-level тэг на ВСЕ блоки, пересекаемые selection.
- * Если selection collapsed — меняет только текущий блок.
+ * Sets a block-level tag on EVERY block the selection crosses. When the
+ * selection is collapsed it changes only the current block.
  *
- * Если targetTag === currentBlockTag → toggle на 'p' (paragraph).
+ * When targetTag === currentBlockTag it toggles to 'p' (a paragraph).
  */
 export function setBlockTag(host: HTMLElement, targetTag: string): void {
   const range = rangeWithinHost(host)
@@ -129,26 +130,27 @@ export function setBlockTag(host: HTMLElement, targetTag: string): void {
   const currentTag = currentBlockTag(host)
   const final = currentTag === targetTag ? 'p' : targetTag
 
-  // Собираем все block-ancestor'ы пересекаемые selection.
+  // We gather every block ancestor the selection crosses.
   const blocks = collectBlockAncestors(range, host)
   if (blocks.length === 0) {
-    // Selection в текстовом узле прямо в host'е — оборачиваем в <p>
-    // и применяем targetTag.
+    // The selection is in a text node directly inside the host — we wrap it
+    // into a <p> and apply targetTag.
     return
   }
   for (const block of blocks) {
     const blockTag = block.tagName.toLowerCase()
     if (blockTag === final) continue
-    // Если block — <li>, нельзя просто заменить tag (будет <ul><h2>…</h2></ul> —
-    // невалидный HTML). Извлекаем li из ul/ol: создаём <final> с содержимым
-    // li и кладём его сразу ПОСЛЕ родительского ul/ol. Если li последний
-    // в списке — список разрезается; если первый — список оставляется выше.
+    // When the block is an <li>, the tag cannot simply be replaced (that would
+    // give <ul><h2>...</h2></ul>, invalid HTML). We extract the li out of the
+    // ul/ol: a <final> with the li's content is created and placed right AFTER
+    // the parent ul/ol. When the li is the last one the list is cut in two;
+    // when it is the first one the list is left above.
     if (blockTag === 'li') {
       const list = block.parentElement
       if (list && (list.tagName.toLowerCase() === 'ul' || list.tagName.toLowerCase() === 'ol')) {
         const replacement = document.createElement(final)
         while (block.firstChild) replacement.appendChild(block.firstChild)
-        // Разрезаем список: всё после block уезжает в новый ul/ol.
+        // The list is cut: everything after the block moves into a new ul/ol.
         const tailItems: Element[] = []
         let next: Element | null = block.nextElementSibling
         while (next) {
@@ -163,7 +165,7 @@ export function setBlockTag(host: HTMLElement, targetTag: string): void {
           replacement.after(tailList)
         }
         if (list.children.length === 0) list.remove()
-        // Каретку — в начало replacement.
+        // The caret goes to the start of the replacement.
         const r = document.createRange()
         r.selectNodeContents(replacement)
         r.collapse(true)
@@ -188,7 +190,7 @@ function collectBlockAncestors(range: Range, host: HTMLElement): HTMLElement[] {
   const endBlock = blockAncestor(range.endContainer, host)
   if (startBlock) result.add(startBlock)
   if (endBlock) result.add(endBlock)
-  // Для cross-block selection — добавляем все блоки между.
+  // For a cross-block selection we add every block in between.
   if (startBlock && endBlock && startBlock !== endBlock) {
     const all = Array.from(host.querySelectorAll<HTMLElement>('p, h1, h2, h3, blockquote, pre, li'))
     let inside = false
@@ -220,17 +222,17 @@ function blockAncestor(start: Node, host: HTMLElement): HTMLElement | null {
 export function toggleList(host: HTMLElement, listTag: 'ul' | 'ol'): void {
   const range = rangeWithinHost(host)
   if (!range) return
-  // Проверяем, не находимся ли мы уже в нужном типе списка.
+  // We check whether we are already in a list of the required type.
   let n: Node | null = range.startContainer
   while (n && n !== host) {
     if (n instanceof HTMLElement) {
       const t = n.tagName.toLowerCase()
       if (t === 'ul' || t === 'ol') {
         if (t === listTag) {
-          // Снять список — заменить ul/ol на серию <p>.
+          // Removing the list means replacing the ul/ol with a series of <p>.
           unwrapList(n)
         } else {
-          // Поменять тип списка.
+          // Changing the list's type.
           const replacement = document.createElement(listTag)
           while (n.firstChild) replacement.appendChild(n.firstChild)
           n.replaceWith(replacement)
@@ -241,7 +243,7 @@ export function toggleList(host: HTMLElement, listTag: 'ul' | 'ol'): void {
     }
     n = n.parentNode
   }
-  // Не в списке — оборачиваем block в <ul/ol><li>
+  // Not in a list — the block is wrapped into a <ul/ol><li>
   const block = blockAncestor(range.startContainer, host)
   if (!block) return
   const list = document.createElement(listTag)

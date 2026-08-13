@@ -1,14 +1,14 @@
 /**
- * Table command — вставка/редактирование таблиц в editor'е.
+ * The table commands — inserting and editing tables in the editor.
  *
- * Поддерживает:
- *   - insertTable(host, rows, cols)         — создать таблицу N×M
- *   - addRowAfter / addRowBefore            — добавить строку
- *   - addColumnAfter / addColumnBefore      — добавить колонку
- *   - removeRow / removeColumn              — удалить
- *   - removeTable                           — удалить всю таблицу
+ * Supported:
+ *   - insertTable(host, rows, cols)         — create an N×M table
+ *   - addRowAfter / addRowBefore            — add a row
+ *   - addColumnAfter / addColumnBefore      — add a column
+ *   - removeRow / removeColumn              — remove one
+ *   - removeTable                           — remove the whole table
  *
- * Все команды диспатчат InputEvent для form-state синхронизации.
+ * Every command dispatches an InputEvent to keep the form state in sync.
  */
 import { rangeWithinHost } from './selection'
 
@@ -49,12 +49,12 @@ export function insertTable(host: HTMLElement, rows: number, cols: number): void
   range.deleteContents()
   range.insertNode(table)
 
-  // Empty <p> после таблицы для caret'а.
+  // An empty <p> after the table, for the caret.
   const p = document.createElement('p')
   p.appendChild(document.createElement('br'))
   table.after(p)
 
-  // Caret в первый <th>.
+  // The caret goes into the first <th>.
   const firstCell = table.querySelector('th')
   if (firstCell) {
     const r = document.createRange()
@@ -159,7 +159,7 @@ export function removeRow(host: HTMLElement): void {
   const row = findRow(host)
   const table = findTable(host)
   if (!row || !table) return
-  // Не удаляем header-row если она единственная.
+  // The header row is not removed when it is the only one.
   const isHeader = row.parentElement?.tagName.toLowerCase() === 'thead'
   if (isHeader && table.rows.length <= 1) return
   row.remove()
@@ -171,7 +171,7 @@ export function removeColumn(host: HTMLElement): void {
   const table = findTable(host)
   if (!cell || !table) return
   const colIdx = cell.cellIndex
-  // Если останется 0 колонок — удаляем всю таблицу.
+  // When no columns would be left, the whole table is removed.
   const totalCols = table.rows[0]?.cells.length ?? 0
   if (totalCols <= 1) {
     table.remove()
@@ -192,7 +192,7 @@ export function removeTable(host: HTMLElement): void {
   emitInput(host)
 }
 
-/** True если caret сейчас внутри <table> в данном host'е. */
+/** True when the caret currently sits inside a <table> of this host. */
 export function isInTable(host: HTMLElement): boolean {
   return findTable(host) !== null
 }

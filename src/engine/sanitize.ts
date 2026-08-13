@@ -1,15 +1,15 @@
 /**
- * sanitizeHtml — приводит произвольный HTML (например, из буфера обмена
- * Word/Google Docs) к нейтральному виду:
- *   - удаляет style-атрибуты, on*-handlers, classes, ids, data-*;
- *   - удаляет тэги-нежелательные (script/iframe/object/embed/style/meta/link);
- *   - tags whitelist: p/h1-h3/strong/em/u/s/code/pre/ul/ol/li/blockquote/
- *     a/img/br/hr/span (span — без атрибутов, оставлен для нейтрального
- *     группирования);
- *   - br-теги внутри p сохраняем (для shift+enter).
+ * sanitizeHtml brings arbitrary HTML (from the Word or Google Docs clipboard,
+ * for instance) into a neutral shape:
+ *   - it removes the style attributes, the on* handlers, the classes, the ids
+ *     and the data-*;
+ *   - it removes the unwanted tags (script/iframe/object/embed/style/meta/link);
+ *   - the tag whitelist is p/h1-h3/strong/em/u/s/code/pre/ul/ol/li/blockquote/
+ *     a/img/br/hr/span (span without attributes, kept for neutral grouping);
+ *   - the br tags inside a p are preserved (for shift+enter).
  *
- * Для безопасности: вся работа через DOMParser (не innerHTML на live-DOM),
- * чтобы избежать выполнения <img onerror=...>.
+ * For safety all of the work goes through DOMParser (not through innerHTML on a
+ * live DOM), so that an <img onerror=...> is never executed.
  */
 
 const ALLOWED_TAGS = new Set([
@@ -35,13 +35,13 @@ const ALLOWED_TAGS = new Set([
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
   a: new Set(['href', 'target', 'rel', 'title']),
   img: new Set(['src', 'alt', 'title', 'width', 'height']),
-  // language-* class на <code> нужен для syntax-highlight'а; dsk-tok-* на
-  // <span> — для рендера токенов.
+  // The language-* class on a <code> is needed for the syntax highlight;
+  // dsk-tok-* on a <span> is needed to render the tokens.
   code: new Set(['class']),
   span: new Set(['class']),
 }
 
-/** Whitelist префиксов классов которые сохраняются на code/span. */
+/** The whitelist of class prefixes preserved on code and span. */
 const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-']
 
 export function sanitizeHtml(input: string): string {
@@ -54,7 +54,7 @@ export function sanitizeHtml(input: string): string {
 }
 
 function cleanNode(node: Element): void {
-  // Снимаем атрибуты, не входящие в whitelist для конкретного тега.
+  // The attributes outside the whitelist of the particular tag are removed.
   const tag = node.tagName.toLowerCase()
   const allowed = ALLOWED_ATTRS[tag] ?? new Set<string>()
   for (const attr of Array.from(node.attributes)) {
@@ -62,7 +62,7 @@ function cleanNode(node: Element): void {
       node.removeAttribute(attr.name)
       continue
     }
-    // class-атрибут: фильтруем values, оставляя только whitelisted-prefixes.
+    // The class attribute: the values are filtered down to the whitelisted prefixes.
     if (attr.name === 'class') {
       const kept = attr.value
         .split(/\s+/)
@@ -72,21 +72,21 @@ function cleanNode(node: Element): void {
       else node.setAttribute('class', kept)
       continue
     }
-    // Защита от javascript: в href/src.
+    // A guard against javascript: in href and src.
     if ((attr.name === 'href' || attr.name === 'src') && /^\s*javascript:/i.test(attr.value)) {
       node.removeAttribute(attr.name)
     }
   }
-  // Для <a> добавляем безопасные defaults (rel/target).
+  // For an <a> we add the safe defaults (rel/target).
   if (tag === 'a') {
     if (! node.getAttribute('rel')) node.setAttribute('rel', 'noopener noreferrer')
     if (! node.getAttribute('target')) node.setAttribute('target', '_blank')
   }
-  // Рекурсивно проходим children, заменяя disallowed на их innerHTML.
+  // We walk the children recursively, replacing the disallowed ones with their innerHTML.
   for (const child of Array.from(node.children)) {
     cleanNode(child)
     if (! ALLOWED_TAGS.has(child.tagName.toLowerCase())) {
-      // Заменяем тэг на его текстовый/блочный контент.
+      // The tag is replaced by its text or block content.
       const replacement = doc().createElement('span')
       replacement.innerHTML = child.innerHTML
       child.replaceWith(...Array.from(replacement.childNodes))

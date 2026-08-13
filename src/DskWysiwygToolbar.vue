@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /**
- * DskWysiwygToolbar — кнопочная панель команд editor'а.
+ * DskWysiwygToolbar — the button panel of the editor's commands.
  *
- * Принимает `controller` (EditorController), эмитит команды через
- * `controller.chain().*().run()`. Список items настраивается через
- * prop `items`.
+ * It takes a `controller` (an EditorController) and emits the commands through
+ * `controller.chain().*().run()`. The list of items is configured through the
+ * `items` prop.
  *
- * Для иконок используем lucide-vue-next через @dskripchenko/ui (UidIcon).
- * Если ui-kit не установлен — fallback на текстовые символы.
+ * For the icons we use lucide-vue-next through @dskripchenko/ui (UidIcon). When
+ * the ui kit is not installed there is a fallback to text symbols.
  */
 import { computed, ref, watch, defineAsyncComponent } from 'vue'
 import type { EditorController } from './engine'
@@ -29,10 +29,10 @@ interface Props {
   controller: EditorController | null
   items?: ToolbarItem[]
   disabled?: boolean
-  /** Versioning trigger — внешний counter для force re-evaluation
-   *  is-active state'а. Передаётся из DskWysiwyg при selectionchange. */
+  /** A versioning trigger — an external counter that forces the is-active
+   *  state to be re-evaluated. Passed from DskWysiwyg on a selectionchange. */
   selectionVersion?: number
-  /** Active-state для 'source' кнопки (host управляет). */
+  /** The active state of the 'source' button (the host controls it). */
   sourceActive?: boolean
 }
 
@@ -58,8 +58,9 @@ const emit = defineEmits<{
 }>()
 
 /**
- * UidIcon — async-load из @dskripchenko/ui. Если пакет не установлен,
- * fallback компонент рендерит null (тогда отображаем текстовые подписи).
+ * UidIcon is loaded asynchronously from @dskripchenko/ui. When the package is
+ * not installed the fallback component renders null (and then we show text
+ * labels).
  */
 const UidIcon = defineAsyncComponent({
   loader: async () => {
@@ -73,7 +74,7 @@ const UidIcon = defineAsyncComponent({
   errorComponent: { setup: () => () => null } as never,
 })
 
-// Lucide-иконки тоже async (peer-dep).
+// The Lucide icons are async as well (a peer dependency).
 const icons = ref<Record<string, unknown>>({})
 async function loadIcons(): Promise<void> {
   try {
@@ -108,7 +109,7 @@ void loadIcons()
 
 const isReady = computed<boolean>(() => Boolean(props.controller))
 
-// Track-флаг для force-recompute is-active при selection change.
+// A tracking flag that forces is-active to be recomputed on a selection change.
 void watch(
   () => props.selectionVersion,
   () => undefined,
@@ -117,8 +118,8 @@ void watch(
 function isActive(name: string, attrs?: Record<string, unknown>): boolean {
   void props.selectionVersion // dependency
   if (!props.controller) return false
-  // EditorController.isActive имеет typed-overloads; в template нам нужен
-  // generic wrapper — кастуем через unknown.
+  // EditorController.isActive has typed overloads; in the template we need a
+  // generic wrapper, so we cast through unknown.
   return (props.controller.isActive as unknown as (n: string, a?: Record<string, unknown>) => boolean)(name, attrs)
 }
 
@@ -129,7 +130,7 @@ function exec(action: () => void): void {
 
 function onLink(): void {
   if (!props.controller) return
-  // Пытаемся узнать текущий URL.
+  // We try to find out the current URL.
   const range = window.getSelection()?.getRangeAt(0)
   let currentUrl: string | null = null
   if (range) {
@@ -140,7 +141,7 @@ function onLink(): void {
     }
   }
   emit('link-request', currentUrl)
-  // Default fallback — prompt; host обычно перехватывает emit и открывает modal.
+  // The default fallback is a prompt; a host usually intercepts the emit and opens a modal.
   const url = window.prompt('URL ссылки', currentUrl ?? 'https://')
   if (url === null) return
   props.controller.chain().focus().setLink(url === '' ? null : url).run()

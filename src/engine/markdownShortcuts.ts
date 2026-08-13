@@ -1,23 +1,23 @@
 /**
- * Markdown-shortcuts: при наборе типичных markdown-префиксов в начале
- * блока автоматически конвертируем в соответствующий tag.
+ * Markdown shortcuts: when a typical markdown prefix is typed at the start of a
+ * block we convert it into the corresponding tag automatically.
  *
  *   `# ` (Space)        → h1
  *   `## ` (Space)       → h2
  *   `### ` (Space)      → h3
- *   `- ` или `* `       → ul + li
- *   `1. ` (любая цифра) → ol + li
+ *   `- ` or `* `         → ul + li
+ *   `1. ` (any digit)     → ol + li
  *   `> ` (Space)        → blockquote
  *   ` ``` ` (3 backtick) → pre/code
  *
- * Вызывается из DskWysiwyg.vue в обработчике input-события (после того
- * как браузер вставил character). Работает только когда caret в начале
- * текстового узла, и всё содержимое до caret — markdown-prefix.
+ * Called from DskWysiwyg.vue in the input event handler (after the browser has
+ * inserted the character). It works only when the caret is at the start of a
+ * text node and everything before the caret is the markdown prefix.
  */
 import { rangeWithinHost } from './selection'
 
 interface ShortcutResult {
-  /** Применился ли shortcut. true → нужно вызвать history.commit. */
+  /** Whether the shortcut was applied. true means history.commit must be called. */
   applied: boolean
 }
 
@@ -31,22 +31,23 @@ export function applyMarkdownShortcut(host: HTMLElement): ShortcutResult {
   const text = (node as Text).data
   const before = text.slice(0, range.startOffset)
 
-  // Находим block-ancestor — заменяем именно его (а не текст узел в нём).
+  // We find the block ancestor — it is what gets replaced (not the text node inside it).
   const block = blockAncestor(node, host)
   if (!block) return { applied: false }
 
-  // Shortcut должен быть в самом начале блока (только до caret = весь текст
-  // первого text-node'а у block'а; либо block.firstChild === node и
-  // before === text). Иначе ввод `# ` в середине абзаца не должен срабатывать.
+  // The shortcut must sit at the very start of a block (everything before the
+  // caret is the whole text of the block's first text node, or
+  // block.firstChild === node and before === text). Otherwise typing `# ` in the
+  // middle of a paragraph must not fire.
   if (block.firstChild !== node) return { applied: false }
   if (before !== text) {
-    // Caret не в конце text-content'а — если after-text непустой,
-    // shortcut применять только если after === '' || after === '​'.
+    // The caret is not at the end of the text content — when the after-text is
+    // non-empty the shortcut applies only if after === '' || after === '​'.
     const after = text.slice(range.startOffset)
     if (after.replace(/[​\s]/g, '') !== '') return { applied: false }
   }
 
-  // Ищем match.
+  // We look for a match.
   const headingMatch = before.match(/^(#{1,3}) $/)
   if (headingMatch) {
     const level = headingMatch[1].length
@@ -78,9 +79,9 @@ export function applyMarkdownShortcut(host: HTMLElement): ShortcutResult {
 }
 
 function blockAncestor(start: Node, host: HTMLElement): HTMLElement | null {
-  // div включён, потому что Chrome contenteditable по умолчанию делит
-  // блоки через div'ы (даже если мы храним <p>). Markdown-shortcut не
-  // должен зависеть от того, как браузер обозначил current-block.
+  // div is included because a Chrome contenteditable splits blocks with divs by
+  // default (even though we store <p>). A markdown shortcut must not depend on
+  // how the browser marked the current block.
   const blockTags = ['p', 'div', 'h1', 'h2', 'h3', 'blockquote', 'pre', 'li']
   let n: Node | null = start
   while (n && n !== host) {
@@ -94,9 +95,9 @@ function blockAncestor(start: Node, host: HTMLElement): HTMLElement | null {
 
 function replaceBlockTag(block: HTMLElement, newTag: string, host: HTMLElement): void {
   const replacement = document.createElement(newTag)
-  // Убираем prefix-text — он же был markdown-маркером.
-  // Затем переносим оставшееся содержимое (если есть) в новый tag.
-  // Здесь оставшееся — пусто (обычно), потому что мы matched весь before.
+  // The prefix text is removed — it was the markdown marker. Then whatever
+  // content is left (if any) is moved into the new tag. Here what is left is
+  // usually empty, because we matched the whole of before.
   replacement.appendChild(document.createElement('br'))
   block.replaceWith(replacement)
   setCaretToStart(replacement)

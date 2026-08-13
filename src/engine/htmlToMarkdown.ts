@@ -1,23 +1,23 @@
 /**
- * htmlToMarkdown — конвертирует HTML editor'а в Markdown.
+ * htmlToMarkdown converts the editor's HTML into Markdown.
  *
- * Поддержка:
- *   - p             → текст + двойной перенос
+ * What is supported:
+ *   - p             → the text plus a double line break
  *   - h1/h2/h3      → `# ` / `## ` / `### `
  *   - strong/b      → `**text**`
  *   - em/i          → `*text*`
- *   - u             → `<u>text</u>` (не входит в стандарт MD; выводим HTML)
+ *   - u             → `<u>text</u>` (not part of standard MD, so HTML is emitted)
  *   - s/strike/del  → `~~text~~`
  *   - code (inline) → `` `text` ``
  *   - pre/code      → fenced ```
- *   - ul/ol/li      → `- ` / `1. ` (без вложенности — упрощение)
+ *   - ul/ol/li      → `- ` / `1. ` (without nesting — a simplification)
  *   - blockquote    → `> ...`
  *   - a             → `[text](href)`
  *   - img           → `![alt](src)`
  *   - hr            → `---`
  *   - br            → `\n`
  *
- * Не поддерживает: вложенные списки глубже 1 уровня, table, mark/sup/sub.
+ * Not supported: lists nested deeper than one level, tables, mark/sup/sub.
  */
 export function htmlToMarkdown(html: string): string {
   if (typeof DOMParser === 'undefined') return html
@@ -65,7 +65,7 @@ function renderNode(node: Node): string {
       return `~~${inner}~~`
 
     case 'code': {
-      // <code> внутри <pre> — обрабатывает родительский pre.
+      // A <code> inside a <pre> is handled by the parent pre.
       const parentTag = node.parentElement?.tagName.toLowerCase()
       if (parentTag === 'pre') return inner
       return `\`${inner}\``
@@ -82,7 +82,7 @@ function renderNode(node: Node): string {
     case 'ol':
       return walkList(node, '1. ') + '\n'
     case 'li':
-      // Обрабатывается через walkList; самостоятельно — fallback.
+      // Handled through walkList; on its own this is the fallback.
       return inner
 
     case 'blockquote':
@@ -129,7 +129,7 @@ function walkList(list: HTMLElement, marker: string): string {
 }
 
 function escapeText(text: string): string {
-  // Экранируем символы Markdown в plain-тексте, чтобы при обратной
-  // конвертации не было ложных срабатываний.
+  // The Markdown characters are escaped in plain text so that a reverse
+  // conversion produces no false positives.
   return text.replace(/([\\`*_{}[\]()#+\-.!])/g, '\\$1')
 }

@@ -15,7 +15,7 @@ describe('beautifyHtml', () => {
 
   it('сохраняет содержимое <pre> как есть', () => {
     const out = beautifyHtml('<pre><code>line1\n  line2</code></pre>')
-    // Внутри pre/code — никакого переформатирования.
+    // Inside a pre/code there is no reformatting at all.
     expect(out).toContain('line1\n  line2')
   })
 

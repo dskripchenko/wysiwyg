@@ -1,12 +1,13 @@
 /**
- * Editor engine — точка входа для команд и состояния editor'а.
+ * The editor engine — the entry point for the editor's commands and state.
  *
- * Вне Vue-компонента: класс `EditorController`, который держит ссылку
- * на host (contenteditable div), history-stack и удобные API'и для
- * toolbar'а: `chain().bold().run()`, `isActive('bold')`, и т.д.
+ * Outside the Vue component: the `EditorController` class, which holds a
+ * reference to the host (the contenteditable div), the history stack and
+ * convenient APIs for the toolbar: `chain().bold().run()`, `isActive('bold')`
+ * and so on.
  *
- * Стиль API намеренно похож на Tiptap (chain/run/isActive) — но без
- * peer-dep на Tiptap.
+ * The API style deliberately resembles Tiptap's (chain/run/isActive) — but
+ * without a peer dependency on Tiptap.
  */
 import {
   insertHorizontalRule,
@@ -39,10 +40,10 @@ import {
 export { sanitizeHtml } from './sanitize'
 
 /**
- * Удаляет zero-width spaces (U+200B) из HTML — в DOM они нужны как
- * caret-target для пустых inline-mark'ов и exit-cursor'ов, но в
- * финальном HTML это мусор: невидимы пользователю, ломают сравнения,
- * раздувают БД. Применяется только при экспорте через getHTML().
+ * Removes the zero-width spaces (U+200B) from the HTML — in the DOM they are
+ * needed as a caret target for empty inline marks and exit cursors, but in the
+ * final HTML they are rubbish: invisible to the user, they break comparisons and
+ * inflate the database. Applied only on export through getHTML().
  */
 function vacuumZwsp(html: string): string {
   return html.replace(/​/g, '')
@@ -74,7 +75,7 @@ export interface ChainAPI {
   undo(): ChainAPI
   redo(): ChainAPI
   focus(): ChainAPI
-  /** Завершает chain — фиксирует history snapshot. */
+  /** Finishes the chain — it records a history snapshot. */
   run(): void
 }
 
@@ -166,12 +167,12 @@ export class EditorController {
     return api
   }
 
-  /** Установить контент (sanitized) + reset history. */
+  /** Set the content (sanitized) and reset the history. */
   setContent(html: string): void {
     this.host.innerHTML = sanitizeHtml(html)
-    // Если editor пустой — гарантируем хотя бы один блочный <p><br>,
-    // чтобы пользовательский ввод сразу попадал в block-context.
-    // Без этого markdown-shortcuts/handleEnter не могут найти blockAncestor.
+    // When the editor is empty we guarantee at least one block <p><br>, so that
+    // the user's typing lands in a block context right away. Without it the
+    // markdown shortcuts and handleEnter cannot find a blockAncestor.
     if (this.host.firstElementChild === null && (this.host.textContent ?? '') === '') {
       const p = document.createElement('p')
       p.appendChild(document.createElement('br'))
@@ -180,9 +181,9 @@ export class EditorController {
     this.history.reset(this.host.innerHTML)
   }
 
-  /** Освободить ресурсы (history); host вызывает на unmount. */
+  /** Release the resources (the history); a host calls this on unmount. */
   destroy(): void {
-    /* ничего global'но не аттачили — просто заглушка для будущих
+    /* nothing was attached globally — just a placeholder for future
        async-cleanup'ов */
   }
 }
