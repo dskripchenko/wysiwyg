@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.9 — 2026-08-17
+
+### Fixed
+- **A clean install was impossible: `@vitejs/plugin-vue` 5.x refused vite 7.**
+  The first CI run the package ever had said so on `npm ci` — the lockfile in
+  the repository held a combination npm would no longer resolve. The plugin is
+  now on 6.x.
+
+### Added
+- CI: typecheck, tests and build on Node 20 and 22. The package had none, which
+  is how a broken install stayed invisible.
+
+### Changed
+- The code's comments are in English; the documentation follows the shared
+  layout (README and CHANGELOG at the root, translations under `docs/`). No
+  behaviour of the widget changed.
+
 ## 0.2.8 — 2026-07-28
 
 ### Changed
