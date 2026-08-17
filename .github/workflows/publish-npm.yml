@@ -86,6 +86,12 @@ jobs:
 
       - name: Publish
         if: steps.decide.outputs.publish == 'yes'
+        # NPM_TOKEN обязан быть токеном ТИПА AUTOMATION (npm → Access Tokens →
+        # Classic → Automation, либо granular с правом записи). Обычный
+        # publish-токен при включённой 2FA просит одноразовый код, и прогон
+        # падает с `npm error code EOTP` уже ПОСЛЕ упаковки — так и вышло с
+        # первым токеном 17.08.2026. Automation-токен 2FA не спрашивает: он для
+        # того и заведён.
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
