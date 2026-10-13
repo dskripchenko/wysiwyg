@@ -34,6 +34,14 @@ describe('EditorController', () => {
     expect(c.getHTML()).not.toContain('script')
   })
 
+  it('setContent keeps the host markers the controller was given', () => {
+    const host = setupHost()
+    const c = new EditorController(host, { allowedAttributes: { img: ['data-signature-stamp'] } })
+    c.setContent('<p><img src="x.png" data-signature-stamp="client"></p>')
+    expect(c.getHTML()).toContain('data-signature-stamp="client"')
+    expect(new EditorController(setupHost()).sanitizeOptions).toEqual({})
+  })
+
   it('isEmpty true for empty host', () => {
     const host = setupHost()
     const c = new EditorController(host)

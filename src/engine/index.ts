@@ -24,7 +24,7 @@ import {
   isFormatActive,
   rangeWithinHost,
 } from './selection'
-import { sanitizeHtml } from './sanitize'
+import { sanitizeHtml, type SanitizeOptions } from './sanitize'
 import {
   addColumnAfter,
   addColumnBefore,
@@ -38,6 +38,7 @@ import {
 } from './table'
 
 export { sanitizeHtml } from './sanitize'
+export type { AllowedAttributes, SanitizeOptions } from './sanitize'
 
 /**
  * Removes the zero-width spaces (U+200B) from the HTML — in the DOM they are
@@ -83,9 +84,13 @@ export class EditorController {
   readonly host: HTMLElement
   readonly history: HistoryStack
 
-  constructor(host: HTMLElement) {
+  /** What setContent keeps beyond the built-in whitelist (see sanitizeHtml). */
+  sanitizeOptions: SanitizeOptions
+
+  constructor(host: HTMLElement, sanitizeOptions: SanitizeOptions = {}) {
     this.host = host
     this.history = new HistoryStack(host)
+    this.sanitizeOptions = sanitizeOptions
   }
 
   /* ------------------------- Queries ------------------------- */
@@ -169,7 +174,7 @@ export class EditorController {
 
   /** Set the content (sanitized) and reset the history. */
   setContent(html: string): void {
-    this.host.innerHTML = sanitizeHtml(html)
+    this.host.innerHTML = sanitizeHtml(html, this.sanitizeOptions)
     // When the editor is empty we guarantee at least one block <p><br>, so that
     // the user's typing lands in a block context right away. Without it the
     // markdown shortcuts and handleEnter cannot find a blockAncestor.

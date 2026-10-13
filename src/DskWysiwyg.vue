@@ -16,7 +16,7 @@
  *     calls `controller.chain().focus().setImage(url).run()`.
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { EditorController, sanitizeHtml } from './engine'
+import { EditorController, sanitizeHtml, type AllowedAttributes } from './engine'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
@@ -33,6 +33,12 @@ interface Props {
   maxHeight?: string
   /** Whether the user may change the widget's height (the resize handle below). */
   resizable?: boolean
+  /**
+   * Attributes of the host's own markers, kept per tag on top of the built-in
+   * whitelist — e.g. `{ img: ['data-signature'] }`. Applies to the content
+   * and to pasted HTML.
+   */
+  allowedAttributes?: AllowedAttributes
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -44,6 +50,7 @@ const props = withDefaults(defineProps<Props>(), {
   minHeight: '200px',
   maxHeight: undefined,
   resizable: true,
+  allowedAttributes: () => ({}),
 })
 
 const emit = defineEmits<{
@@ -93,7 +100,7 @@ onMounted(() => {
   // way to influence the default Enter behaviour. Our own handleEnter below
   // intercepts most cases anyway.
   try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch { /* no-op */ }
-  const c = new EditorController(hostRef.value)
+  const c = new EditorController(hostRef.value, { allowedAttributes: props.allowedAttributes })
   c.setContent(props.modelValue)
   controller.value = c
   isEmpty.value = c.isEmpty()
@@ -308,7 +315,7 @@ function onPaste(e: ClipboardEvent): void {
   const html = e.clipboardData.getData('text/html')
   const text = e.clipboardData.getData('text/plain')
   e.preventDefault()
-  const cleaned = html ? sanitizeHtml(html) : escapePlainText(text)
+  const cleaned = html ? sanitizeHtml(html, { allowedAttributes: props.allowedAttributes }) : escapePlainText(text)
   insertAtCaret(cleaned)
   controller.value.history.commit()
   isEmpty.value = controller.value.isEmpty()
