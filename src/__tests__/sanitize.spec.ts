@@ -39,4 +39,23 @@ describe('sanitizeHtml', () => {
     expect(out).not.toContain('font')
     expect(out).toContain('x')
   })
+
+  it('strips data-* by default', () => {
+    const out = sanitizeHtml('<p><img src="x.png" data-signature="ceo"></p>')
+    expect(out).not.toContain('data-signature')
+  })
+
+  it('keeps the host markers listed in allowedAttributes, for that tag only', () => {
+    const html = '<p data-signature="p"><img src="x.png" data-signature="ceo" data-signature-stamp="" data-other="1"></p>'
+    const out = sanitizeHtml(html, { allowedAttributes: { img: ['data-signature', 'data-signature-stamp'] } })
+    expect(out).toContain('data-signature="ceo"')
+    expect(out).toContain('data-signature-stamp=""')
+    expect(out).not.toContain('data-other')
+    expect(out).not.toContain('<p data-signature')
+  })
+
+  it('never keeps on* handlers, even when listed', () => {
+    const out = sanitizeHtml('<img src="x.png" onerror="alert(1)">', { allowedAttributes: { img: ['onerror'] } })
+    expect(out).not.toContain('onerror')
+  })
 })

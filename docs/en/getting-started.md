@@ -50,6 +50,7 @@ DOMParser whitelist before emitting.
 | `minHeight` | `string` | `'200px'` | CSS length on the root. |
 | `maxHeight` | `string` | `undefined` | CSS length on the root. |
 | `resizable` | `boolean` | `true` | User-resizable vertically. |
+| `allowedAttributes` | `Record<string, string[]>` | `{}` | Attributes kept per tag beyond the built-in whitelist — your own markers, e.g. `{ img: ['data-signature'] }`. `on*` handlers are never kept. |
 
 ## Events
 

@@ -10,7 +10,19 @@
  *
  * For safety all of the work goes through DOMParser (not through innerHTML on a
  * live DOM), so that an <img onerror=...> is never executed.
+ *
+ * A host whose content carries markers of its own — `<img data-signature="…">`
+ * that it swaps for a picture and back, say — lists them in
+ * `allowedAttributes`; without it they would be stripped on every setContent.
+ * The on* handlers are never allowed, whatever the list says.
  */
+
+/** Extra attributes kept per tag, on top of the built-in whitelist. */
+export type AllowedAttributes = Record<string, readonly string[]>
+
+export interface SanitizeOptions {
+  allowedAttributes?: AllowedAttributes
+}
 
 const ALLOWED_TAGS = new Set([
   'p',
@@ -44,21 +56,21 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
 /** The whitelist of class prefixes preserved on code and span. */
 const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-']
 
-export function sanitizeHtml(input: string): string {
+export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {
   if (typeof DOMParser === 'undefined') return input
   const doc = new DOMParser().parseFromString(`<div>${input}</div>`, 'text/html')
   const root = doc.body.firstElementChild
   if (!root) return ''
-  cleanNode(root)
+  cleanNode(root, options.allowedAttributes ?? {})
   return root.innerHTML
 }
 
-function cleanNode(node: Element): void {
+function cleanNode(node: Element, extra: AllowedAttributes): void {
   // The attributes outside the whitelist of the particular tag are removed.
   const tag = node.tagName.toLowerCase()
-  const allowed = ALLOWED_ATTRS[tag] ?? new Set<string>()
+  const allowed = new Set<string>([...(ALLOWED_ATTRS[tag] ?? []), ...(extra[tag] ?? [])])
   for (const attr of Array.from(node.attributes)) {
-    if (! allowed.has(attr.name)) {
+    if (! allowed.has(attr.name) || /^on/i.test(attr.name)) {
       node.removeAttribute(attr.name)
       continue
     }
@@ -84,7 +96,7 @@ function cleanNode(node: Element): void {
   }
   // We walk the children recursively, replacing the disallowed ones with their innerHTML.
   for (const child of Array.from(node.children)) {
-    cleanNode(child)
+    cleanNode(child, extra)
     if (! ALLOWED_TAGS.has(child.tagName.toLowerCase())) {
       // The tag is replaced by its text or block content.
       const replacement = doc().createElement('span')

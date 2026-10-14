@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.10 — 2026-10-13
+
+### Added
+- **`allowedAttributes`** — a prop of `DskWysiwyg`, an option of
+  `EditorController` and of `sanitizeHtml`: attributes kept per tag on top of
+  the built-in whitelist, e.g. `{ img: ['data-signature'] }`. It applies to the
+  content and to pasted HTML; `on*` handlers are never kept.
+
+### Fixed
+- **A host's own markers were lost on every content update.** The sanitizer
+  strips every `data-*`, and `setContent` runs it each time the `modelValue`
+  changes — so an `<img data-signature="…">` the host had placed (and swaps for
+  a picture and back) came back from the widget as a plain image. A host now
+  lists such attributes in `allowedAttributes`. Without it nothing changes.
+
 ## 0.2.9 — 2026-08-17
 
 ### Fixed
