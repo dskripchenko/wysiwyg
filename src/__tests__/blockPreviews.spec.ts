@@ -154,3 +154,111 @@ describe('block previews', () => {
     expect(htmlToMarkdown('<pre><code>x</code></pre>')).toBe('```\nx\n```')
   })
 })
+
+describe('live block islands', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  const API = '<pre><code class="language-api">GET /a</code></pre><p>after</p>'
+
+  function liveRenderers(log: string[]): BlockRenderers {
+    return {
+      api: () => ({
+        mount: (el, ctx) => {
+          log.push(`mount:${ctx.code}:${ctx.editable}`)
+          const input = document.createElement('input')
+          input.value = ctx.code
+          input.addEventListener('change', () => ctx.setCode(input.value))
+          el.appendChild(input)
+          return {
+            update: (code) => {
+              log.push(`update:${code}`)
+              input.value = code
+            },
+            destroy: () => log.push('destroy'),
+          }
+        },
+      }),
+    }
+  }
+
+  it('mounts the widget into the island and keeps the code hidden', () => {
+    const log: string[] = []
+    const { host, c } = setup(API, liveRenderers(log))
+    const island = host.querySelector(`[${PREVIEW_ATTR}]`)!
+    expect(island.hasAttribute('data-dsk-preview-live')).toBe(true)
+    expect(island.querySelector('input')!.value).toBe('GET /a')
+    expect(host.querySelector('pre')!.getAttribute(STATE_ATTR)).toBe('view')
+    expect(log).toEqual(['mount:GET /a:true'])
+    expect(c.getHTML()).toBe(API)
+  })
+
+  it('writes the widget\'s code into the block, once, as one history step', () => {
+    const log: string[] = []
+    const { host, c } = setup(API, liveRenderers(log))
+    let changes = 0
+    c.previews.onCodeChange = () => {
+      changes++
+      c.history.commit()
+    }
+    const input = host.querySelector<HTMLInputElement>(`[${PREVIEW_ATTR}] input`)!
+    input.value = 'POST /b'
+    input.dispatchEvent(new Event('change'))
+    expect(changes).toBe(1)
+    expect(c.getHTML()).toBe('<pre><code class="language-api">POST /b</code></pre><p>after</p>')
+    // The widget already shows it: no remount, no update.
+    c.previews.sync()
+    expect(log).toEqual(['mount:GET /a:true'])
+
+    // Undo brings the old code back into a fresh widget.
+    c.chain().undo().run()
+    expect(c.getHTML()).toBe(API)
+    expect(log).toContain('destroy')
+    expect(host.querySelector<HTMLInputElement>(`[${PREVIEW_ATTR}] input`)!.value).toBe('GET /a')
+  })
+
+  it('hands an external change of the code to the mounted widget', () => {
+    const log: string[] = []
+    const { host, c } = setup(API, liveRenderers(log))
+    host.querySelector('pre code')!.textContent = 'DELETE /c'
+    c.previews.sync()
+    expect(log).toEqual(['mount:GET /a:true', 'update:DELETE /c'])
+  })
+
+  it('mounts read-only widgets in a read-only editor, and ignores their setCode', () => {
+    const log: string[] = []
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const c = new EditorController(host, { blockRenderers: liveRenderers(log) })
+    c.previews.setEditable(false)
+    c.setContent(API)
+    const input = host.querySelector<HTMLInputElement>(`[${PREVIEW_ATTR}] input`)!
+    input.value = 'POST /b'
+    input.dispatchEvent(new Event('change'))
+    expect(c.getHTML()).toBe(API)
+    expect(log).toEqual(['mount:GET /a:false'])
+
+    c.previews.setEditable(true)
+    expect(log).toEqual(['mount:GET /a:false', 'destroy', 'mount:GET /a:true'])
+  })
+
+  it('never opens the code of a live block', () => {
+    const { host, c } = setup(API, liveRenderers([]))
+    const pre = host.querySelector('pre')!
+    c.previews.edit(host.querySelector<HTMLElement>(`[${PREVIEW_ATTR}]`)!)
+    expect(pre.getAttribute(STATE_ATTR)).toBe('view')
+    c.previews.followSelection(caretIn(pre.querySelector('code')!.firstChild!, 1))
+    expect(pre.getAttribute(STATE_ATTR)).toBe('view')
+  })
+
+  it('destroys the widgets with the block and with the editor', () => {
+    const log: string[] = []
+    const { host, c } = setup(API + API, liveRenderers(log))
+    host.querySelector('pre')!.remove()
+    c.previews.sync()
+    expect(log.filter((l) => l === 'destroy')).toHaveLength(1)
+    c.destroy()
+    expect(log.filter((l) => l === 'destroy')).toHaveLength(2)
+  })
+})

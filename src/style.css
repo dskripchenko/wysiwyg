@@ -262,6 +262,15 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   cursor: default;
 }
 .dsk-wysiwyg__preview[data-error] { padding: 0; }
+/* A live island holds an interactive widget: no click-to-edit affordance, and
+   the text inside is selectable like any form's. */
+.dsk-wysiwyg__preview[data-dsk-preview-live] {
+  padding: 0;
+  overflow: visible;
+  cursor: auto;
+  user-select: text;
+}
+.dsk-wysiwyg__preview[data-dsk-preview-live]:hover { border-color: transparent; }
 .dsk-wysiwyg__preview-error {
   padding: 8px 12px;
   background: var(--dsk-wysiwyg-error-bg);

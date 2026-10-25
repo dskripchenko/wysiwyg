@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Live blocks.** A block renderer may answer `{ mount }` instead of
+  `{ html }`: the island then holds the host's widget — a form, a request
+  builder — which edits the block through `setCode(code)` (one history step,
+  one emit). Undo and redo reach the widget through `update(code)`, `destroy`
+  runs when the block or the editor goes away, and readonly mounts widgets
+  with `editable: false`. Keys, typing, pasting and clicks inside a widget are
+  left to it. New types: `BlockMountContext`, `BlockMountHandle`.
+
 ## 0.3.0 — 2026-10-25
 
 ### Added

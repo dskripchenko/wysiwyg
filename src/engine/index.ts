@@ -41,7 +41,7 @@ import {
 
 export { sanitizeHtml } from './sanitize'
 export type { AllowedAttributes, SanitizeOptions } from './sanitize'
-export type { BlockRenderer, BlockRenderers, BlockRenderResult } from './blockPreviews'
+export type { BlockRenderer, BlockRenderers, BlockRenderResult, BlockMountContext, BlockMountHandle } from './blockPreviews'
 
 export interface EditorOptions extends SanitizeOptions {
   /**
@@ -210,9 +210,8 @@ export class EditorController {
     this.history.reset(serializeHost(this.host))
   }
 
-  /** Release the resources (the history); a host calls this on unmount. */
+  /** Release the resources (the live block widgets); a host calls this on unmount. */
   destroy(): void {
-    /* nothing was attached globally — just a placeholder for future
-       async-cleanup'ов */
+    this.previews.destroy()
   }
 }
