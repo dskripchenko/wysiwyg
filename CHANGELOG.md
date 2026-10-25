@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-25
 
 ### Added
 - **Block previews.** `blockRenderers` — a prop of `DskWysiwyg` and an option
