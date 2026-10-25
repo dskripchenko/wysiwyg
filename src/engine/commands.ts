@@ -344,3 +344,44 @@ export function insertHorizontalRule(host: HTMLElement): void {
   }
   emitInput(host)
 }
+
+/**
+ * Inserts `<pre><code class="language-X">code</code></pre>`. An empty current
+ * block (what is left after a slash command) is replaced, otherwise the code
+ * block goes after it. The caret lands at the end of the code.
+ */
+export function insertCodeBlock(host: HTMLElement, language: string, code = ''): void {
+  const range = rangeWithinHost(host)
+  const pre = document.createElement('pre')
+  const codeEl = document.createElement('code')
+  codeEl.className = `language-${language.replace(/[^\w-]/g, '')}`
+  // ZWSP: a caret target for an empty block; getHTML drops it.
+  codeEl.textContent = code === '' ? '​' : code
+  pre.appendChild(codeEl)
+
+  // A block directly inside the host — the li/td of a list or a table is not one.
+  let block: Element | null = range ? blockAncestor(range.startContainer, host) : null
+  while (block && block.parentElement !== host) block = block.parentElement
+  if (block && block.tagName.toLowerCase() === 'p' && (block.textContent ?? '').replace(/[​\s]/g, '') === '') {
+    block.replaceWith(pre)
+  } else if (block) {
+    block.after(pre)
+  } else {
+    host.appendChild(pre)
+  }
+  if (! pre.nextElementSibling) {
+    const p = document.createElement('p')
+    p.appendChild(document.createElement('br'))
+    pre.after(p)
+  }
+
+  const caret = document.createRange()
+  caret.selectNodeContents(codeEl)
+  caret.collapse(false)
+  const sel = window.getSelection()
+  if (sel) {
+    sel.removeAllRanges()
+    sel.addRange(caret)
+  }
+  emitInput(host)
+}

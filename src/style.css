@@ -34,6 +34,8 @@
   --dsk-wysiwyg-code-bg: #f3f4f6;
   --dsk-wysiwyg-code-fg: #b91c1c;
   --dsk-wysiwyg-blockquote-border: #d1d5db;
+  --dsk-wysiwyg-error-bg: #fef2f2;
+  --dsk-wysiwyg-error-fg: #b91c1c;
   /* syntax-highlight token colors (light) */
   --dsk-wysiwyg-tok-keyword: #7c3aed;
   --dsk-wysiwyg-tok-string: #16a34a;
@@ -226,6 +228,46 @@
   background: transparent;
   color: inherit;
   padding: 0;
+}
+
+/* Block previews: a code block with a renderer (```mermaid, say) shows as what
+   it draws. The island is not content — getHTML drops it. */
+.dsk-wysiwyg__content pre[data-dsk-preview-state='view'] { display: none; }
+.dsk-wysiwyg__content pre[data-dsk-preview-state='edit'],
+.dsk-wysiwyg__content pre[data-dsk-preview-state='error'] {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.dsk-wysiwyg__preview {
+  margin: 0.5em 0;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.dsk-wysiwyg__preview:empty { display: none; }
+.dsk-wysiwyg__preview > svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.dsk-wysiwyg__preview:hover { border-color: var(--dsk-wysiwyg-border); }
+.dsk-wysiwyg--readonly .dsk-wysiwyg__preview { cursor: default; }
+.dsk-wysiwyg--readonly .dsk-wysiwyg__preview:hover { border-color: transparent; }
+pre[data-dsk-preview-state='edit'] + .dsk-wysiwyg__preview,
+pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
+  margin-top: 0;
+  border-color: var(--dsk-wysiwyg-border);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  cursor: default;
+}
+.dsk-wysiwyg__preview[data-error] { padding: 0; }
+.dsk-wysiwyg__preview-error {
+  padding: 8px 12px;
+  background: var(--dsk-wysiwyg-error-bg);
+  color: var(--dsk-wysiwyg-error-fg);
+  font-size: 0.9em;
+  white-space: pre-wrap;
 }
 
 /* Code-syntax highlighting tokens — палитра через CSS-переменные,

@@ -16,12 +16,13 @@
  *     calls `controller.chain().focus().setImage(url).run()`.
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { EditorController, sanitizeHtml, type AllowedAttributes } from './engine'
+import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRenderers } from './engine'
+import { PREVIEW_ATTR } from './engine/blockPreviews'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
-import DskWysiwygSlashMenu from './DskWysiwygSlashMenu.vue'
+import DskWysiwygSlashMenu, { type SlashCommand } from './DskWysiwygSlashMenu.vue'
 
 interface Props {
   modelValue?: string
@@ -39,6 +40,14 @@ interface Props {
    * and to pasted HTML.
    */
   allowedAttributes?: AllowedAttributes
+  /**
+   * Code-block languages shown as what they draw — `{ mermaid: renderer }`
+   * turns a ```mermaid block into a diagram. The contract is the kit's
+   * UidMarkdown blockRenderers; the stored HTML keeps the code.
+   */
+  blockRenderers?: BlockRenderers
+  /** Items added to the slash menu after the built-in ones. */
+  slashCommands?: SlashCommand[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -51,6 +60,8 @@ const props = withDefaults(defineProps<Props>(), {
   maxHeight: undefined,
   resizable: true,
   allowedAttributes: () => ({}),
+  blockRenderers: () => ({}),
+  slashCommands: () => [],
 })
 
 const emit = defineEmits<{
@@ -100,7 +111,10 @@ onMounted(() => {
   // way to influence the default Enter behaviour. Our own handleEnter below
   // intercepts most cases anyway.
   try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch { /* no-op */ }
-  const c = new EditorController(hostRef.value, { allowedAttributes: props.allowedAttributes })
+  const c = new EditorController(hostRef.value, {
+    allowedAttributes: props.allowedAttributes,
+    blockRenderers: props.blockRenderers,
+  })
   c.setContent(props.modelValue)
   controller.value = c
   isEmpty.value = c.isEmpty()
@@ -110,17 +124,66 @@ onMounted(() => {
     if (! hostRef.value) return
     if (document.activeElement === hostRef.value || hostRef.value.contains(document.activeElement)) {
       selectionVersion.value++
+      controller.value?.previews.followSelection(currentRange())
     }
   }
   document.addEventListener('selectionchange', onSelectionChange)
 })
 
 onBeforeUnmount(() => {
+  if (previewTimer) clearTimeout(previewTimer)
   if (onSelectionChange) {
     document.removeEventListener('selectionchange', onSelectionChange)
   }
   controller.value?.destroy()
 })
+
+watch(
+  () => props.blockRenderers,
+  (next) => controller.value?.previews.setRenderers(next),
+)
+
+/** The previews follow typing, a beat behind: one render per pause, not per key. */
+let previewTimer: ReturnType<typeof setTimeout> | null = null
+function schedulePreviews(): void {
+  if (previewTimer) clearTimeout(previewTimer)
+  previewTimer = setTimeout(() => {
+    previewTimer = null
+    controller.value?.previews.sync()
+  }, 150)
+}
+
+function currentRange(): Range | null {
+  const sel = window.getSelection()
+  if (! sel || sel.rangeCount === 0 || ! hostRef.value) return null
+  const range = sel.getRangeAt(0)
+  return hostRef.value.contains(range.startContainer) ? range : null
+}
+
+/** A click on a preview opens its code (not in readonly). */
+function onMousedown(e: MouseEvent): void {
+  if (props.readonly || ! controller.value || ! hostRef.value) return
+  const island = (e.target as Element | null)?.closest?.(`[${PREVIEW_ATTR}]`)
+  if (! island || ! hostRef.value.contains(island)) return
+  e.preventDefault()
+  hostRef.value.focus()
+  controller.value.previews.edit(island as HTMLElement)
+}
+
+/** Inserts text at the caret as a text node — inside an open code block. */
+function insertTextAtCaret(text: string): void {
+  const range = currentRange()
+  if (! range) return
+  range.deleteContents()
+  const node = document.createTextNode(text)
+  range.insertNode(node)
+  range.setStartAfter(node)
+  range.collapse(true)
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(range)
+  hostRef.value?.dispatchEvent(new InputEvent('input', { bubbles: true }))
+}
 
 watch(
   () => props.modelValue,
@@ -137,6 +200,9 @@ function onInput(): void {
   // Markdown shortcuts: after an input we check whether the block's prefix
   // should be replaced by a heading/list/quote/code block.
   const shortcut = applyMarkdownShortcut(hostRef.value)
+  // Backspace over a shown diagram takes its hidden code along.
+  if (controller.value.previews.dropOrphanedCode()) controller.value.history.commit()
+  schedulePreviews()
   if (shortcut.applied) {
     controller.value.history.commit()
   } else {
@@ -260,6 +326,7 @@ function onBlur(): void {
   // mousedown.prevent in the slash menu preserves the selection, so closing on
   // blur is safe for it — the choice has already been made.
   closeSlashMenu()
+  controller.value.previews.closeAll()
   const codes = hostRef.value.querySelectorAll<HTMLElement>('pre > code[class*="language-"]')
   let dirty = false
   for (const code of Array.from(codes)) {
@@ -315,6 +382,11 @@ function onPaste(e: ClipboardEvent): void {
   const html = e.clipboardData.getData('text/html')
   const text = e.clipboardData.getData('text/plain')
   e.preventDefault()
+  // Into an open code block the text goes as text: one block, not a <p> per line.
+  if (controller.value.previews.openCodeAt(currentRange())) {
+    insertTextAtCaret(text)
+    return
+  }
   const cleaned = html ? sanitizeHtml(html, { allowedAttributes: props.allowedAttributes }) : escapePlainText(text)
   insertAtCaret(cleaned)
   controller.value.history.commit()
@@ -440,6 +512,29 @@ function onKeydown(e: KeyboardEvent): void {
     }
     if (e.key === 'Escape')    { e.preventDefault(); closeSlashMenu(); return }
   }
+  // Inside an open code block: Enter is a line break of the code, Escape leaves it.
+  const openCode = controller.value.previews.openCodeAt(currentRange())
+  if (openCode && e.key === 'Escape') {
+    e.preventDefault()
+    controller.value.previews.leave(openCode)
+    return
+  }
+  if (openCode && e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    e.preventDefault()
+    // A newline at the very end needs a second one to show as a line.
+    const range = currentRange()
+    const atEnd = range !== null && range.collapsed
+      && (openCode.textContent ?? '').length === textBeforeCaret(openCode, range).length
+    insertTextAtCaret(atEnd && ! (openCode.textContent ?? '').endsWith('\n') ? '\n\n' : '\n')
+    if (atEnd) {
+      const r = currentRange()
+      if (r && r.startContainer.nodeType === Node.TEXT_NODE && r.startOffset > 0) {
+        r.setStart(r.startContainer, r.startOffset - 1)
+        r.collapse(true)
+      }
+    }
+    return
+  }
   // Our own Enter handler: it splits the block into a new <p> without cloning
   // the inline marks. Without this Chrome drags the active <strong>/<em>/... into
   // the next line and every new line comes out bold.
@@ -507,6 +602,7 @@ defineExpose({
       @blur="onBlur"
       @paste="onPaste"
       @keydown="onKeydown"
+      @mousedown="onMousedown"
     />
     <DskWysiwygSlashMenu
       ref="slashMenuRef"
@@ -515,6 +611,7 @@ defineExpose({
       :query="slashQuery"
       :top="slashTop"
       :left="slashLeft"
+      :extra="slashCommands"
       @select="onSlashSelect"
       @close="closeSlashMenu"
     />

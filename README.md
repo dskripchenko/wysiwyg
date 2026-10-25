@@ -46,12 +46,16 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
 - **Markdown shortcuts** — `# `, `## `, `- `, `1. `, `> `, ` ``` ` at
   the start of a block.
 - **Slash commands** — type `/` to open a popup with heading/list/quote/
-  code/hr/table commands.
+  code/hr/table commands, plus the host's own (`slashCommands`).
 - **Tables** — insert / addRow / addColumn / removeRow / removeColumn /
   removeTable.
 - **Code syntax highlighting** — js/ts/tsx/jsx/php/html/css/json
   in `<pre><code class="language-X">` blocks.
-- **HTML→Markdown** — `htmlToMarkdown(html)` helper.
+- **Block previews** — a code block with a renderer (` ```mermaid `, say)
+  shows as its diagram; a click opens the code with a live preview. The
+  renderer is the host's, so the editor stays dependency-free.
+- **HTML→Markdown** — `htmlToMarkdown(html)` helper; code blocks keep
+  their language.
 - **Source mode** — toggle to raw HTML editor with beautify on view,
   minify on save, syntax highlighting overlay.
 - **Sanitize** — DOMParser-based whitelist (own implementation).
@@ -66,7 +70,7 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
 
 - [Getting started](docs/en/getting-started.md)
 - [Controller API](docs/en/controller-api.md) (chain-style API)
-- [Extensions](docs/en/extensions.md) — markdown shortcuts, slash, tables, highlight
+- [Extensions](docs/en/extensions.md) — markdown shortcuts, slash, block previews, tables, highlight
 - [Customization](docs/en/customization.md) — toolbar, themes, sizing
 - [Migration guide](docs/en/migration-guide.md)
 

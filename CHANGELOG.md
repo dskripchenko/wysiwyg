@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Block previews.** `blockRenderers` — a prop of `DskWysiwyg` and an option
+  of `EditorController` — turns a `<pre><code class="language-X">` into what
+  it draws: `{ mermaid }` shows a diagram. A click opens the code with a live
+  preview under it; Escape or moving the caret out closes it; an `{ error }`
+  answer shows the code with the message. Backspace over a shown block deletes
+  it with its code. The stored HTML, the history and the markdown export keep
+  only the code. The contract is the one of the kit's UidMarkdown
+  `blockRenderers`, and the editor gains no dependency.
+- **`slashCommands`** — the host's own slash-menu items, after the built-in ones.
+- **`insertCodeBlock(language, code?)`** in the chain API.
+- Pasted text inside an open preview's code goes in as text, and Enter there
+  is a line break of the code.
+
+### Fixed
+- `htmlToMarkdown` dropped a code block's language: ` ```mermaid ` came out
+  as a bare ` ``` `.
+
 ## 0.2.10 — 2026-10-13
 
 ### Added

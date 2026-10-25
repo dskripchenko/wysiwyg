@@ -9,7 +9,9 @@
  * The API style deliberately resembles Tiptap's (chain/run/isActive) — but
  * without a peer dependency on Tiptap.
  */
+import { BlockPreviews, serializeHost, type BlockRenderers } from './blockPreviews'
 import {
+  insertCodeBlock,
   insertHorizontalRule,
   insertImage,
   setBlockTag,
@@ -39,6 +41,17 @@ import {
 
 export { sanitizeHtml } from './sanitize'
 export type { AllowedAttributes, SanitizeOptions } from './sanitize'
+export type { BlockRenderer, BlockRenderers, BlockRenderResult } from './blockPreviews'
+
+export interface EditorOptions extends SanitizeOptions {
+  /**
+   * Code-block languages shown as what they draw, e.g. `{ mermaid }`. Same
+   * contract as the kit's UidMarkdown blockRenderers.
+   */
+  blockRenderers?: BlockRenderers
+  /** Called when an asynchronous preview has landed. */
+  onPreviewRendered?: () => void
+}
 
 /**
  * Removes the zero-width spaces (U+200B) from the HTML — in the DOM they are
@@ -62,6 +75,8 @@ export interface ChainAPI {
   orderedList(): ChainAPI
   blockquote(): ChainAPI
   codeBlock(): ChainAPI
+  /** A `<pre><code class="language-X">` with the code, the caret at its end. */
+  insertCodeBlock(language: string, code?: string): ChainAPI
   setLink(url: string | null): ChainAPI
   setImage(src: string, alt?: string): ChainAPI
   horizontalRule(): ChainAPI
@@ -83,13 +98,20 @@ export interface ChainAPI {
 export class EditorController {
   readonly host: HTMLElement
   readonly history: HistoryStack
+  /** The previews of the code blocks that have a renderer. */
+  readonly previews: BlockPreviews
 
   /** What setContent keeps beyond the built-in whitelist (see sanitizeHtml). */
   sanitizeOptions: SanitizeOptions
 
-  constructor(host: HTMLElement, sanitizeOptions: SanitizeOptions = {}) {
+  constructor(host: HTMLElement, options: EditorOptions = {}) {
+    const { blockRenderers, onPreviewRendered, ...sanitizeOptions } = options
     this.host = host
-    this.history = new HistoryStack(host)
+    this.previews = new BlockPreviews(host, blockRenderers, onPreviewRendered)
+    this.history = new HistoryStack(host, {
+      serialize: serializeHost,
+      onRestore: () => this.previews.sync(),
+    })
     this.sanitizeOptions = sanitizeOptions
   }
 
@@ -128,7 +150,7 @@ export class EditorController {
   canUndo(): boolean { return this.history.canUndo }
   canRedo(): boolean { return this.history.canRedo }
 
-  getHTML(): string { return vacuumZwsp(this.host.innerHTML) }
+  getHTML(): string { return vacuumZwsp(serializeHost(this.host)) }
 
   isEmpty(): boolean {
     const text = this.host.textContent?.trim() ?? ''
@@ -151,6 +173,7 @@ export class EditorController {
       orderedList: () => { toggleList(this.host, 'ol'); dirty = true; return api },
       blockquote: () => { setBlockTag(this.host, 'blockquote'); dirty = true; return api },
       codeBlock: () => { setBlockTag(this.host, 'pre'); dirty = true; return api },
+      insertCodeBlock: (language, code) => { insertCodeBlock(this.host, language, code); this.previews.sync(); dirty = true; return api },
       setLink: (url) => { setLink(this.host, url); dirty = true; return api },
       setImage: (src, alt) => { insertImage(this.host, src, alt); dirty = true; return api },
       horizontalRule: () => { insertHorizontalRule(this.host); dirty = true; return api },
@@ -183,7 +206,8 @@ export class EditorController {
       p.appendChild(document.createElement('br'))
       this.host.appendChild(p)
     }
-    this.history.reset(this.host.innerHTML)
+    this.previews.sync()
+    this.history.reset(serializeHost(this.host))
   }
 
   /** Release the resources (the history); a host calls this on unmount. */

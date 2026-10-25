@@ -49,6 +49,8 @@ const html = ref('<p>Привет</p>')
 | `readonly` | `boolean` | `false` | Read-only режим. |
 | `minHeight` | `string` | `'200px'` | Min-height area. |
 | `maxHeight` | `string` | — | Max-height (overflow-y auto). |
+| `blockRenderers` | `BlockRenderers` | `{}` | Языки блоков кода, которые показываются отрисованными (`{ mermaid }`). |
+| `slashCommands` | `SlashCommand[]` | `[]` | Свои пункты slash-меню после встроенных. |
 
 ## Events
 
@@ -202,6 +204,33 @@ Dark-вариант через `@media (prefers-color-scheme: dark)` встро�
 Введите `/` в начале блока — откроется popup со списком команд
 (headings, lists, quote, code-block, hr, table). Стрелки/Enter/Esc
 для навигации. Query-фильтр после `/` (например `/h2`, `/list`).
+Свои пункты хост добавляет пропом `slashCommands`.
+
+## Превью блоков (диаграммы, графики)
+
+Блок кода может показываться тем, что он рисует. Хост передаёт отрисовщик
+на язык — тот же контракт, что у `blockRenderers` в UidMarkdown кита:
+
+```ts
+const blockRenderers: BlockRenderers = {
+  mermaid: (code) => ({ html: render(code).svg }), // или { error }
+}
+```
+
+```vue
+<DskWysiwyg v-model="html" :block-renderers="blockRenderers" :slash-commands="slashCommands" />
+```
+
+- `<pre><code class="language-mermaid">` показывается диаграммой, код скрыт.
+- Клик по диаграмме открывает код с живым предпросмотром под ним; Escape
+  или уход курсора закрывает.
+- `{ error }` оставляет код открытым и показывает сообщение под ним.
+- Backspace по диаграмме удаляет её вместе с кодом, отмена возвращает.
+- В readonly диаграммы показываются, но не открываются.
+
+Хранимый HTML не меняется: `getHTML()`, v-model, история и `htmlToMarkdown`
+видят только блок кода. Превью — нередактируемый островок, который редактор
+сам добавляет и убирает. Своих зависимостей у редактора нет.
 
 ## HTML → Markdown
 
