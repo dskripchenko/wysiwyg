@@ -10,6 +10,8 @@
   runs when the block or the editor goes away, and readonly mounts widgets
   with `editable: false`. Keys, typing, pasting and clicks inside a widget are
   left to it. New types: `BlockMountContext`, `BlockMountHandle`.
+- The editor's content styles (paragraphs, code, `pre`, tables, links…) and
+  its `white-space: pre-wrap` no longer reach into a live widget.
 
 ## 0.3.0 — 2026-10-25
 

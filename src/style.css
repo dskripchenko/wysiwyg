@@ -182,31 +182,31 @@
   color: var(--dsk-wysiwyg-fg-muted);
   opacity: 0.6;
 }
-.dsk-wysiwyg__content p { margin: 0 0 0.75em; }
-.dsk-wysiwyg__content p:last-child { margin-bottom: 0; }
-.dsk-wysiwyg__content h1,
-.dsk-wysiwyg__content h2,
-.dsk-wysiwyg__content h3 {
+.dsk-wysiwyg__content p:not([data-dsk-preview-live] *) { margin: 0 0 0.75em; }
+.dsk-wysiwyg__content p:last-child:not([data-dsk-preview-live] *) { margin-bottom: 0; }
+.dsk-wysiwyg__content h1:not([data-dsk-preview-live] *),
+.dsk-wysiwyg__content h2:not([data-dsk-preview-live] *),
+.dsk-wysiwyg__content h3:not([data-dsk-preview-live] *) {
   margin: 1em 0 0.5em;
   line-height: 1.25;
   font-weight: 600;
 }
-.dsk-wysiwyg__content h1 { font-size: 1.6em; }
-.dsk-wysiwyg__content h2 { font-size: 1.35em; }
-.dsk-wysiwyg__content h3 { font-size: 1.15em; }
-.dsk-wysiwyg__content ul,
-.dsk-wysiwyg__content ol {
+.dsk-wysiwyg__content h1:not([data-dsk-preview-live] *) { font-size: 1.6em; }
+.dsk-wysiwyg__content h2:not([data-dsk-preview-live] *) { font-size: 1.35em; }
+.dsk-wysiwyg__content h3:not([data-dsk-preview-live] *) { font-size: 1.15em; }
+.dsk-wysiwyg__content ul:not([data-dsk-preview-live] *),
+.dsk-wysiwyg__content ol:not([data-dsk-preview-live] *) {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
-.dsk-wysiwyg__content li { margin: 0.2em 0; }
-.dsk-wysiwyg__content blockquote {
+.dsk-wysiwyg__content li:not([data-dsk-preview-live] *) { margin: 0.2em 0; }
+.dsk-wysiwyg__content blockquote:not([data-dsk-preview-live] *) {
   margin: 0.5em 0;
   padding-left: 1em;
   border-left: 3px solid var(--dsk-wysiwyg-blockquote-border);
   color: var(--dsk-wysiwyg-fg-muted);
 }
-.dsk-wysiwyg__content code {
+.dsk-wysiwyg__content code:not([data-dsk-preview-live] *) {
   padding: 1px 4px;
   background: var(--dsk-wysiwyg-code-bg);
   color: var(--dsk-wysiwyg-code-fg);
@@ -214,7 +214,7 @@
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.92em;
 }
-.dsk-wysiwyg__content pre {
+.dsk-wysiwyg__content pre:not([data-dsk-preview-live] *) {
   margin: 0.5em 0;
   padding: 12px 14px;
   background: #18181b;
@@ -224,7 +224,7 @@
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.9em;
 }
-.dsk-wysiwyg__content pre code {
+.dsk-wysiwyg__content pre code:not([data-dsk-preview-live] *) {
   background: transparent;
   color: inherit;
   padding: 0;
@@ -269,6 +269,10 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   overflow: visible;
   cursor: auto;
   user-select: text;
+  /* The content's own text settings stop at the widget; the content
+     selectors above skip its descendants for the same reason. */
+  white-space: normal;
+  word-wrap: normal;
 }
 .dsk-wysiwyg__preview[data-dsk-preview-live]:hover { border-color: transparent; }
 .dsk-wysiwyg__preview-error {
@@ -291,33 +295,33 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 .dsk-wysiwyg .dsk-tok-function { color: var(--dsk-wysiwyg-tok-function); }
 .dsk-wysiwyg .dsk-tok-punct    { color: var(--dsk-wysiwyg-tok-punct); }
 
-.dsk-wysiwyg__content a {
+.dsk-wysiwyg__content a:not([data-dsk-preview-live] *) {
   color: var(--dsk-wysiwyg-link-color);
   text-decoration: underline;
 }
-.dsk-wysiwyg__content img {
+.dsk-wysiwyg__content img:not([data-dsk-preview-live] *) {
   max-width: 100%;
   height: auto;
   border-radius: 4px;
 }
-.dsk-wysiwyg__content hr {
+.dsk-wysiwyg__content hr:not([data-dsk-preview-live] *) {
   border: 0;
   border-top: 1px solid var(--dsk-wysiwyg-border);
   margin: 1em 0;
 }
-.dsk-wysiwyg__content table {
+.dsk-wysiwyg__content table:not([data-dsk-preview-live] *) {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75em 0;
 }
-.dsk-wysiwyg__content th,
-.dsk-wysiwyg__content td {
+.dsk-wysiwyg__content th:not([data-dsk-preview-live] *),
+.dsk-wysiwyg__content td:not([data-dsk-preview-live] *) {
   padding: 6px 10px;
   border: 1px solid var(--dsk-wysiwyg-border);
   vertical-align: top;
   min-width: 40px;
 }
-.dsk-wysiwyg__content th {
+.dsk-wysiwyg__content th:not([data-dsk-preview-live] *) {
   background: var(--dsk-wysiwyg-toolbar-bg);
   font-weight: 600;
   text-align: left;
