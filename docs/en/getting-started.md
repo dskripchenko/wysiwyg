@@ -75,7 +75,7 @@ Undo / Redo · Source-mode toggle.
 
 `|` inserts a divider. Available items: `bold`, `italic`, `underline`,
 `strike`, `code`, `h1`-`h3`, `ul`, `ol`, `quote`, `link`, `image`,
-`hr`, `codeblock`, `table`, `undo`, `redo`, `source`.
+`hr`, `codeblock`, `table`, `undo`, `redo`, `source`, `fullscreen`.
 
 ## What's next
 

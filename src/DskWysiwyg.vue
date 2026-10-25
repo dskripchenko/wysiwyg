@@ -69,6 +69,7 @@ const emit = defineEmits<{
   'image-request': []
   'link-request': [currentUrl: string | null]
   ready: [controller: EditorController]
+  'fullscreen-change': [fullscreen: boolean]
 }>()
 
 const hostRef = ref<HTMLElement | null>(null)
@@ -570,6 +571,32 @@ function onKeydown(e: KeyboardEvent): void {
   else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); controller.value.chain().redo().run(); emit('update:modelValue', controller.value.getHTML()) }
 }
 
+/**
+ * Fullscreen: the editor covers the window — for long texts and wide blocks
+ * (diagrams, API widgets). Escape or the button leaves it; the page under it
+ * does not scroll meanwhile.
+ */
+const fullscreen = ref<boolean>(false)
+function setFullscreen(next: boolean): void {
+  if (fullscreen.value === next) return
+  fullscreen.value = next
+  document.documentElement.classList.toggle('dsk-wysiwyg-fullscreen-open', next)
+  if (next) document.addEventListener('keydown', onFullscreenKeydown)
+  else document.removeEventListener('keydown', onFullscreenKeydown)
+  emit('fullscreen-change', next)
+  if (! sourceMode.value) hostRef.value?.focus()
+}
+function toggleFullscreen(): void {
+  setFullscreen(! fullscreen.value)
+}
+/** Escape leaves fullscreen — unless something inside used it (the slash menu, an open code block). */
+function onFullscreenKeydown(e: KeyboardEvent): void {
+  if (e.key !== 'Escape' || e.defaultPrevented) return
+  e.preventDefault()
+  setFullscreen(false)
+}
+onBeforeUnmount(() => setFullscreen(false))
+
 const wrapStyle = computed(() => ({
   '--dsk-wysiwyg-min-height': props.minHeight,
   '--dsk-wysiwyg-max-height': props.maxHeight ?? 'none',
@@ -577,17 +604,22 @@ const wrapStyle = computed(() => ({
 
 defineExpose({
   get controller() { return controller.value },
+  get fullscreen() { return fullscreen.value },
+  setFullscreen,
+  toggleFullscreen,
 })
 </script>
 
 <template>
-  <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly }]" :style="wrapStyle">
+  <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen }]" :style="wrapStyle">
     <DskWysiwygToolbar
       v-if="toolbar && !readonly"
       :controller="controller"
       :items="toolbarItems"
       :selection-version="selectionVersion"
       :source-active="sourceMode"
+      :fullscreen-active="fullscreen"
+      @toggle-fullscreen="toggleFullscreen"
       @image-request="emit('image-request')"
       @link-request="(url) => emit('link-request', url)"
       @toggle-source="toggleSource"

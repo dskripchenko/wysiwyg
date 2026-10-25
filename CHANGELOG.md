@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Fullscreen.** A `fullscreen` toolbar item (in the default set, after
+  `source`) spreads the editor over the window; Escape or the button leaves
+  it, the page under it does not scroll, and a wide screen keeps the text in a
+  readable column. `setFullscreen(on)`, `toggleFullscreen()` and `fullscreen`
+  on the component's ref, the `fullscreen-change` event, and
+  `--dsk-wysiwyg-fullscreen-z` for hosts with fixed layers of their own.
+
 ## 0.4.0 — 2026-10-25
 
 ### Added
