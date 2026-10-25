@@ -45,4 +45,6 @@ export type {
   BlockRenderer,
   BlockRenderers,
   BlockRenderResult,
+  BlockMountContext,
+  BlockMountHandle,
 } from './engine'

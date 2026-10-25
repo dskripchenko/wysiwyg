@@ -93,6 +93,36 @@ A renderer has the contract of the kit's UidMarkdown `blockRenderers`:
 one registry serves both. `html` is inserted as is, and the renderer answers
 for its safety. The editor itself has no dependency on any diagram library.
 
+### Live blocks (widgets)
+
+A renderer can answer with `mount` instead of `html`. The island then holds
+a live widget — a form, a request builder — that is the block's editor:
+
+```ts
+const blockRenderers: BlockRenderers = {
+  api: () => ({
+    mount: (el, { code, editable, setCode }) => {
+      const widget = createWidget(el, { code, readonly: !editable, onChange: setCode })
+      return { update: (next) => widget.setCode(next), destroy: () => widget.unmount() }
+    },
+  }),
+}
+```
+
+- The code stays hidden and never opens: the widget edits it through
+  `setCode(code)`, which the editor records as one history step and emits.
+- Undo and redo change the code from outside: the widget gets it through
+  `update(code)`; without `update` it is mounted again.
+- Keys, typing, pasting and clicks inside the widget stay there — the editor
+  does not treat them as its own.
+- In readonly mode `editable` is `false` and `setCode` is ignored; switching
+  the mode mounts the widgets again.
+- `destroy` runs when the block is deleted, replaced by an undo, or the editor
+  unmounts.
+
+The contract (`BlockMountContext`, `BlockMountHandle`) is the kit's
+UidMarkdown one, so a renderer registered once works in both.
+
 ## Code syntax highlighting
 
 `<pre><code class="language-{lang}">` blocks are highlighted on blur.

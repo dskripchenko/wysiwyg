@@ -13,6 +13,10 @@
  *   - `error` — the renderer could not read the code: the code shows, the
  *               island holds the message.
  *
+ * A renderer may also answer with `mount`: a live island. The host's widget —
+ * a form, a request builder — is mounted into the island and edits the block
+ * through `setCode`; the code stays hidden, since the widget is its editor.
+ *
  * The editor itself knows nothing about diagrams: the host passes renderers
  * with the same contract as the kit's UidMarkdown blockRenderers.
  */
@@ -22,6 +26,32 @@ export interface BlockRenderResult {
   html?: string
   /** Shown instead of a preview, next to the code. */
   error?: string
+  /**
+   * A live island: called with the island element once the result lands.
+   * Return a handle (or a cleanup function) — `update` takes later changes
+   * of the code (undo, redo) without remounting, `destroy` runs when the
+   * block goes away.
+   */
+  mount?: (el: HTMLElement, ctx: BlockMountContext) => BlockMountHandle | (() => void) | void
+}
+
+export interface BlockMountContext {
+  /** The block's code at mount time. */
+  code: string
+  language: string
+  /** False in a read-only editor: the widget only shows. */
+  editable: boolean
+  /**
+   * Replaces the block's code. The island is not re-rendered for this change —
+   * the widget already shows it; the editor records it in the history and
+   * emits the new HTML. Ignored when not editable.
+   */
+  setCode(code: string): void
+}
+
+export interface BlockMountHandle {
+  update?(code: string): void
+  destroy?(): void
 }
 
 export type BlockRenderer = (
@@ -33,6 +63,8 @@ export type BlockRenderers = Readonly<Record<string, BlockRenderer>>
 
 export const PREVIEW_ATTR = 'data-dsk-preview'
 export const STATE_ATTR = 'data-dsk-preview-state'
+/** Marks a live island: the editor leaves the events inside it to the widget. */
+export const LIVE_ATTR = 'data-dsk-preview-live'
 
 type PreviewState = 'view' | 'edit' | 'error'
 
@@ -69,6 +101,14 @@ interface Entry {
   /** Bumped on every render, so a late async answer never overwrites a newer one. */
   ticket: number
   failed: boolean
+  /** The mounted widget of a live island. */
+  handle: BlockMountHandle | null
+}
+
+/** True when the node sits inside a live island of a host. */
+export function inLiveIsland(node: EventTarget | Node | null): boolean {
+  const el = node instanceof Element ? node : node instanceof Node ? node.parentElement : null
+  return el?.closest(`[${LIVE_ATTR}]`) != null
 }
 
 export class BlockPreviews {
@@ -77,6 +117,11 @@ export class BlockPreviews {
   private readonly entries = new WeakMap<HTMLElement, Entry>()
   private readonly onChange: () => void
   private index = 0
+  private editable = true
+  /** Live widgets by island, to destroy the ones whose island went away. */
+  private readonly mounted = new Map<HTMLElement, BlockMountHandle>()
+  /** Called after a live widget changed its block's code. */
+  onCodeChange: () => void = () => {}
 
   /**
    * @param onChange called after an asynchronous render lands, for hosts that
@@ -90,6 +135,31 @@ export class BlockPreviews {
 
   setRenderers(renderers: BlockRenderers): void {
     this.renderers = renderers
+    this.remountAll()
+  }
+
+  /** A read-only editor mounts its live widgets as read-only. */
+  setEditable(editable: boolean): void {
+    if (this.editable === editable) return
+    this.editable = editable
+    this.remountAll()
+  }
+
+  /** Destroys every live widget — the editor is going away. */
+  destroy(): void {
+    for (const handle of this.mounted.values()) handle.destroy?.()
+    this.mounted.clear()
+  }
+
+  /** Renders every block anew: the renderers or the mode changed. */
+  private remountAll(): void {
+    for (const pre of this.previewable()) {
+      const entry = this.entries.get(pre)
+      if (! entry) continue
+      // A new renderer or mode: the widget is mounted again, not updated.
+      this.unmountLive(entry)
+      entry.source = null
+    }
     this.sync()
   }
 
@@ -116,6 +186,13 @@ export class BlockPreviews {
     for (const pre of Array.from(this.host.querySelectorAll<HTMLElement>(`[${STATE_ATTR}]`))) {
       if (! pres.includes(pre)) pre.removeAttribute(STATE_ATTR)
     }
+    // Islands dropped by an undo, a setContent or the code above.
+    for (const [island, handle] of this.mounted) {
+      if (! island.isConnected || ! live.has(island)) {
+        handle.destroy?.()
+        this.mounted.delete(island)
+      }
+    }
   }
 
   /**
@@ -139,6 +216,8 @@ export class BlockPreviews {
     for (const pre of this.previewable()) {
       const inside = range !== null && pre.contains(range.startContainer)
       const entry = this.entries.get(pre)
+      // A live block is edited through its widget; its code never opens.
+      if (entry?.handle) continue
       if (inside) this.setState(pre, 'edit')
       else this.setState(pre, entry?.failed ? 'error' : 'view')
     }
@@ -151,6 +230,7 @@ export class BlockPreviews {
 
   /** Opens the code of the island's block and puts the caret at its end. */
   edit(island: HTMLElement): void {
+    if (island.hasAttribute(LIVE_ATTR)) return
     const pre = island.previousElementSibling
     if (! (pre instanceof HTMLElement) || pre.tagName.toLowerCase() !== 'pre') return
     this.setState(pre, 'edit')
@@ -214,7 +294,7 @@ export class BlockPreviews {
       island.setAttribute('contenteditable', 'false')
       island.className = 'dsk-wysiwyg__preview'
       entry?.island.remove()
-      entry = { island, source: null, ticket: 0, failed: false }
+      entry = { island, source: null, ticket: 0, failed: false, handle: null }
       this.entries.set(pre, entry)
       pre.after(island)
     }
@@ -231,7 +311,7 @@ export class BlockPreviews {
     const ticket = ++entry.ticket
     const language = codeBlockLanguage(pre)!
     const renderer = this.renderers[language]!
-    if (source.trim() === '') {
+    if (source.trim() === '' && ! entry.handle) {
       // A block just inserted: nothing to draw yet, and no error to shout.
       entry.failed = false
       entry.island.removeAttribute('data-error')
@@ -241,6 +321,11 @@ export class BlockPreviews {
     const apply = (result: BlockRenderResult): void => {
       if (ticket !== entry.ticket) return
       const island = entry.island
+      if (result.mount) {
+        this.mountLive(pre, entry, source, language, result.mount)
+        return
+      }
+      this.unmountLive(entry)
       if (result.error !== undefined || result.html === undefined) {
         entry.failed = true
         island.setAttribute('data-error', '')
@@ -266,6 +351,51 @@ export class BlockPreviews {
     } else {
       apply(out)
     }
+  }
+  private mountLive(
+    pre: HTMLElement,
+    entry: Entry,
+    source: string,
+    language: string,
+    mount: NonNullable<BlockRenderResult['mount']>,
+  ): void {
+    entry.failed = false
+    const island = entry.island
+    island.removeAttribute('data-error')
+    this.setState(pre, 'view')
+    // The widget already there takes the new code (an undo, a redo).
+    if (entry.handle?.update) {
+      entry.handle.update(source)
+      return
+    }
+    this.unmountLive(entry)
+    island.replaceChildren()
+    island.setAttribute(LIVE_ATTR, '')
+    const editable = this.editable
+    const out = mount(island, {
+      code: source,
+      language,
+      editable,
+      setCode: (code) => {
+        if (! editable || ! pre.isConnected) return
+        const target = pre.querySelector('code') ?? pre
+        target.textContent = code
+        // Already shown by the widget: the next sync must not re-render it.
+        entry.source = codeOf(pre)
+        this.onCodeChange()
+      },
+    })
+    const handle: BlockMountHandle = typeof out === 'function' ? { destroy: out } : (out ?? {})
+    entry.handle = handle
+    this.mounted.set(island, handle)
+  }
+
+  private unmountLive(entry: Entry): void {
+    if (! entry.handle) return
+    entry.handle.destroy?.()
+    this.mounted.delete(entry.island)
+    entry.handle = null
+    entry.island.removeAttribute(LIVE_ATTR)
   }
 }
 

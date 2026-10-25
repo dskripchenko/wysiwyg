@@ -17,7 +17,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRenderers } from './engine'
-import { PREVIEW_ATTR } from './engine/blockPreviews'
+import { PREVIEW_ATTR, inLiveIsland } from './engine/blockPreviews'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
@@ -115,6 +115,13 @@ onMounted(() => {
     allowedAttributes: props.allowedAttributes,
     blockRenderers: props.blockRenderers,
   })
+  // A live block widget edited its code: one history step, one emit.
+  c.previews.onCodeChange = (): void => {
+    c.history.commit()
+    isEmpty.value = c.isEmpty()
+    emit('update:modelValue', c.getHTML())
+  }
+  c.previews.setEditable(! props.readonly)
   c.setContent(props.modelValue)
   controller.value = c
   isEmpty.value = c.isEmpty()
@@ -143,6 +150,11 @@ watch(
   (next) => controller.value?.previews.setRenderers(next),
 )
 
+watch(
+  () => props.readonly,
+  (readonly) => controller.value?.previews.setEditable(! readonly),
+)
+
 /** The previews follow typing, a beat behind: one render per pause, not per key. */
 let previewTimer: ReturnType<typeof setTimeout> | null = null
 function schedulePreviews(): void {
@@ -163,6 +175,8 @@ function currentRange(): Range | null {
 /** A click on a preview opens its code (not in readonly). */
 function onMousedown(e: MouseEvent): void {
   if (props.readonly || ! controller.value || ! hostRef.value) return
+  // A live block's widget handles its own clicks (its inputs take the focus).
+  if (inLiveIsland(e.target)) return
   const island = (e.target as Element | null)?.closest?.(`[${PREVIEW_ATTR}]`)
   if (! island || ! hostRef.value.contains(island)) return
   e.preventDefault()
@@ -195,8 +209,10 @@ watch(
   },
 )
 
-function onInput(): void {
+function onInput(e?: Event): void {
   if (!controller.value || !hostRef.value) return
+  // Typing in a live block's widget is the widget's: it reports through setCode.
+  if (e && inLiveIsland(e.target)) return
   // Markdown shortcuts: after an input we check whether the block's prefix
   // should be replaced by a heading/list/quote/code block.
   const shortcut = applyMarkdownShortcut(hostRef.value)
@@ -379,6 +395,7 @@ function onSourceInput(e: Event): void {
 
 function onPaste(e: ClipboardEvent): void {
   if (!controller.value || !e.clipboardData) return
+  if (inLiveIsland(e.target)) return
   const html = e.clipboardData.getData('text/html')
   const text = e.clipboardData.getData('text/plain')
   e.preventDefault()
@@ -499,6 +516,8 @@ function handleEnter(e: KeyboardEvent): boolean {
 
 function onKeydown(e: KeyboardEvent): void {
   if (!controller.value) return
+  // Keys in a live block's widget (its inputs, its shortcuts) stay there.
+  if (inLiveIsland(e.target)) return
   // The slash-menu navigation is intercepted before the hotkeys.
   if (slashOpen.value && slashMenuRef.value) {
     if (e.key === 'ArrowDown') { e.preventDefault(); slashMenuRef.value.moveDown(); return }
