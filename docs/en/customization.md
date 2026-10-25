@@ -75,7 +75,7 @@ The user can drag the bottom-right grip vertically. To disable:
 
 `|` is a divider. Items: `bold`, `italic`, `underline`, `strike`,
 `code`, `h1`-`h3`, `ul`, `ol`, `quote`, `link`, `image`, `hr`,
-`codeblock`, `table`, `undo`, `redo`, `source`.
+`codeblock`, `table`, `undo`, `redo`, `source`, `fullscreen`.
 
 ## Custom commands
 
@@ -126,3 +126,23 @@ To extend: fork or wrap with your own `sanitizeHtml` before saving.
 
 - [Controller API](controller-api.md)
 - [Extensions](extensions.md)
+
+## Fullscreen
+
+The `fullscreen` toolbar item (in the default set, after `source`) spreads
+the editor over the window — for long texts and wide blocks such as diagrams
+or API widgets. Escape or the same button leaves it; the page under it does
+not scroll meanwhile, and on a wide screen the text keeps a readable column.
+
+```ts
+const editor = ref()
+editor.value.toggleFullscreen()      // or setFullscreen(true)
+editor.value.fullscreen              // the current state
+```
+
+```vue
+<DskWysiwyg ref="editor" v-model="html" @fullscreen-change="(on) => …" />
+```
+
+Over a host's own fixed layers, raise `--dsk-wysiwyg-fullscreen-z`
+(1000 by default).

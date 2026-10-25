@@ -23,6 +23,7 @@ export type ToolbarItem =
   | 'table'
   | 'undo' | 'redo'
   | 'source'
+  | 'fullscreen'
   | '|'
 
 interface Props {
@@ -34,6 +35,8 @@ interface Props {
   selectionVersion?: number
   /** The active state of the 'source' button (the host controls it). */
   sourceActive?: boolean
+  /** The active state of the 'fullscreen' button (the host controls it). */
+  fullscreenActive?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -44,17 +47,19 @@ const props = withDefaults(defineProps<Props>(), {
     'link', 'image', '|',
     'horizontal-rule', 'table', '|',
     'undo', 'redo', '|',
-    'source',
+    'source', 'fullscreen',
   ],
   disabled: false,
   selectionVersion: 0,
   sourceActive: false,
+  fullscreenActive: false,
 })
 
 const emit = defineEmits<{
   'image-request': []
   'link-request': [currentUrl: string | null]
   'toggle-source': []
+  'toggle-fullscreen': []
 }>()
 
 /**
@@ -100,6 +105,8 @@ async function loadIcons(): Promise<void> {
       Undo: mod.Undo,
       Redo: mod.Redo,
       FileCode: mod.FileCode2 ?? mod.FileCode,
+      Maximize: mod.Maximize2,
+      Minimize: mod.Minimize2,
     }
   } catch {
     icons.value = {}
@@ -386,6 +393,18 @@ function onImage(): void {
       >
         <component v-if="icons.FileCode" :is="UidIcon" :icon="icons.FileCode" :size="14" />
         <span v-else>&lt;/&gt;</span>
+      </button>
+
+      <button
+        v-else-if="item === 'fullscreen'"
+        type="button"
+        :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': fullscreenActive }]"
+        :title="fullscreenActive ? 'Выйти из полноэкранного режима (Esc)' : 'Во весь экран'"
+        :aria-pressed="fullscreenActive"
+        @click="emit('toggle-fullscreen')"
+      >
+        <component v-if="fullscreenActive ? icons.Minimize : icons.Maximize" :is="UidIcon" :icon="fullscreenActive ? icons.Minimize : icons.Maximize" :size="14" />
+        <span v-else>{{ fullscreenActive ? '⤡' : '⤢' }}</span>
       </button>
     </template>
   </div>

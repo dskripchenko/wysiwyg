@@ -72,6 +72,27 @@
   background: var(--dsk-wysiwyg-toolbar-bg);
 }
 
+/* Fullscreen: the editor covers the window; the page under it stays put. */
+.dsk-wysiwyg--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dsk-wysiwyg-fullscreen-z, 1000);
+  min-height: 0;
+  max-height: none;
+  height: auto !important;
+  border-radius: 0;
+  border-width: 0;
+  background: var(--dsk-wysiwyg-bg);
+}
+.dsk-wysiwyg--fullscreen .dsk-wysiwyg__content {
+  /* A readable column on a wide screen. */
+  padding-inline: max(16px, calc((100% - 960px) / 2));
+}
+html.dsk-wysiwyg-fullscreen-open,
+html.dsk-wysiwyg-fullscreen-open body {
+  overflow: hidden;
+}
+
 /* Toolbar */
 .dsk-wysiwyg-toolbar {
   display: flex;
