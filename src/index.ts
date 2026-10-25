@@ -37,4 +37,12 @@ export { EditorController, sanitizeHtml } from './engine'
 export { htmlToMarkdown } from './engine/htmlToMarkdown'
 export { highlight } from './engine/highlight'
 export { beautifyHtml, minifyHtml } from './engine/format'
-export type { ChainAPI, AllowedAttributes, SanitizeOptions } from './engine'
+export type {
+  ChainAPI,
+  AllowedAttributes,
+  SanitizeOptions,
+  EditorOptions,
+  BlockRenderer,
+  BlockRenderers,
+  BlockRenderResult,
+} from './engine'

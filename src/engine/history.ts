@@ -21,17 +21,29 @@ export class HistoryStack {
   private host: HTMLElement
   private throttleMs: number
   private maxSize: number
+  private serialize: (host: HTMLElement) => string
+  private onRestore: () => void
 
-  constructor(host: HTMLElement, opts: { throttleMs?: number; maxSize?: number } = {}) {
+  /**
+   * @param opts.serialize what a snapshot stores — the host's innerHTML by
+   *   default; the controller passes one without the preview islands.
+   * @param opts.onRestore called after undo/redo has put a snapshot back.
+   */
+  constructor(
+    host: HTMLElement,
+    opts: { throttleMs?: number; maxSize?: number; serialize?: (host: HTMLElement) => string; onRestore?: () => void } = {},
+  ) {
     this.host = host
     this.throttleMs = opts.throttleMs ?? 350
     this.maxSize = opts.maxSize ?? 100
+    this.serialize = opts.serialize ?? ((h) => h.innerHTML)
+    this.onRestore = opts.onRestore ?? (() => {})
     this.snapshot()
   }
 
   /** The current snapshot (the innerHTML). */
   snapshot(): void {
-    const html = this.host.innerHTML
+    const html = this.serialize(this.host)
     if (this.cursor >= 0 && this.stack[this.cursor] === html) return
     // The forward history after the current cursor is dropped (any edit after an undo).
     this.stack = this.stack.slice(0, this.cursor + 1)
@@ -67,12 +79,14 @@ export class HistoryStack {
     if (! this.canUndo) return
     this.cursor--
     this.host.innerHTML = this.stack[this.cursor]
+    this.onRestore()
   }
 
   redo(): void {
     if (! this.canRedo) return
     this.cursor++
     this.host.innerHTML = this.stack[this.cursor]
+    this.onRestore()
   }
 
   reset(html: string): void {

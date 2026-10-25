@@ -50,6 +50,8 @@ DOMParser whitelist before emitting.
 | `minHeight` | `string` | `'200px'` | CSS length on the root. |
 | `maxHeight` | `string` | `undefined` | CSS length on the root. |
 | `resizable` | `boolean` | `true` | User-resizable vertically. |
+| `blockRenderers` | `BlockRenderers` | `{}` | Code-block languages shown as what they draw, e.g. `{ mermaid }`. See [Extensions](extensions.md#block-previews-diagrams-charts). |
+| `slashCommands` | `SlashCommand[]` | `[]` | Items added to the slash menu after the built-in ones. |
 | `allowedAttributes` | `Record<string, string[]>` | `{}` | Attributes kept per tag beyond the built-in whitelist — your own markers, e.g. `{ img: ['data-signature'] }`. `on*` handlers are never kept. |
 
 ## Events

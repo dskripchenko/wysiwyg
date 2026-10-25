@@ -61,6 +61,9 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   const doc = new DOMParser().parseFromString(`<div>${input}</div>`, 'text/html')
   const root = doc.body.firstElementChild
   if (!root) return ''
+  // The editor's own preview islands (copied along with a diagram) are
+  // dropped whole: unwrapped, their SVG labels would turn into stray text.
+  for (const island of Array.from(root.querySelectorAll('[data-dsk-preview]'))) island.remove()
   cleanNode(root, options.allowedAttributes ?? {})
   return root.innerHTML
 }

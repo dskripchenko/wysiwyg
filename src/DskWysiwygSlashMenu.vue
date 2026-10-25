@@ -31,6 +31,8 @@ export interface SlashMenuProps {
   /** The position (of the caret). */
   top: number
   left: number
+  /** The host's own items, listed after the built-in ones. */
+  extra?: SlashCommand[]
 }
 
 const props = defineProps<SlashMenuProps>()
@@ -65,9 +67,10 @@ const COMMANDS: SlashCommand[] = [
 ]
 
 const filtered = computed<SlashCommand[]>(() => {
+  const all = props.extra?.length ? [...COMMANDS, ...props.extra] : COMMANDS
   const q = props.query.toLowerCase().trim()
-  if (q === '') return COMMANDS
-  return COMMANDS.filter((cmd) =>
+  if (q === '') return all
+  return all.filter((cmd) =>
     cmd.label.toLowerCase().includes(q) ||
     cmd.aliases?.some((a) => a.includes(q)),
   )

@@ -44,7 +44,8 @@ function insertGreeting() {
 | `paragraph()` | Set current block to `<p>`. |
 | `bulletList()` / `orderedList()` | Wrap current block in `<ul>`/`<ol>`. |
 | `blockquote()` | Set current block to `<blockquote>`. |
-| `codeBlock(lang?: string)` | Set current block to `<pre><code class="language-X">`. |
+| `codeBlock()` | Set current block to `<pre>`. |
+| `insertCodeBlock(language: string, code?: string)` | Insert `<pre><code class="language-X">code</code></pre>` (an empty current paragraph is replaced), caret at the end of the code. |
 | `link(href: string, target?: '_blank')` | Wrap selection in `<a href>`. |
 | `unlink()` | Remove `<a>` around selection. |
 | `image(src: string, alt?: string)` | Insert `<img>`. |

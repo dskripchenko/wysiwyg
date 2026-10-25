@@ -9,7 +9,7 @@
  *   - u             → `<u>text</u>` (not part of standard MD, so HTML is emitted)
  *   - s/strike/del  → `~~text~~`
  *   - code (inline) → `` `text` ``
- *   - pre/code      → fenced ```
+ *   - pre/code      → fenced ```, with the language of a `language-X` class
  *   - ul/ol/li      → `- ` / `1. ` (without nesting — a simplification)
  *   - blockquote    → `> ...`
  *   - a             → `[text](href)`
@@ -41,6 +41,8 @@ function renderNode(node: Node): string {
   }
   if (! (node instanceof HTMLElement)) return ''
 
+  // The editor's preview islands are not content.
+  if (node.hasAttribute('data-dsk-preview')) return ''
   const tag = node.tagName.toLowerCase()
   const inner = walkNodes(node.childNodes)
 
@@ -73,8 +75,9 @@ function renderNode(node: Node): string {
     case 'pre': {
       // pre > code → fenced.
       const codeChild = node.querySelector('code')
-      const content = codeChild ? codeChild.textContent ?? '' : node.textContent ?? ''
-      return `\`\`\`\n${content.replace(/\n$/, '')}\n\`\`\`\n\n`
+      const content = (codeChild ? codeChild.textContent ?? '' : node.textContent ?? '').replace(/\u200B/g, '')
+      const lang = codeChild?.className.match(/(?:^|\s)language-([\w-]+)/)?.[1] ?? ''
+      return `\`\`\`${lang}\n${content.replace(/\n$/, '')}\n\`\`\`\n\n`
     }
 
     case 'ul':
