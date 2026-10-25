@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-25
 
 ### Added
 - **Live blocks.** A block renderer may answer `{ mount }` instead of
