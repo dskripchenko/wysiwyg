@@ -43,7 +43,9 @@ DOMParser whitelist before emitting.
 | Prop | Type | Default | Notes |
 |---|---|---|---|
 | `modelValue` | `string` | `''` | HTML string. Sanitized on emit. |
-| `placeholder` | `string` | `''` | Shown when empty. |
+| `placeholder` | `string` | the language's | Shown when empty. |
+| `locale` | `'en' \| 'ru'` | kit's locale, else `'en'` | UI language, see [Customization](customization.md#language). |
+| `labels` | `WysiwygPartialLabels` | — | Single UI strings over the language's own. |
 | `toolbar` | `boolean` | `true` | Show the toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | (default set) | Override toolbar order. |
 | `readonly` | `boolean` | `false` | |

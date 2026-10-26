@@ -33,6 +33,20 @@ export { default as DskWysiwygToolbar } from './DskWysiwygToolbar.vue'
 export type { ToolbarItem } from './DskWysiwygToolbar.vue'
 export { default as DskWysiwygSlashMenu } from './DskWysiwygSlashMenu.vue'
 export type { SlashCommand } from './DskWysiwygSlashMenu.vue'
+export {
+  en as wysiwygEn,
+  ru as wysiwygRu,
+  wysiwygLocales,
+  localeFromCode,
+  resolveLabels,
+} from './locale'
+export type {
+  WysiwygLocale,
+  WysiwygLabels,
+  WysiwygPartialLabels,
+  WysiwygToolbarLabels,
+  WysiwygSlashLabels,
+} from './locale'
 export { EditorController, sanitizeHtml } from './engine'
 export { htmlToMarkdown } from './engine/htmlToMarkdown'
 export { highlight } from './engine/highlight'

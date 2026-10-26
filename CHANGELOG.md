@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Localisable UI.** The toolbar's titles and aria-label, the slash menu's
+  items and hints, the fullscreen and source buttons, the link prompt and the
+  placeholder come in English and Russian. `locale` (`'en' | 'ru'`) and
+  `labels` (a partial override: `{ placeholder, toolbar: {…}, slash: {…} }`)
+  on `DskWysiwyg`, `DskWysiwygToolbar` and `DskWysiwygSlashMenu`. Without a
+  `locale` the editor follows the @dskripchenko/ui kit's locale when the kit
+  is installed and a provider is above it (`ru*` → Russian, else English).
+  The kit stays an optional peer; the editor gains no dependency.
+- Exports `wysiwygEn`, `wysiwygRu`, `wysiwygLocales`, `localeFromCode`,
+  `resolveLabels` and the types `WysiwygLocale`, `WysiwygLabels`,
+  `WysiwygPartialLabels`, `WysiwygToolbarLabels`, `WysiwygSlashLabels`.
+- `./package.json` in the package's `exports`.
+
+### Fixed
+- The slash menu opens on a query in any script (`/цит`), not only in ASCII
+  letters — so a Russian UI filters by its own labels.
+
+### Changed
+- With neither a `locale` nor a kit provider the UI is English (it was
+  Russian). Pass `locale="ru"` to keep the old strings.
+
 ## 0.5.0 — 2026-10-25
 
 ### Added

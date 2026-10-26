@@ -23,6 +23,7 @@ import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
 import DskWysiwygSlashMenu, { type SlashCommand } from './DskWysiwygSlashMenu.vue'
+import { useWysiwygLabels, type WysiwygLocale, type WysiwygPartialLabels } from './locale'
 
 interface Props {
   modelValue?: string
@@ -48,11 +49,20 @@ interface Props {
   blockRenderers?: BlockRenderers
   /** Items added to the slash menu after the built-in ones. */
   slashCommands?: SlashCommand[]
+  /**
+   * The UI language — 'en' | 'ru'. When unset, the @dskripchenko/ui kit's
+   * locale (a provider above the editor; `ru*` gives Russian), else English.
+   */
+  locale?: WysiwygLocale
+  /** Single strings over the language's own: `{ toolbar: { bold: 'Fett' } }`. */
+  labels?: WysiwygPartialLabels
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
-  placeholder: 'Введите текст…',
+  placeholder: undefined,
+  locale: undefined,
+  labels: undefined,
   toolbar: true,
   toolbarItems: undefined,
   readonly: false,
@@ -71,6 +81,10 @@ const emit = defineEmits<{
   ready: [controller: EditorController]
   'fullscreen-change': [fullscreen: boolean]
 }>()
+
+const { locale: uiLocale, labels: text, KitLocaleProbe, probeKit } = useWysiwygLabels(props)
+/** The placeholder prop wins over the language's own. */
+const placeholderText = computed<string>(() => props.placeholder ?? text.value.placeholder)
 
 const hostRef = ref<HTMLElement | null>(null)
 const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
@@ -250,7 +264,8 @@ function updateSlashMenu(): void {
   if (! blockEl) { closeSlashMenu(); return }
 
   const beforeText = textBeforeCaret(blockEl, range)
-  const match = beforeText.match(/^\/([\w-]*)$/)
+  // Any letters: a query in the UI language (`/цит`) filters by the labels.
+  const match = beforeText.match(/^\/([\p{L}\p{N}_-]*)$/u)
   if (! match) { closeSlashMenu(); return }
 
   slashQuery.value = match[1]
@@ -612,6 +627,7 @@ defineExpose({
 
 <template>
   <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen }]" :style="wrapStyle">
+    <component :is="KitLocaleProbe" v-if="probeKit" />
     <DskWysiwygToolbar
       v-if="toolbar && !readonly"
       :controller="controller"
@@ -619,6 +635,8 @@ defineExpose({
       :selection-version="selectionVersion"
       :source-active="sourceMode"
       :fullscreen-active="fullscreen"
+      :locale="uiLocale"
+      :labels="labels"
       @toggle-fullscreen="toggleFullscreen"
       @image-request="emit('image-request')"
       @link-request="(url) => emit('link-request', url)"
@@ -634,7 +652,7 @@ defineExpose({
       <textarea
         class="dsk-wysiwyg__source"
         :value="sourceValue"
-        :placeholder="placeholder"
+        :placeholder="placeholderText"
         spellcheck="false"
         @input="onSourceInput"
         @scroll="onSourceScroll"
@@ -645,7 +663,7 @@ defineExpose({
       ref="hostRef"
       class="dsk-wysiwyg__content"
       :contenteditable="!readonly"
-      :data-placeholder="placeholder"
+      :data-placeholder="placeholderText"
       role="textbox"
       aria-multiline="true"
       :spellcheck="true"
@@ -663,6 +681,8 @@ defineExpose({
       :top="slashTop"
       :left="slashLeft"
       :extra="slashCommands"
+      :locale="uiLocale"
+      :labels="labels"
       @select="onSlashSelect"
       @close="closeSlashMenu"
     />

@@ -28,3 +28,34 @@ editor.value.fullscreen              // текущее состояние
 
 Если у хоста свои фиксированные слои поверх страницы, поднимите
 `--dsk-wysiwyg-fullscreen-z` (по умолчанию 1000).
+
+## Язык интерфейса
+
+Подсказки тулбара, slash-меню и плейсхолдер есть на английском и русском.
+Откуда берётся язык — побеждает первое совпадение:
+
+1. `labels` — отдельные строки поверх языка;
+2. `locale` — `'en'` или `'ru'`;
+3. локаль UI-кита @dskripchenko/ui, если кит установлен и над редактором есть
+   `UidLocaleProvider` (или `provideLocale()`): `code`, начинающийся с `ru`, —
+   русский, любой другой — английский;
+4. английский.
+
+```vue
+<DskWysiwyg v-model="html" locale="ru" />
+
+<DskWysiwyg
+  v-model="html"
+  :labels="{ placeholder: 'Пишите…', toolbar: { bold: 'Полужирный (⌘B)' }, slash: { h1: 'Крупный заголовок' } }"
+/>
+```
+
+Проп `placeholder` по-прежнему главнее плейсхолдера языка. Группы — `toolbar`
+(подсказки кнопок, `label` для aria-label тулбара, `sourceBack`,
+`fullscreenExit`, `linkPrompt` для запасного prompt) и `slash` (встроенные
+пункты и их подсказки); полные наборы экспортируются как `wysiwygEn` и
+`wysiwygRu`, типы — `WysiwygLabels` и `WysiwygPartialLabels`.
+`DskWysiwygToolbar` и `DskWysiwygSlashMenu` принимают те же `locale` и
+`labels`, если используются отдельно.
+
+Кит — необязательный peer: без него редактор английский, если не сказано иное.
