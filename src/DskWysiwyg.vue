@@ -264,7 +264,8 @@ function updateSlashMenu(): void {
   if (! blockEl) { closeSlashMenu(); return }
 
   const beforeText = textBeforeCaret(blockEl, range)
-  const match = beforeText.match(/^\/([\w-]*)$/)
+  // Any letters: a query in the UI language (`/цит`) filters by the labels.
+  const match = beforeText.match(/^\/([\p{L}\p{N}_-]*)$/u)
   if (! match) { closeSlashMenu(); return }
 
   slashQuery.value = match[1]

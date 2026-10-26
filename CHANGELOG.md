@@ -16,6 +16,10 @@
   `WysiwygPartialLabels`, `WysiwygToolbarLabels`, `WysiwygSlashLabels`.
 - `./package.json` in the package's `exports`.
 
+### Fixed
+- The slash menu opens on a query in any script (`/цит`), not only in ASCII
+  letters — so a Russian UI filters by its own labels.
+
 ### Changed
 - With neither a `locale` nor a kit provider the UI is English (it was
   Russian). Pass `locale="ru"` to keep the old strings.
