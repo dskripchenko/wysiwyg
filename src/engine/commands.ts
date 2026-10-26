@@ -22,6 +22,71 @@ function emitInput(host: HTMLElement): void {
 }
 
 /* ------------------------------------------------------------------ */
+/* Keeping the caret across a block replacement                        */
+/* ------------------------------------------------------------------ */
+
+/** A selection end as a character offset into a block's text. */
+interface BlockPoint {
+  block: HTMLElement
+  offset: number
+}
+
+function pointIn(block: HTMLElement, container: Node, offset: number): BlockPoint | null {
+  if (!block.contains(container)) return null
+  const r = document.createRange()
+  r.selectNodeContents(block)
+  r.setEnd(container, offset)
+  return { block, offset: r.toString().length }
+}
+
+/** Resolves a character offset back to a DOM position inside the block. */
+function resolvePoint(block: HTMLElement, offset: number): [Node, number] {
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
+  let left = offset
+  let last: Text | null = null
+  for (let n = walker.nextNode() as Text | null; n; n = walker.nextNode() as Text | null) {
+    if (left <= n.data.length) return [n, left]
+    left -= n.data.length
+    last = n
+  }
+  if (last) return [last, last.data.length]
+  // No text: before the <br> that keeps the line, or at the start.
+  return [block, 0]
+}
+
+/** An empty block gets a <br>, or the caret has no line to stand on. */
+function ensureLine(block: HTMLElement): void {
+  if (block.querySelector('br, img, hr')) return
+  if ((block.textContent ?? '') !== '') return
+  block.appendChild(document.createElement('br'))
+}
+
+/**
+ * Moves a block's children into `replacement`, puts it in the block's place and
+ * keeps the selection: its ends, held as text offsets, are restored inside the
+ * replacement. Without this the selection stays in the detached block and the
+ * browser drops the caret wherever it likes (the previous paragraph in Chromium,
+ * outside any block in WebKit).
+ */
+function replaceBlock(block: HTMLElement, replacement: HTMLElement, place: (r: HTMLElement) => void): void {
+  const sel = window.getSelection()
+  const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null
+  const start = range ? pointIn(block, range.startContainer, range.startOffset) : null
+  const end = range ? pointIn(block, range.endContainer, range.endOffset) : null
+  while (block.firstChild) replacement.appendChild(block.firstChild)
+  place(replacement)
+  ensureLine(replacement)
+  if (!sel || !range || (!start && !end)) return
+  const next = document.createRange()
+  if (start) next.setStart(...resolvePoint(replacement, start.offset))
+  else next.setStart(range.startContainer, range.startOffset)
+  if (end) next.setEnd(...resolvePoint(replacement, end.offset))
+  else next.setEnd(range.endContainer, range.endOffset)
+  sel.removeAllRanges()
+  sel.addRange(next)
+}
+
+/* ------------------------------------------------------------------ */
 /* Inline marks (bold / italic / underline / strike / code)            */
 /* ------------------------------------------------------------------ */
 
@@ -165,6 +230,7 @@ export function setBlockTag(host: HTMLElement, targetTag: string): void {
           replacement.after(tailList)
         }
         if (list.children.length === 0) list.remove()
+        ensureLine(replacement)
         // The caret goes to the start of the replacement.
         const r = document.createRange()
         r.selectNodeContents(replacement)
@@ -177,9 +243,7 @@ export function setBlockTag(host: HTMLElement, targetTag: string): void {
         continue
       }
     }
-    const replacement = document.createElement(final)
-    while (block.firstChild) replacement.appendChild(block.firstChild)
-    block.replaceWith(replacement)
+    replaceBlock(block, document.createElement(final), (r) => block.replaceWith(r))
   }
   emitInput(host)
 }
@@ -247,10 +311,10 @@ export function toggleList(host: HTMLElement, listTag: 'ul' | 'ol'): void {
   const block = blockAncestor(range.startContainer, host)
   if (!block) return
   const list = document.createElement(listTag)
-  const li = document.createElement('li')
-  while (block.firstChild) li.appendChild(block.firstChild)
-  list.appendChild(li)
-  block.replaceWith(list)
+  replaceBlock(block, document.createElement('li'), (li) => {
+    list.appendChild(li)
+    block.replaceWith(list)
+  })
   emitInput(host)
 }
 
