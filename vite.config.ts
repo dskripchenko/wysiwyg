@@ -1,9 +1,16 @@
+import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 
+// The toolbar icons are bundled (no `lucide-vue-next` in a CDN import map); their license goes with them.
+const lucideLicense = readFileSync(resolve(__dirname, 'node_modules/lucide-vue-next/LICENSE'), 'utf8').trim()
+const lucideBanner = `/*! Includes icons from lucide-vue-next (https://lucide.dev)\n${lucideLicense.replace(/\*\//g, '* /')}\n*/`
+
 export default defineConfig({
+  // Keep the /*! license banner through minification.
+  esbuild: { legalComments: 'inline' },
   plugins: [
     vue(),
     dts({
@@ -33,11 +40,9 @@ export default defineConfig({
         // run time and the component degrades gracefully (see the fallback in
         // DskWysiwygToolbar).
         /^@dskripchenko\/ui($|\/)/,
-        // The Lucide icons are used through the ui kit; in case of a direct
-        // import we mark them external as well.
-        'lucide-vue-next',
       ],
       output: {
+        banner: lucideBanner,
         globals: {
           vue: 'Vue',
         },

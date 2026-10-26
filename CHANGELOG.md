@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.3 — 2026-10-26
+
+### Changed
+- **The toolbar icons are bundled.** The toolbar imports its lucide icons
+  directly and the build bundles them (the ISC notice is kept), instead of a
+  run-time `import('lucide-vue-next')`: the editor loads from an ESM CDN
+  without `lucide-vue-next` in the import map. They still draw through the
+  kit's `UidIcon`; without the kit the buttons keep their text symbols.
+
 ## 0.5.2 — 2026-10-26
 
 ### Fixed
