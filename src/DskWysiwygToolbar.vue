@@ -6,10 +6,35 @@
  * `controller.chain().*().run()`. The list of items is configured through the
  * `items` prop.
  *
- * For the icons we use lucide-vue-next through @dskripchenko/ui (UidIcon). When
- * the ui kit is not installed there is a fallback to text symbols.
+ * The icons (lucide, bundled into the build) are drawn through UidIcon of
+ * @dskripchenko/ui. When the ui kit is not installed there is a fallback to
+ * text symbols.
  */
 import { computed, ref, watch, defineAsyncComponent } from 'vue'
+import {
+  Bold,
+  Code,
+  Code2,
+  FileCode2,
+  Heading1,
+  Heading2,
+  Heading3,
+  Image,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Maximize2,
+  Minimize2,
+  Minus,
+  Pilcrow,
+  Quote,
+  Redo,
+  Strikethrough,
+  Table,
+  Underline,
+  Undo,
+} from 'lucide-vue-next'
 import type { EditorController } from './engine'
 import { useWysiwygLabels, type WysiwygLocale, type WysiwygPartialLabels } from './locale'
 
@@ -88,40 +113,38 @@ const UidIcon = defineAsyncComponent({
   errorComponent: { setup: () => () => null } as never,
 })
 
-// The Lucide icons are async as well (a peer dependency).
-const icons = ref<Record<string, unknown>>({})
-async function loadIcons(): Promise<void> {
-  try {
-    const mod = await import('lucide-vue-next')
-    icons.value = {
-      Bold: mod.Bold,
-      Italic: mod.Italic,
-      Underline: mod.Underline,
-      Strikethrough: mod.Strikethrough,
-      Code: mod.Code,
-      Heading1: mod.Heading1,
-      Heading2: mod.Heading2,
-      Heading3: mod.Heading3,
-      Pilcrow: mod.Pilcrow,
-      List: mod.List,
-      ListOrdered: mod.ListOrdered,
-      Quote: mod.Quote,
-      Code2: mod.Code2,
-      Link2: mod.Link2,
-      Image: mod.Image,
-      Minus: mod.Minus,
-      Table: mod.Table,
-      Undo: mod.Undo,
-      Redo: mod.Redo,
-      FileCode: mod.FileCode2 ?? mod.FileCode,
-      Maximize: mod.Maximize2,
-      Minimize: mod.Minimize2,
-    }
-  } catch {
-    icons.value = {}
-  }
+// Bundled, so the editor loads from an ESM CDN without lucide in the import map.
+const ICONS: Record<string, unknown> = {
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  Pilcrow,
+  List,
+  ListOrdered,
+  Quote,
+  Code2,
+  Link2,
+  Image,
+  Minus,
+  Table,
+  Undo,
+  Redo,
+  FileCode: FileCode2,
+  Maximize: Maximize2,
+  Minimize: Minimize2,
 }
-void loadIcons()
+// The icons draw through UidIcon: without the kit the buttons keep their text symbols.
+const kitLoaded = ref(false)
+import('@dskripchenko/ui').then(
+  (kit) => (kitLoaded.value = Boolean((kit as { UidIcon?: unknown }).UidIcon)),
+  () => undefined,
+)
+const icons = computed<Record<string, unknown>>(() => (kitLoaded.value ? ICONS : {}))
 
 const isReady = computed<boolean>(() => Boolean(props.controller))
 
