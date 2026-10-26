@@ -114,4 +114,54 @@ describe('EditorController', () => {
     // Expected: <ul><li>first</li></ul><h2>second</h2><ul><li>third</li></ul>
     expect(host.innerHTML).toMatch(/<ul><li>first<\/li><\/ul><h2>second<\/h2><ul><li>third<\/li><\/ul>/)
   })
+
+  describe('the caret survives a block replacement', () => {
+    function caretAt(node: Node, offset: number): void {
+      const range = document.createRange()
+      range.setStart(node, offset)
+      range.collapse(true)
+      const sel = window.getSelection()!
+      sel.removeAllRanges()
+      sel.addRange(range)
+    }
+
+    /** The block holding the caret and the text before it in that block. */
+    function caret(): { tag: string; before: string } {
+      const range = window.getSelection()!.getRangeAt(0)
+      let n: Node | null = range.startContainer
+      while (n && !(n instanceof HTMLElement && /^(P|H\d|BLOCKQUOTE|LI|PRE)$/.test(n.tagName))) n = n.parentNode
+      const block = n as HTMLElement
+      const before = document.createRange()
+      before.selectNodeContents(block)
+      before.setEnd(range.startContainer, range.startOffset)
+      return { tag: block.tagName, before: before.toString() }
+    }
+
+    it('heading keeps the caret at its offset in the text', () => {
+      const host = setupHost('<p>first</p><p>hello <strong>bold</strong> tail</p>')
+      const c = new EditorController(host)
+      caretAt(host.children[1].querySelector('strong')!.firstChild!, 2)
+      c.chain().heading(2).run()
+      expect(host.innerHTML).toBe('<p>first</p><h2>hello <strong>bold</strong> tail</h2>')
+      expect(caret()).toEqual({ tag: 'H2', before: 'hello bo' })
+    })
+
+    it('an emptied block gets a <br> and keeps the caret', () => {
+      const host = setupHost('<p>first</p><p></p>')
+      const c = new EditorController(host)
+      caretAt(host.children[1], 0)
+      c.chain().blockquote().run()
+      expect(host.innerHTML).toBe('<p>first</p><blockquote><br></blockquote>')
+      expect(caret()).toEqual({ tag: 'BLOCKQUOTE', before: '' })
+    })
+
+    it('a list keeps the caret inside the new item', () => {
+      const host = setupHost('<p>first</p><p>item text</p>')
+      const c = new EditorController(host)
+      caretAt(host.children[1].firstChild!, 4)
+      c.chain().bulletList().run()
+      expect(host.innerHTML).toBe('<p>first</p><ul><li>item text</li></ul>')
+      expect(caret()).toEqual({ tag: 'LI', before: 'item' })
+    })
+  })
 })

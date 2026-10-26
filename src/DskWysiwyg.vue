@@ -335,8 +335,13 @@ function onSlashSelect(cmd: { apply: (c: EditorController) => void }): void {
     closeSlashMenu()
     return
   }
-  // The `/query` text is deleted before the command is applied.
+  // The `/query` text is deleted before the command is applied; the emptied
+  // block keeps a <br>, or the caret has no line in it.
   slashRange.deleteContents()
+  const block = slashRange.startContainer
+  if (block instanceof HTMLElement && (block.textContent ?? '') === '' && !block.querySelector('br, img, hr')) {
+    block.appendChild(document.createElement('br'))
+  }
   const sel = window.getSelection()
   if (sel) {
     sel.removeAllRanges()

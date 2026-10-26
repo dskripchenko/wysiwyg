@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.2 — 2026-10-26
+
+### Fixed
+- **Typing after a block change goes into the new block.** Turning a block
+  into a heading, a quote, a paragraph or a list (from the slash menu or the
+  toolbar) moved its content into a new element but left the selection in the
+  detached old one: Chromium then typed into the previous paragraph, WebKit
+  outside any block. The selection is now carried over as text offsets, and an
+  empty block gets a `<br>` so the caret has a line to stand on. Choosing a
+  slash item with Enter on an empty line is the common case.
+
 ## 0.5.1 — 2026-10-26
 
 ### Added
