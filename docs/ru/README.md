@@ -43,7 +43,9 @@ const html = ref('<p>Привет</p>')
 | Prop | Type | Default | Описание |
 |---|---|---|---|
 | `modelValue` | `string` | `''` | HTML-content (v-model). |
-| `placeholder` | `string` | `'Введите текст…'` | Подсказка. |
+| `placeholder` | `string` | из языка | Подсказка. |
+| `locale` | `'en' \| 'ru'` | локаль кита, иначе `'en'` | Язык интерфейса, см. [Кастомизация](customization.md#язык-интерфейса). |
+| `labels` | `WysiwygPartialLabels` | — | Отдельные строки интерфейса поверх языка. |
 | `toolbar` | `boolean` | `true` | Показать toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | весь набор | Кастомный список. |
 | `readonly` | `boolean` | `false` | Read-only режим. |

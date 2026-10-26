@@ -11,6 +11,7 @@
  */
 import { computed, ref, watch, defineAsyncComponent } from 'vue'
 import type { EditorController } from './engine'
+import { useWysiwygLabels, type WysiwygLocale, type WysiwygPartialLabels } from './locale'
 
 export type ToolbarItem =
   | 'bold' | 'italic' | 'underline' | 'strike' | 'code'
@@ -37,6 +38,10 @@ interface Props {
   sourceActive?: boolean
   /** The active state of the 'fullscreen' button (the host controls it). */
   fullscreenActive?: boolean
+  /** The UI language; when unset, the kit's locale (if any) or English. */
+  locale?: WysiwygLocale
+  /** Single strings over the language's own. */
+  labels?: WysiwygPartialLabels
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -53,7 +58,11 @@ const props = withDefaults(defineProps<Props>(), {
   selectionVersion: 0,
   sourceActive: false,
   fullscreenActive: false,
+  locale: undefined,
+  labels: undefined,
 })
+
+const { labels: text, KitLocaleProbe, probeKit } = useWysiwygLabels(props)
 
 const emit = defineEmits<{
   'image-request': []
@@ -149,7 +158,7 @@ function onLink(): void {
   }
   emit('link-request', currentUrl)
   // The default fallback is a prompt; a host usually intercepts the emit and opens a modal.
-  const url = window.prompt('URL ссылки', currentUrl ?? 'https://')
+  const url = window.prompt(text.value.toolbar.linkPrompt, currentUrl ?? 'https://')
   if (url === null) return
   props.controller.chain().focus().setLink(url === '' ? null : url).run()
 }
@@ -160,7 +169,8 @@ function onImage(): void {
 </script>
 
 <template>
-  <div class="dsk-wysiwyg-toolbar" role="toolbar" aria-label="Редактор">
+  <div class="dsk-wysiwyg-toolbar" role="toolbar" :aria-label="text.toolbar.label">
+    <component :is="KitLocaleProbe" v-if="probeKit" />
     <template v-for="(item, idx) in items" :key="`tb-${idx}`">
       <span v-if="item === '|'" class="dsk-wysiwyg-toolbar__divider" />
 
@@ -169,7 +179,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('bold') }]"
-        title="Жирный (⌘B)"
+        :title="text.toolbar.bold"
         @click="exec(() => controller?.chain().focus().bold().run())"
       >
         <component v-if="icons.Bold" :is="UidIcon" :icon="icons.Bold" :size="14" />
@@ -180,7 +190,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('italic') }]"
-        title="Курсив (⌘I)"
+        :title="text.toolbar.italic"
         @click="exec(() => controller?.chain().focus().italic().run())"
       >
         <component v-if="icons.Italic" :is="UidIcon" :icon="icons.Italic" :size="14" />
@@ -191,7 +201,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('underline') }]"
-        title="Подчёркнутый (⌘U)"
+        :title="text.toolbar.underline"
         @click="exec(() => controller?.chain().focus().underline().run())"
       >
         <component v-if="icons.Underline" :is="UidIcon" :icon="icons.Underline" :size="14" />
@@ -202,7 +212,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('strike') }]"
-        title="Зачёркнутый"
+        :title="text.toolbar.strike"
         @click="exec(() => controller?.chain().focus().strike().run())"
       >
         <component v-if="icons.Strikethrough" :is="UidIcon" :icon="icons.Strikethrough" :size="14" />
@@ -213,7 +223,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('code') }]"
-        title="Inline code"
+        :title="text.toolbar.code"
         @click="exec(() => controller?.chain().focus().code().run())"
       >
         <component v-if="icons.Code" :is="UidIcon" :icon="icons.Code" :size="14" />
@@ -225,7 +235,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('heading', { level: 1 }) }]"
-        title="Заголовок 1"
+        :title="text.toolbar.h1"
         @click="exec(() => controller?.chain().focus().heading(1).run())"
       >
         <component v-if="icons.Heading1" :is="UidIcon" :icon="icons.Heading1" :size="14" />
@@ -236,7 +246,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('heading', { level: 2 }) }]"
-        title="Заголовок 2"
+        :title="text.toolbar.h2"
         @click="exec(() => controller?.chain().focus().heading(2).run())"
       >
         <component v-if="icons.Heading2" :is="UidIcon" :icon="icons.Heading2" :size="14" />
@@ -247,7 +257,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('heading', { level: 3 }) }]"
-        title="Заголовок 3"
+        :title="text.toolbar.h3"
         @click="exec(() => controller?.chain().focus().heading(3).run())"
       >
         <component v-if="icons.Heading3" :is="UidIcon" :icon="icons.Heading3" :size="14" />
@@ -258,7 +268,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('paragraph') }]"
-        title="Параграф"
+        :title="text.toolbar.paragraph"
         @click="exec(() => controller?.chain().focus().paragraph().run())"
       >
         <component v-if="icons.Pilcrow" :is="UidIcon" :icon="icons.Pilcrow" :size="14" />
@@ -270,7 +280,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('bulletList') }]"
-        title="Маркированный список"
+        :title="text.toolbar.bulletList"
         @click="exec(() => controller?.chain().focus().bulletList().run())"
       >
         <component v-if="icons.List" :is="UidIcon" :icon="icons.List" :size="14" />
@@ -281,7 +291,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('orderedList') }]"
-        title="Нумерованный список"
+        :title="text.toolbar.orderedList"
         @click="exec(() => controller?.chain().focus().orderedList().run())"
       >
         <component v-if="icons.ListOrdered" :is="UidIcon" :icon="icons.ListOrdered" :size="14" />
@@ -293,7 +303,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('blockquote') }]"
-        title="Цитата"
+        :title="text.toolbar.blockquote"
         @click="exec(() => controller?.chain().focus().blockquote().run())"
       >
         <component v-if="icons.Quote" :is="UidIcon" :icon="icons.Quote" :size="14" />
@@ -304,7 +314,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('codeBlock') }]"
-        title="Блок кода"
+        :title="text.toolbar.codeBlock"
         @click="exec(() => controller?.chain().focus().codeBlock().run())"
       >
         <component v-if="icons.Code2" :is="UidIcon" :icon="icons.Code2" :size="14" />
@@ -316,7 +326,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('link') }]"
-        title="Ссылка"
+        :title="text.toolbar.link"
         @click="onLink"
       >
         <component v-if="icons.Link2" :is="UidIcon" :icon="icons.Link2" :size="14" />
@@ -327,7 +337,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         class="dsk-wysiwyg-toolbar__btn"
-        title="Изображение"
+        :title="text.toolbar.image"
         @click="onImage"
       >
         <component v-if="icons.Image" :is="UidIcon" :icon="icons.Image" :size="14" />
@@ -339,7 +349,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         class="dsk-wysiwyg-toolbar__btn"
-        title="Горизонтальная линия"
+        :title="text.toolbar.horizontalRule"
         @click="exec(() => controller?.chain().focus().horizontalRule().run())"
       >
         <component v-if="icons.Minus" :is="UidIcon" :icon="icons.Minus" :size="14" />
@@ -351,7 +361,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': isActive('table') }]"
-        title="Вставить таблицу 3×3"
+        :title="text.toolbar.table"
         @click="exec(() => isActive('table')
           ? controller?.chain().focus().addRowAfter().run()
           : controller?.chain().focus().insertTable(3, 3).run())"
@@ -365,7 +375,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady || !controller?.canUndo()"
         class="dsk-wysiwyg-toolbar__btn"
-        title="Отменить (⌘Z)"
+        :title="text.toolbar.undo"
         @click="exec(() => controller?.chain().undo().run())"
       >
         <component v-if="icons.Undo" :is="UidIcon" :icon="icons.Undo" :size="14" />
@@ -376,7 +386,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled || !isReady || !controller?.canRedo()"
         class="dsk-wysiwyg-toolbar__btn"
-        title="Повторить (⌘⇧Z)"
+        :title="text.toolbar.redo"
         @click="exec(() => controller?.chain().redo().run())"
       >
         <component v-if="icons.Redo" :is="UidIcon" :icon="icons.Redo" :size="14" />
@@ -388,7 +398,7 @@ function onImage(): void {
         type="button"
         :disabled="disabled"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': sourceActive }]"
-        :title="sourceActive ? 'Назад в редактор' : 'Исходный код (HTML)'"
+        :title="sourceActive ? text.toolbar.sourceBack : text.toolbar.source"
         @click="emit('toggle-source')"
       >
         <component v-if="icons.FileCode" :is="UidIcon" :icon="icons.FileCode" :size="14" />
@@ -399,7 +409,7 @@ function onImage(): void {
         v-else-if="item === 'fullscreen'"
         type="button"
         :class="['dsk-wysiwyg-toolbar__btn', { 'is-active': fullscreenActive }]"
-        :title="fullscreenActive ? 'Выйти из полноэкранного режима (Esc)' : 'Во весь экран'"
+        :title="fullscreenActive ? text.toolbar.fullscreenExit : text.toolbar.fullscreen"
         :aria-pressed="fullscreenActive"
         @click="emit('toggle-fullscreen')"
       >

@@ -12,6 +12,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import type { EditorController } from './engine'
+import { useWysiwygLabels, type WysiwygLocale, type WysiwygPartialLabels, type WysiwygSlashLabels } from './locale'
 
 export interface SlashCommand {
   key: string
@@ -33,6 +34,10 @@ export interface SlashMenuProps {
   left: number
   /** The host's own items, listed after the built-in ones. */
   extra?: SlashCommand[]
+  /** The UI language; when unset, the kit's locale (if any) or English. */
+  locale?: WysiwygLocale
+  /** Single strings over the language's own. */
+  labels?: WysiwygPartialLabels
 }
 
 const props = defineProps<SlashMenuProps>()
@@ -43,31 +48,37 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const COMMANDS: SlashCommand[] = [
-  { key: 'h1', label: 'Заголовок 1', hint: 'Большой заголовок', aliases: ['h1', 'heading1', 'title'],
-    apply: (c) => c.chain().focus().heading(1).run() },
-  { key: 'h2', label: 'Заголовок 2', hint: 'Средний заголовок', aliases: ['h2', 'heading2'],
-    apply: (c) => c.chain().focus().heading(2).run() },
-  { key: 'h3', label: 'Заголовок 3', hint: 'Малый заголовок', aliases: ['h3', 'heading3'],
-    apply: (c) => c.chain().focus().heading(3).run() },
-  { key: 'paragraph', label: 'Параграф', hint: 'Обычный текст', aliases: ['p', 'text', 'paragraph'],
-    apply: (c) => c.chain().focus().paragraph().run() },
-  { key: 'ul', label: 'Маркированный список', aliases: ['ul', 'bullet', 'list'],
-    apply: (c) => c.chain().focus().bulletList().run() },
-  { key: 'ol', label: 'Нумерованный список', aliases: ['ol', 'numbered', 'ordered'],
-    apply: (c) => c.chain().focus().orderedList().run() },
-  { key: 'quote', label: 'Цитата', aliases: ['quote', 'blockquote'],
-    apply: (c) => c.chain().focus().blockquote().run() },
-  { key: 'code', label: 'Блок кода', aliases: ['code', 'codeblock', 'pre'],
-    apply: (c) => c.chain().focus().codeBlock().run() },
-  { key: 'hr', label: 'Горизонтальная линия', aliases: ['hr', 'divider', 'rule'],
-    apply: (c) => c.chain().focus().horizontalRule().run() },
-  { key: 'table', label: 'Таблица 3×3', aliases: ['table'],
-    apply: (c) => c.chain().focus().insertTable(3, 3).run() },
-]
+/** The built-in items; the labels come from the language in effect. */
+function builtinCommands(l: WysiwygSlashLabels): SlashCommand[] {
+  return [
+    { key: 'h1', label: l.h1, hint: l.h1Hint, aliases: ['h1', 'heading1', 'title'],
+      apply: (c) => c.chain().focus().heading(1).run() },
+    { key: 'h2', label: l.h2, hint: l.h2Hint, aliases: ['h2', 'heading2'],
+      apply: (c) => c.chain().focus().heading(2).run() },
+    { key: 'h3', label: l.h3, hint: l.h3Hint, aliases: ['h3', 'heading3'],
+      apply: (c) => c.chain().focus().heading(3).run() },
+    { key: 'paragraph', label: l.paragraph, hint: l.paragraphHint, aliases: ['p', 'text', 'paragraph'],
+      apply: (c) => c.chain().focus().paragraph().run() },
+    { key: 'ul', label: l.bulletList, aliases: ['ul', 'bullet', 'list'],
+      apply: (c) => c.chain().focus().bulletList().run() },
+    { key: 'ol', label: l.orderedList, aliases: ['ol', 'numbered', 'ordered'],
+      apply: (c) => c.chain().focus().orderedList().run() },
+    { key: 'quote', label: l.blockquote, aliases: ['quote', 'blockquote'],
+      apply: (c) => c.chain().focus().blockquote().run() },
+    { key: 'code', label: l.codeBlock, aliases: ['code', 'codeblock', 'pre'],
+      apply: (c) => c.chain().focus().codeBlock().run() },
+    { key: 'hr', label: l.horizontalRule, aliases: ['hr', 'divider', 'rule'],
+      apply: (c) => c.chain().focus().horizontalRule().run() },
+    { key: 'table', label: l.table, aliases: ['table'],
+      apply: (c) => c.chain().focus().insertTable(3, 3).run() },
+  ]
+}
+
+const { labels: text, KitLocaleProbe, probeKit } = useWysiwygLabels(props)
+const commands = computed<SlashCommand[]>(() => builtinCommands(text.value.slash))
 
 const filtered = computed<SlashCommand[]>(() => {
-  const all = props.extra?.length ? [...COMMANDS, ...props.extra] : COMMANDS
+  const all = props.extra?.length ? [...commands.value, ...props.extra] : commands.value
   const q = props.query.toLowerCase().trim()
   if (q === '') return all
   return all.filter((cmd) =>
@@ -101,6 +112,7 @@ defineExpose({ moveDown, moveUp, selectActive, hasItems: () => filtered.value.le
 </script>
 
 <template>
+  <component :is="KitLocaleProbe" v-if="probeKit" />
   <Teleport to="body">
     <div
       v-if="open && filtered.length > 0"

@@ -146,3 +146,35 @@ editor.value.fullscreen              // the current state
 
 Over a host's own fixed layers, raise `--dsk-wysiwyg-fullscreen-z`
 (1000 by default).
+
+## Language
+
+The toolbar's titles, the slash menu and the placeholder come in English and
+Russian. Where the language comes from, first match wins:
+
+1. `labels` — single strings over the language's own;
+2. `locale` — `'en'` or `'ru'`;
+3. the @dskripchenko/ui kit's locale, when the kit is installed and a
+   `UidLocaleProvider` (or `provideLocale()`) is above the editor: a `code`
+   starting with `ru` gives Russian, anything else English;
+4. English.
+
+```vue
+<DskWysiwyg v-model="html" locale="ru" />
+
+<DskWysiwyg
+  v-model="html"
+  :labels="{ placeholder: 'Schreiben…', toolbar: { bold: 'Fett (⌘B)' }, slash: { h1: 'Überschrift 1' } }"
+/>
+```
+
+The `placeholder` prop still wins over the language's placeholder. The
+groups are `toolbar` (titles, the toolbar's `label` for its aria-label,
+`sourceBack`, `fullscreenExit`, `linkPrompt` for the fallback prompt) and
+`slash` (the built-in items and their hints); the full sets are exported as
+`wysiwygEn` and `wysiwygRu`, the types as `WysiwygLabels` and
+`WysiwygPartialLabels`. `DskWysiwygToolbar` and `DskWysiwygSlashMenu` take
+the same `locale` and `labels` when used on their own.
+
+The kit is an optional peer: without it the editor is English unless told
+otherwise.
