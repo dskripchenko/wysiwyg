@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.1 — 2026-10-26
 
 ### Added
 - **Localisable UI.** The toolbar's titles and aria-label, the slash menu's
