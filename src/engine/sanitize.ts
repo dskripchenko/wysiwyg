@@ -72,7 +72,14 @@ function cleanNode(node: Element, extra: AllowedAttributes): void {
   // The attributes outside the whitelist of the particular tag are removed.
   const tag = node.tagName.toLowerCase()
   const allowed = new Set<string>([...(ALLOWED_ATTRS[tag] ?? []), ...(extra[tag] ?? [])])
+  // A table cell keeps its alignment (text-align), and nothing else of its style.
+  if ((tag === 'td' || tag === 'th') && node.hasAttribute('style')) {
+    const align = /(?:^|;)\s*text-align\s*:\s*(left|center|right)\b/i.exec(node.getAttribute('style') ?? '')?.[1]
+    if (align) node.setAttribute('style', `text-align:${align.toLowerCase()}`)
+    else node.removeAttribute('style')
+  }
   for (const attr of Array.from(node.attributes)) {
+    if ((tag === 'td' || tag === 'th') && attr.name === 'style') continue
     if (! allowed.has(attr.name) || /^on/i.test(attr.name)) {
       node.removeAttribute(attr.name)
       continue

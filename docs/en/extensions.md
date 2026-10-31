@@ -144,12 +144,27 @@ addRow / addColumn / remove buttons (or use the controller).
 ```ts
 import { htmlToMarkdown } from '@dskripchenko/wysiwyg'
 
-const md = htmlToMarkdown('<h1>Hi</h1><p><strong>bold</strong></p>')
-// '# Hi\n\n**bold**\n'
+const md = htmlToMarkdown('<h1>Hi</h1><p><strong>bold</strong> text, version 1.5</p>')
+// '# Hi\n\n**bold** text, version 1.5'
 ```
 
-Supports: p, h1-h3, strong/em/u/s, code, pre, ul/ol, blockquote, a,
-img, hr, br. A code block keeps its language: ` ```mermaid `.
+The editor's HTML as CommonMark with GFM tables and strikethrough, written so
+that converting it back gives the same document — a second pass changes
+nothing:
+
+- headings h1–h6, paragraphs, `**bold**`, `*italic*`, `~~struck~~`;
+  `u`, `mark`, `sup`, `sub` stay as HTML (Markdown has none);
+- inline code with as many backticks as it needs; code blocks fenced with a
+  fence longer than any backticks inside, the language kept
+  (` ```mermaid `);
+- lists nested by indentation, several paragraphs in an item;
+- quotes, nested ones too; tables with the column alignment; links and
+  images with their title; `<br>` as a hard break (`\` at the line end);
+- text is escaped only where a character would mean markup (`*`, `_`,
+  `` ` ``, `[`, `<`, and `#`, `-`, `1.` at a line start): dots, dashes and
+  brackets stay as written.
+
+The editor's preview islands are left out.
 
 ## Source mode
 
