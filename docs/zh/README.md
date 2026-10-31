@@ -64,11 +64,11 @@ const html = ref('<p>你好 <strong>世界</strong>！</p>')
 
 ## 文档
 
-- [快速开始](../../docs/en/getting-started.md) (en)
-- [控制器 API](../../docs/en/controller-api.md) (en)
-- [扩展](../../docs/en/extensions.md) (en)
-- [自定义](../../docs/en/customization.md) (en)
-- [迁移指南](../../docs/en/migration-guide.md) (en)
+- [快速开始](getting-started.md)
+- [控制器 API](controller-api.md)
+- [扩展](extensions.md)
+- [自定义](customization.md)
+- [迁移指南](migration-guide.md)
 
 ## 许可证
 

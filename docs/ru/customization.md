@@ -1,13 +1,127 @@
----
-title: Кастомизация
-locale: ru
-status: stub
-translated_from: ../en/customization.md
----
-
 # Кастомизация
 
-> ⚠️ **Эта страница ещё не полностью переведена.** Пока используйте [английскую версию](../en/customization.md).
+## Темы
+
+Редактор понимает распространённые признаки тёмной темы через CSS:
+
+- `data-theme="dark"` на `:root` или любом предке (например, его
+  выставляет переключатель темы вашего приложения)
+- `:root.dark` (в стиле Tailwind)
+- предок с `[data-theme='dark']` (большинство переключателей уровня приложения)
+- `@media (prefers-color-scheme: dark)` (системная настройка)
+- `[data-theme='light']` принудительно включает светлую тему даже при тёмной системной
+
+Или задайте тему напрямую:
+
+```vue
+<DskWysiwyg v-model="html" class="dsk-wysiwyg--dark-theme" />
+```
+
+## Токены
+
+Все цвета — CSS custom properties, переопределяйте где угодно:
+
+```css
+.dsk-wysiwyg {
+  --dsk-wysiwyg-bg: #fff;
+  --dsk-wysiwyg-fg: #111;
+  --dsk-wysiwyg-border: #e5e7eb;
+  --dsk-wysiwyg-accent: #14b8a6;
+  --dsk-wysiwyg-muted: #6b7280;
+
+  /* цвета токенов подсветки синтаксиса */
+  --dsk-wysiwyg-tok-keyword: #2563eb;
+  --dsk-wysiwyg-tok-string: #16a34a;
+  --dsk-wysiwyg-tok-comment: #9ca3af;
+  --dsk-wysiwyg-tok-number: #b45309;
+  --dsk-wysiwyg-tok-tag: #2563eb;
+  --dsk-wysiwyg-tok-attr: #b45309;
+  --dsk-wysiwyg-tok-function: #7c3aed;
+  --dsk-wysiwyg-tok-punct: #4b5563;
+}
+```
+
+## Размеры и изменение высоты
+
+```vue
+<DskWysiwyg
+  v-model="html"
+  min-height="150px"
+  max-height="600px"
+  :resizable="true"
+/>
+```
+
+Пользователь может тянуть уголок в правом нижнем углу по вертикали. Чтобы
+отключить:
+
+```vue
+<DskWysiwyg :resizable="false" />
+```
+
+## Свои кнопки тулбара
+
+```vue
+<DskWysiwyg
+  v-model="html"
+  :toolbar-items="['bold', 'italic', '|', 'h2', 'h3', '|', 'link', 'image', 'source']"
+/>
+```
+
+`|` — разделитель. Кнопки: `bold`, `italic`, `underline`, `strike`,
+`code`, `h1`-`h3`, `ul`, `ol`, `quote`, `link`, `image`, `hr`,
+`codeblock`, `table`, `undo`, `redo`, `source`, `fullscreen`.
+
+## Свои команды
+
+Вызывайте контроллер из кнопки хоста:
+
+```vue
+<script setup>
+import { ref } from 'vue'
+import { DskWysiwyg } from '@dskripchenko/wysiwyg'
+
+const editorRef = ref(null)
+const html = ref('')
+
+function insertSignature() {
+  editorRef.value.controller.chain()
+    .focus()
+    .paragraph()
+    .insertText('— Sent from MyApp')
+    .run()
+}
+</script>
+
+<template>
+  <DskWysiwyg ref="editorRef" v-model="html" />
+  <button @click="insertSignature">Insert signature</button>
+</template>
+```
+
+## Санитизация
+
+`getHTML()` пропускает результат через whitelist на основе DOMParser:
+
+- Разрешённые теги: `p`, `br`, `strong`, `em`, `u`, `s`, `code`, `pre`,
+  `h1`-`h6`, `ul`, `ol`, `li`, `blockquote`, `a` (`href`, `target`,
+  `rel`), `img` (`src`, `alt`, `width`, `height`), `hr`, `table`,
+  `thead`, `tbody`, `tr`, `th`, `td`, `class` на `span`/`code` с
+  префиксом `language-`/`dsk-tok-`.
+- Всё остальное отбрасывается.
+
+Чтобы расширить: сделайте форк или перед сохранением прогоняйте HTML
+через свою обёртку над `sanitizeHtml`.
+
+## События и жизненный цикл
+
+- `@update:modelValue` — после каждой зафиксированной правки (с debounce).
+- `controller.on('blur', fn)` — доступен хосту для сохранения по blur.
+
+## См. также
+
+- [Controller API](controller-api.md)
+- [Расширения](extensions.md)
 
 ## Полноэкранный режим
 

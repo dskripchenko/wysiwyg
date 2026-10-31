@@ -65,11 +65,11 @@ const html = ref('<p>Hallo <strong>Welt</strong>!</p>')
 
 ## Dokumentation
 
-- [Erste Schritte](../../docs/en/getting-started.md) (en)
-- [Controller-API](../../docs/en/controller-api.md) (en)
-- [Erweiterungen](../../docs/en/extensions.md) (en)
-- [Anpassung](../../docs/en/customization.md) (en)
-- [Migration Guide](../../docs/en/migration-guide.md) (en)
+- [Erste Schritte](getting-started.md)
+- [Controller-API](controller-api.md)
+- [Erweiterungen](extensions.md)
+- [Anpassung](customization.md)
+- [Migration Guide](migration-guide.md)
 
 ## Lizenz
 
