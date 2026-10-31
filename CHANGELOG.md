@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 — Unreleased
+
+### Changed
+- **`htmlToMarkdown` writes Markdown that converts back to the same
+  document.** Text is escaped only where a character would mean markup —
+  dots, dashes and brackets stay as written (`1.5`, `a-b`, `(net)` used to
+  come out as `1\.5`, `a\-b`, `\(net\)`). Lists nest by indentation and keep
+  several paragraphs in an item; tables become GFM tables with the column
+  alignment; headings h1–h6; link and image titles; inline code and fences
+  with as many backticks as the content needs; `<br>` is a hard break;
+  `mark`, `sup`, `sub` stay as HTML. Converting the result once more changes
+  nothing.
+- **Table cells keep their alignment**: the sanitizer leaves `text-align`
+  on `<td>` / `<th>` (and drops the rest of their style).
+
 ## 0.5.3 — 2026-10-26
 
 ### Changed
