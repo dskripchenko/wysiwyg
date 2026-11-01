@@ -30,6 +30,13 @@ interface Props {
   placeholder?: string
   toolbar?: boolean
   toolbarItems?: ToolbarItem[]
+  /**
+   * Where the toolbar is shown instead of above the content: an element, or
+   * a CSS selector of one in the document — the host's own bar, a floating
+   * panel. It stays the editor's toolbar (the same commands and state); it
+   * goes back above the content when the target is not there.
+   */
+  toolbarTarget?: string | HTMLElement
   readonly?: boolean
   minHeight?: string
   maxHeight?: string
@@ -65,6 +72,7 @@ const props = withDefaults(defineProps<Props>(), {
   labels: undefined,
   toolbar: true,
   toolbarItems: undefined,
+  toolbarTarget: undefined,
   readonly: false,
   minHeight: '200px',
   maxHeight: undefined,
@@ -617,6 +625,15 @@ function onFullscreenKeydown(e: KeyboardEvent): void {
 }
 onBeforeUnmount(() => setFullscreen(false))
 
+/** The element `toolbarTarget` names, once it is in the document; null keeps the toolbar above the content. */
+const toolbarHost = shallowRef<HTMLElement | null>(null)
+function resolveToolbarHost(): void {
+  const target = props.toolbarTarget
+  toolbarHost.value = typeof target === 'string' ? (target ? document.querySelector<HTMLElement>(target) : null) : (target ?? null)
+}
+onMounted(resolveToolbarHost)
+watch(() => props.toolbarTarget, resolveToolbarHost)
+
 const wrapStyle = computed(() => ({
   '--dsk-wysiwyg-min-height': props.minHeight,
   '--dsk-wysiwyg-max-height': props.maxHeight ?? 'none',
@@ -633,8 +650,10 @@ defineExpose({
 <template>
   <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen }]" :style="wrapStyle">
     <component :is="KitLocaleProbe" v-if="probeKit" />
+    <Teleport :to="toolbarHost ?? 'body'" :disabled="!toolbarHost">
     <DskWysiwygToolbar
       v-if="toolbar && !readonly"
+      :class="{ 'dsk-wysiwyg-toolbar--detached': toolbarHost }"
       :controller="controller"
       :items="toolbarItems"
       :selection-version="selectionVersion"
@@ -647,6 +666,7 @@ defineExpose({
       @link-request="(url) => emit('link-request', url)"
       @toggle-source="toggleSource"
     />
+    </Teleport>
     <div v-if="sourceMode" class="dsk-wysiwyg__source-wrap">
       <pre
         ref="sourceHighlightRef"

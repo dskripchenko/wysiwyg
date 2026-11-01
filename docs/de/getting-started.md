@@ -42,6 +42,7 @@ interne DOMParser-Whitelist sanitisiert.
 | `labels` | `WysiwygPartialLabels` | — | Einzelne UI-Strings über denen der Sprache. |
 | `toolbar` | `boolean` | `true` | Zeigt die Toolbar an. |
 | `toolbarItems` | `ToolbarItem[]` | (Standardsatz) | Überschreibt die Reihenfolge der Toolbar. |
+| `toolbarTarget` | `string \| HTMLElement` | — | Zeigt die Toolbar in diesem Element (oder dem, das der Selektor findet) statt über dem Inhalt — in der eigenen Leiste oder einem schwebenden Panel der Anwendung. Es bleibt die Toolbar des Editors; fehlt das Ziel im Dokument, bleibt sie über dem Inhalt. |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS-Länge am Root-Element. |
 | `maxHeight` | `string` | `undefined` | CSS-Länge am Root-Element. |

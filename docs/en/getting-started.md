@@ -48,6 +48,7 @@ DOMParser whitelist before emitting.
 | `labels` | `WysiwygPartialLabels` | — | Single UI strings over the language's own. |
 | `toolbar` | `boolean` | `true` | Show the toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | (default set) | Override toolbar order. |
+| `toolbarTarget` | `string \| HTMLElement` | — | Show the toolbar in this element (or the element this selector finds) instead of above the content — the host's own bar or a floating panel. Still the editor's toolbar; back above the content when the target is not in the document. |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS length on the root. |
 | `maxHeight` | `string` | `undefined` | CSS length on the root. |
