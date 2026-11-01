@@ -1,6 +1,6 @@
 {
   "name": "@dskripchenko/wysiwyg",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publishConfig": {
     "access": "public"
   },
@@ -73,5 +73,8 @@
     "vitest": "^3.0.0",
     "vue": "^3.5.13",
     "vue-tsc": "^2.1.10"
+  },
+  "dependencies": {
+    "@dskripchenko/syntax": "^0.3.2"
   }
 }
