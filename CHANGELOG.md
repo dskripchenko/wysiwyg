@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.6.0 — Unreleased
+## 0.7.0
+
+### Added
+
+- `toolbarTarget` — show the toolbar in the host's own element (or the one a CSS selector finds) instead of above the content: a bar of the application, a floating panel. It stays the editor's toolbar, with the editor's tokens and dark theme, and goes back above the content when the target is not in the document.
+
+## 0.6.0
 
 ### Changed
 - **`htmlToMarkdown` writes Markdown that converts back to the same

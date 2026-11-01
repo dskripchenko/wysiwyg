@@ -94,6 +94,24 @@ html.dsk-wysiwyg-fullscreen-open body {
 }
 
 /* Toolbar */
+/* A toolbar shown in the host's own container (`toolbarTarget`): the editor's
+   tokens, and a box of its own instead of the editor's top edge. */
+:where(.dsk-wysiwyg-toolbar--detached) {
+  --dsk-wysiwyg-bg: #ffffff;
+  --dsk-wysiwyg-fg: #1f2937;
+  --dsk-wysiwyg-fg-muted: #6b7280;
+  --dsk-wysiwyg-border: #e5e7eb;
+  --dsk-wysiwyg-radius: 8px;
+  --dsk-wysiwyg-toolbar-bg: #f9fafb;
+  --dsk-wysiwyg-btn-active-bg: rgba(45, 212, 191, 0.16);
+  --dsk-wysiwyg-btn-active-fg: #0d9488;
+  --dsk-wysiwyg-btn-hover-bg: rgba(0, 0, 0, 0.05);
+}
+.dsk-wysiwyg-toolbar--detached {
+  color: var(--dsk-wysiwyg-fg);
+  border: 1px solid var(--dsk-wysiwyg-border);
+  border-radius: var(--dsk-wysiwyg-radius);
+}
 .dsk-wysiwyg-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -358,7 +376,8 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 /* Dark-theme palette — общий блок для всех способов активации dark.
    Переменные общие — токены подсветки и базовая палитра. */
 .dsk-wysiwyg--dark-theme,
-:where(:root[data-theme='dark'], :root.dark, [data-theme='dark']) .dsk-wysiwyg {
+:where(:root[data-theme='dark'], :root.dark, [data-theme='dark']) .dsk-wysiwyg,
+:where(:root[data-theme='dark'], :root.dark, [data-theme='dark']) .dsk-wysiwyg-toolbar--detached {
   --dsk-wysiwyg-bg: #18181b;
   --dsk-wysiwyg-fg: #e5e7eb;
   --dsk-wysiwyg-fg-muted: #9ca3af;
@@ -379,7 +398,7 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 }
 /* OS-уровневая dark-тема — только если host не переопределил явно. */
 @media (prefers-color-scheme: dark) {
-  :where(.dsk-wysiwyg) {
+  :where(.dsk-wysiwyg, .dsk-wysiwyg-toolbar--detached) {
     --dsk-wysiwyg-bg: #18181b;
     --dsk-wysiwyg-fg: #e5e7eb;
     --dsk-wysiwyg-fg-muted: #9ca3af;
@@ -401,7 +420,8 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 }
 /* Light-override: если host явно ставит [data-theme='light'] — возвращаем
    светлую палитру даже при OS dark. */
-:where(:root[data-theme='light'], :root.light, [data-theme='light']) .dsk-wysiwyg {
+:where(:root[data-theme='light'], :root.light, [data-theme='light']) .dsk-wysiwyg,
+:where(:root[data-theme='light'], :root.light, [data-theme='light']) .dsk-wysiwyg-toolbar--detached {
   --dsk-wysiwyg-bg: #ffffff;
   --dsk-wysiwyg-fg: #1f2937;
   --dsk-wysiwyg-fg-muted: #6b7280;

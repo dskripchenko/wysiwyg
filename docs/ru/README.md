@@ -48,6 +48,7 @@ const html = ref('<p>Привет</p>')
 | `labels` | `WysiwygPartialLabels` | — | Отдельные строки интерфейса поверх языка. |
 | `toolbar` | `boolean` | `true` | Показать toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | весь набор | Кастомный список. |
+| `toolbarTarget` | `string \| HTMLElement` | — | Тулбар в элементе программы, а не над содержимым. |
 | `readonly` | `boolean` | `false` | Read-only режим. |
 | `minHeight` | `string` | `'200px'` | Min-height area. |
 | `maxHeight` | `string` | — | Max-height (overflow-y auto). |
