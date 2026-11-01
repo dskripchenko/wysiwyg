@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+### Changed
+
+- Code blocks and the source view are highlighted through `@dskripchenko/syntax` (now a dependency): some 35 languages and formats instead of eight — Python, Go, Rust, Java, C#, SQL, YAML, shell, diff and others, with their usual aliases (`py`, `yml`, `sh`, `postgresql`) — and nested code read properly (a script inside HTML, a variable inside a string). `highlight(code, language)` and the `dsk-tok-*` classes stay as they were.
+
 ## 0.7.0
 
 ### Added

@@ -280,8 +280,10 @@ blockquote, a, img, hr, br.
 ## Code syntax highlighting
 
 `<pre><code class="language-js">…</code></pre>` блоки автоматически
-подсвечиваются на blur'е. Поддержка: `js`, `ts`, `tsx`, `jsx`, `php`,
-`html`, `css`, `json`. Token-based regex (без AST), ~1 KB gzip.
+подсвечиваются на blur'е — средствами `@dskripchenko/syntax`: около 35
+языков и форматов (`js`, `ts`, `php`, `python`, `go`, `rust`, `sql`, `html`,
+`css`, `json`, `yaml`, `bash`, `diff` и другие, с псевдонимами). Около 11 KB
+gzip, общих с другими пакетами, которые подсвечивают код.
 
 ```ts
 import { highlight } from '@dskripchenko/wysiwyg'
@@ -318,7 +320,7 @@ src/
 │   ├── sanitize.ts         — DOMParser-based sanitize
 │   ├── markdownShortcuts.ts — `# `, `- `, `1. `, `> `, ` ``` ` → block-format
 │   ├── htmlToMarkdown.ts   — HTML → MD конвертер
-│   ├── highlight.ts        — token-regex syntax highlighter
+│   ├── highlight.ts        — syntax highlighting (@dskripchenko/syntax)
 │   ├── table.ts            — table insert/edit команды
 │   └── index.ts            — EditorController + chain() API
 ├── DskWysiwyg.vue          — root (contenteditable + paste/keydown)

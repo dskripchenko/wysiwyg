@@ -40,6 +40,8 @@ export default defineConfig({
         // run time and the component degrades gracefully (see the fallback in
         // DskWysiwygToolbar).
         /^@dskripchenko\/ui($|\/)/,
+        // The tokenizer is a dependency: a host bundles it once for everything that highlights.
+        '@dskripchenko/syntax',
       ],
       output: {
         banner: lucideBanner,

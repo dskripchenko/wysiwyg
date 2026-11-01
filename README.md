@@ -49,7 +49,7 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
   code/hr/table commands, plus the host's own (`slashCommands`).
 - **Tables** — insert / addRow / addColumn / removeRow / removeColumn /
   removeTable.
-- **Code syntax highlighting** — js/ts/tsx/jsx/php/html/css/json
+- **Code syntax highlighting** — some 35 languages and formats via `@dskripchenko/syntax`
   in `<pre><code class="language-X">` blocks.
 - **Block previews** — a code block with a renderer (` ```mermaid `, say)
   shows as its diagram; a click opens the code with a live preview. The
