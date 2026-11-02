@@ -45,7 +45,8 @@ const ALLOWED_TAGS = new Set([
 ])
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
-  a: new Set(['href', 'target', 'rel', 'title']),
+  // data-wikilink: an internal link ([[note]]), written back as one.
+  a: new Set(['href', 'target', 'rel', 'title', 'data-wikilink', 'class']),
   img: new Set(['src', 'alt', 'title', 'width', 'height']),
   // The language-* class on a <code> is needed for the syntax highlight;
   // dsk-tok-* on a <span> is needed to render the tokens.
@@ -54,7 +55,7 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
 }
 
 /** The whitelist of class prefixes preserved on code and span. */
-const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-']
+const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-', 'uid-markdown__wikilink']
 
 export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {
   if (typeof DOMParser === 'undefined') return input

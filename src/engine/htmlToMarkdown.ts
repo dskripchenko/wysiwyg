@@ -187,6 +187,14 @@ function inlineOf(node: Node): string {
       return `${ticks}${pad}${text}${pad}${ticks}`
     }
     case 'a': {
+      // An internal link: [[note]], with its own text only when it differs from what the link shows by default.
+      const wiki = node.getAttribute('data-wikilink')
+      if (wiki !== null) {
+        const text = (node.textContent ?? '').trim()
+        const [name = '', heading] = wiki.split('#')
+        const shown = heading ? `${name}${name ? ' › ' : ''}${heading}` : name
+        return text === '' || text === shown ? `[[${wiki}]]` : `[[${wiki}|${text}]]`
+      }
       const href = (node.getAttribute('href') ?? '').replace(/[()\s]/g, (c) => encodeURIComponent(c))
       const title = node.getAttribute('title')
       return `[${inner()}](${href}${title ? ` "${title.replace(/"/g, '\\"')}"` : ''})`
@@ -206,7 +214,11 @@ function inlineOf(node: Node): string {
 
 /** Characters that would start markup anywhere in a line. */
 function escapeInline(text: string): string {
-  return text.replace(/[\\`*_[\]<]/g, '\\$&').replace(/~~/g, '\\~\\~')
+  // [[note]] typed as text is an internal link: kept as written.
+  return text
+    .split(/(\[\[[^\]\n]+\]\])/)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(/[\\`*_[\]<]/g, '\\$&').replace(/~~/g, '\\~\\~')))
+    .join('')
 }
 
 /** A block marker at the start of a line of plain text: `#`, `>`, `-`, `+`, `1.`, `---`. */

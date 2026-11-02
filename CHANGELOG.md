@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0
+
+### Added
+
+- Internal links (`[[note]]`, `[[note#heading]]`, `[[note|text]]`, as `@dskripchenko/ui` 1.25 renders them) survive the visual mode: the sanitizer keeps `data-wikilink`, `htmlToMarkdown` writes them back as `[[…]]` — with the link's own text only when it was changed — and `[[note]]` typed as text is not escaped.
+
 ## 0.8.1
 
 ### Fixed
