@@ -55,11 +55,11 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   // dsk-tok-* on a <span> is needed to render the tokens.
   code: new Set(['class']),
   // data-math: a formula island (its TeX), data-display: inline or block.
-  span: new Set(['class', 'data-math', 'data-display', 'data-tag']),
+  span: new Set(['class', 'data-math', 'data-display', 'data-tag', 'data-embed']),
 }
 
 /** The whitelist of class prefixes preserved on code and span. */
-const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-', 'uid-markdown__wikilink', 'uid-markdown__tag']
+const ALLOWED_CLASS_PREFIXES = ['language-', 'dsk-tok-', 'uid-markdown__wikilink', 'uid-markdown__tag', 'uid-markdown__embed']
 
 export function sanitizeHtml(input: string, options: SanitizeOptions = {}): string {
   if (typeof DOMParser === 'undefined') return input

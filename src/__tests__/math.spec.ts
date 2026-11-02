@@ -98,3 +98,18 @@ describe('tags through the visual mode', () => {
     expect(htmlToMarkdown(sanitizeHtml(html))).toBe(md)
   })
 })
+
+describe('embeds through the visual mode', () => {
+  it('an embed comes back as ![[…]], whatever a host drew in it', () => {
+    const html = '<p><span class="uid-markdown__embed is-filled" data-embed="Plan#Goals"><a href="Plan.md#goals" class="uid-markdown__wikilink" data-wikilink="Plan#Goals">Plan › Goals</a><b>drawn by the host</b></span></p>'
+    expect(htmlToMarkdown(sanitizeHtml(html))).toBe('![[Plan#Goals]]')
+  })
+})
+
+describe('embeds from the kit', () => {
+  it('![[note#heading]] through the visual mode and back', async () => {
+    const { renderMarkdown } = await import('@dskripchenko/ui')
+    const md = 'Before ![[Plan#Goals]] and after.\n\n![[Notes]]'
+    expect(htmlToMarkdown(sanitizeHtml(renderMarkdown(md)))).toBe(md)
+  })
+})

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.0
+
+### Added
+
+- Embedded notes (`![[note]]`, `![[note#heading]]`, as `@dskripchenko/ui` 1.28 draws them) survive the visual mode: `span.uid-markdown__embed[data-embed]` is kept and written back as `![[…]]`, whatever the host drew in it.
+
 ## 0.11.0
 
 ### Added

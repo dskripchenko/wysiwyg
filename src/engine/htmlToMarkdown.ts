@@ -187,6 +187,9 @@ function inlineOf(node: Node): string {
     case 'mark': return wrap('==')
     case 'u': case 'sup': case 'sub': return `<${tag}>${inner()}</${tag}>`
     case 'span': {
+      // An embedded note: written as the embed it is, whatever the host drew in it.
+      const embed = node.getAttribute('data-embed')
+      if (embed !== null) return `![[${embed}]]`
       // A tag: written as it reads, its characters unescaped (`#my_tag` is one tag).
       const tag = node.getAttribute('data-tag')
       if (tag !== null) return `#${tag}`
