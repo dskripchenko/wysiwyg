@@ -42,6 +42,8 @@ export default defineConfig({
         /^@dskripchenko\/ui($|\/)/,
         // The tokenizer is a dependency: a host bundles it once for everything that highlights.
         '@dskripchenko/syntax',
+        // Formulas: a dependency too, bundled once by the host.
+        '@dskripchenko/math',
       ],
       output: {
         banner: lucideBanner,

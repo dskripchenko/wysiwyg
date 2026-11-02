@@ -71,6 +71,8 @@ export interface WysiwygSlashLabels {
   codeBlock: string
   horizontalRule: string
   table: string
+  math: string
+  mathHint: string
 }
 
 export interface WysiwygLabels {
@@ -78,17 +80,21 @@ export interface WysiwygLabels {
   placeholder: string
   toolbar: WysiwygToolbarLabels
   slash: WysiwygSlashLabels
+  /** Asked for a formula's TeX (a new one, or a double-clicked one). */
+  mathPrompt: string
 }
 
 /** A partial override: any single string of any group. */
 export interface WysiwygPartialLabels {
   placeholder?: string
+  mathPrompt?: string
   toolbar?: Partial<WysiwygToolbarLabels>
   slash?: Partial<WysiwygSlashLabels>
 }
 
 export const en: WysiwygLabels = {
   placeholder: 'Start typing…',
+  mathPrompt: 'Formula (TeX)',
   toolbar: {
     label: 'Editor',
     bold: 'Bold (⌘B)',
@@ -131,11 +137,14 @@ export const en: WysiwygLabels = {
     codeBlock: 'Code block',
     horizontalRule: 'Horizontal rule',
     table: 'Table 3×3',
+    math: 'Formula',
+    mathHint: 'TeX, on its own line',
   },
 }
 
 export const ru: WysiwygLabels = {
   placeholder: 'Введите текст…',
+  mathPrompt: 'Формула (TeX)',
   toolbar: {
     label: 'Редактор',
     bold: 'Жирный (⌘B)',
@@ -178,6 +187,8 @@ export const ru: WysiwygLabels = {
     codeBlock: 'Блок кода',
     horizontalRule: 'Горизонтальная линия',
     table: 'Таблица 3×3',
+    math: 'Формула',
+    mathHint: 'TeX, отдельной строкой',
   },
 }
 
@@ -194,6 +205,7 @@ export function resolveLabels(locale: WysiwygLocale, override?: WysiwygPartialLa
   if (!override) return base
   return {
     placeholder: override.placeholder ?? base.placeholder,
+    mathPrompt: override.mathPrompt ?? base.mathPrompt,
     toolbar: { ...base.toolbar, ...stripUndefined(override.toolbar) },
     slash: { ...base.slash, ...stripUndefined(override.slash) },
   }

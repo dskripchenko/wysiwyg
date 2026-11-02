@@ -40,6 +40,7 @@ function insertGreeting() {
 | `blockquote()` | Setzt den aktuellen Block auf `<blockquote>`. |
 | `codeBlock()` | Setzt den aktuellen Block auf `<pre>`. |
 | `insertCodeBlock(language: string, code?: string)` | Fügt `<pre><code class="language-X">code</code></pre>` ein (ein leerer aktueller Absatz wird ersetzt), der Cursor steht am Ende des Codes. |
+| `insertMath(tex: string, block?: boolean)` | Fügt eine TeX-Formel ein: in einer eigenen Zeile (`block`; ein leerer aktueller Absatz wird ersetzt) oder im Text an der Einfügemarke. Sie ist eine Insel, von `@dskripchenko/math` als MathML gezeichnet; ein Doppelklick bearbeitet ihr TeX (`labels.mathPrompt`). |
 | `link(href: string, target?: '_blank')` | Umschließt die Auswahl mit `<a href>`. |
 | `unlink()` | Entfernt das `<a>` um die Auswahl. |
 | `image(src: string, alt?: string)` | Fügt ein `<img>` ein. |

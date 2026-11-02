@@ -49,7 +49,7 @@ const emit = defineEmits<{
 }>()
 
 /** The built-in items; the labels come from the language in effect. */
-function builtinCommands(l: WysiwygSlashLabels): SlashCommand[] {
+function builtinCommands(l: WysiwygSlashLabels, mathPrompt: string): SlashCommand[] {
   return [
     { key: 'h1', label: l.h1, hint: l.h1Hint, aliases: ['h1', 'heading1', 'title'],
       apply: (c) => c.chain().focus().heading(1).run() },
@@ -71,11 +71,16 @@ function builtinCommands(l: WysiwygSlashLabels): SlashCommand[] {
       apply: (c) => c.chain().focus().horizontalRule().run() },
     { key: 'table', label: l.table, aliases: ['table'],
       apply: (c) => c.chain().focus().insertTable(3, 3).run() },
+    { key: 'math', label: l.math, hint: l.mathHint, aliases: ['math', 'formula', 'tex', 'latex', 'equation'],
+      apply: (c) => {
+        const tex = window.prompt(mathPrompt, '')
+        if (tex && tex.trim() !== '') c.chain().focus().insertMath(tex.trim(), true).run()
+      } },
   ]
 }
 
 const { labels: text, KitLocaleProbe, probeKit } = useWysiwygLabels(props)
-const commands = computed<SlashCommand[]>(() => builtinCommands(text.value.slash))
+const commands = computed<SlashCommand[]>(() => builtinCommands(text.value.slash, text.value.mathPrompt))
 
 const filtered = computed<SlashCommand[]>(() => {
   const all = props.extra?.length ? [...commands.value, ...props.extra] : commands.value

@@ -40,6 +40,7 @@ function insertGreeting() {
 | `blockquote()` | Превращает текущий блок в `<blockquote>`. |
 | `codeBlock()` | Превращает текущий блок в `<pre>`. |
 | `insertCodeBlock(language: string, code?: string)` | Вставляет `<pre><code class="language-X">code</code></pre>` (пустой текущий абзац заменяется), курсор — в конце кода. |
+| `insertMath(tex: string, block?: boolean)` | Вставляет формулу TeX: отдельной строкой (`block`; пустой текущий абзац заменяется) или в текст в позицию курсора. Это островок, нарисованный как MathML пакетом `@dskripchenko/math`; двойной щелчок правит её TeX (`labels.mathPrompt`). |
 | `link(href: string, target?: '_blank')` | Оборачивает выделение в `<a href>`. |
 | `unlink()` | Снимает `<a>` вокруг выделения. |
 | `image(src: string, alt?: string)` | Вставляет `<img>`. |

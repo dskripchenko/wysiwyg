@@ -440,3 +440,11 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   --dsk-wysiwyg-tok-function: #0891b2;
   --dsk-wysiwyg-tok-punct: #6b7280;
 }
+
+/* A formula: one island, drawn in a math font; a double click edits its TeX. */
+.dsk-wysiwyg__content .dsk-math-island { cursor: default; border-radius: 3px; }
+.dsk-wysiwyg__content .dsk-math-island:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+.dsk-wysiwyg__content .dsk-math-island[data-display="block"] { display: block; text-align: center; margin: 0.5em 0; }
+.dsk-wysiwyg__content math.dsk-math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Noto Sans Math", math; }
+.dsk-wysiwyg__content .dsk-math-error { color: #d1242f; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-bottom: 1px dotted; }
+.dsk-wysiwyg__content mark { background: #fff3bf; color: inherit; border-radius: 2px; padding: 0 0.1em; }

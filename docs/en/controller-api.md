@@ -46,6 +46,7 @@ function insertGreeting() {
 | `blockquote()` | Set current block to `<blockquote>`. |
 | `codeBlock()` | Set current block to `<pre>`. |
 | `insertCodeBlock(language: string, code?: string)` | Insert `<pre><code class="language-X">code</code></pre>` (an empty current paragraph is replaced), caret at the end of the code. |
+| `insertMath(tex: string, block?: boolean)` | Insert a TeX formula: on a line of its own (`block`; an empty current paragraph is replaced) or in the text at the caret. It is an island drawn as MathML by `@dskripchenko/math`; a double click edits its TeX (`labels.mathPrompt`). |
 | `link(href: string, target?: '_blank')` | Wrap selection in `<a href>`. |
 | `unlink()` | Remove `<a>` around selection. |
 | `image(src: string, alt?: string)` | Insert `<img>`. |
