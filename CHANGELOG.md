@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0
+
+### Added
+
+- Tags (`#todo`, `#work/urgent`, as `@dskripchenko/ui` 1.27 draws them) survive the visual mode: the sanitizer keeps `span.uid-markdown__tag[data-tag]`, `htmlToMarkdown` writes them back as `#tag` with their characters unescaped.
+
+### Fixed
+
+- A line starting with `#tag` is no longer escaped as if it were a heading: `#` is escaped only before a space or alone.
+
 ## 0.10.1
 
 ### Changed

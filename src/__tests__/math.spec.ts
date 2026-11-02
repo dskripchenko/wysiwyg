@@ -84,3 +84,17 @@ describe('Markdown to the visual mode and back', () => {
     expect(htmlToMarkdown(sanitizeHtml(renderMarkdown(md)))).toBe(md)
   })
 })
+
+describe('tags through the visual mode', () => {
+  it('a tag comes back as written, a line starting with one is not escaped; a heading-like # still is', async () => {
+    const { renderMarkdown } = await import('@dskripchenko/ui')
+    expect(htmlToMarkdown(sanitizeHtml('<p>Do <span class="uid-markdown__tag" data-tag="my_tag/sub">#my_tag/sub</span> now</p>'))).toBe('Do #my_tag/sub now')
+    expect(htmlToMarkdown('<p>#todo first</p>')).toBe('#todo first')
+    expect(htmlToMarkdown('<p># not a heading</p>')).toBe('\\# not a heading')
+    // The kit draws them (1.27): the round trip keeps them.
+    const md = 'Do #my_tag and #work/urgent.'
+    const html = renderMarkdown(md)
+    expect(html).toContain('data-tag')
+    expect(htmlToMarkdown(sanitizeHtml(html))).toBe(md)
+  })
+})
