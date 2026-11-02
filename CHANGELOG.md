@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.0
+
+### Added
+
+- TeX formulas, as `@dskripchenko/ui` 1.26 renders them (`$…$`, `$$…$$`): in the visual mode each is an island — `<span data-math="TeX" data-display="inline|block">` — drawn as MathML by `@dskripchenko/math` (now a dependency), not editable inside; a double click edits its TeX (`labels.mathPrompt`), the slash menu's **Formula** inserts one, `insertMath(tex, block)` from code. `htmlToMarkdown` writes them back as `$…$` and `$$` blocks; pasted MathML with its TeX becomes an island, nothing else of it is kept.
+- `==highlighted==` text: `<mark>` is kept and written back as `==…==`.
+
+### Fixed
+
+- Dollars and `==` in plain text are escaped only where they would be read as a formula or a highlight: a price ($5 and $10) stays as written.
+- A `<br>` closing a paragraph (the browser's placeholder for an empty line) is no longer written as a hard break `\`.
+
 ## 0.9.0
 
 ### Added

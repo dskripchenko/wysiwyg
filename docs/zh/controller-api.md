@@ -40,6 +40,7 @@ function insertGreeting() {
 | `blockquote()` | 将当前块设为 `<blockquote>`。 |
 | `codeBlock()` | 将当前块设为 `<pre>`。 |
 | `insertCodeBlock(language: string, code?: string)` | 插入 `<pre><code class="language-X">code</code></pre>`（空的当前段落会被替换），光标置于代码末尾。 |
+| `insertMath(tex: string, block?: boolean)` | 插入 TeX 公式：独占一行（`block`；空的当前段落会被替换），或插入到光标处的文本中。公式是由 `@dskripchenko/math` 绘制为 MathML 的独立块；双击可编辑其 TeX（`labels.mathPrompt`）。 |
 | `link(href: string, target?: '_blank')` | 用 `<a href>` 包裹选区。 |
 | `unlink()` | 移除选区周围的 `<a>`。 |
 | `image(src: string, alt?: string)` | 插入 `<img>`。 |

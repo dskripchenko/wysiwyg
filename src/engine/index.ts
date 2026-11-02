@@ -12,6 +12,7 @@
 import { BlockPreviews, serializeHost, type BlockRenderers } from './blockPreviews'
 import {
   insertCodeBlock,
+  insertMath,
   insertHorizontalRule,
   insertImage,
   setBlockTag,
@@ -77,6 +78,8 @@ export interface ChainAPI {
   codeBlock(): ChainAPI
   /** A `<pre><code class="language-X">` with the code, the caret at its end. */
   insertCodeBlock(language: string, code?: string): ChainAPI
+  /** A TeX formula at the caret: on a line of its own (`block`), or in the text. */
+  insertMath(tex: string, block?: boolean): ChainAPI
   setLink(url: string | null): ChainAPI
   setImage(src: string, alt?: string): ChainAPI
   horizontalRule(): ChainAPI
@@ -174,6 +177,7 @@ export class EditorController {
       blockquote: () => { setBlockTag(this.host, 'blockquote'); dirty = true; return api },
       codeBlock: () => { setBlockTag(this.host, 'pre'); dirty = true; return api },
       insertCodeBlock: (language, code) => { insertCodeBlock(this.host, language, code); this.previews.sync(); dirty = true; return api },
+      insertMath: (tex, block = false) => { insertMath(this.host, tex, block); this.previews.sync(); dirty = true; return api },
       setLink: (url) => { setLink(this.host, url); dirty = true; return api },
       setImage: (src, alt) => { insertImage(this.host, src, alt); dirty = true; return api },
       horizontalRule: () => { insertHorizontalRule(this.host); dirty = true; return api },

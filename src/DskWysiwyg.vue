@@ -18,6 +18,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRenderers } from './engine'
 import { PREVIEW_ATTR, inLiveIsland } from './engine/blockPreviews'
+import { MATH_ATTR, mathIslandOf } from './engine/mathIslands'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
@@ -193,6 +194,21 @@ function currentRange(): Range | null {
   if (! sel || sel.rangeCount === 0 || ! hostRef.value) return null
   const range = sel.getRangeAt(0)
   return hostRef.value.contains(range.startContainer) ? range : null
+}
+
+/** A double click on a formula: its TeX asked for and changed; emptied, the formula goes. */
+function onDblclick(e: MouseEvent): void {
+  if (props.readonly || ! controller.value || ! hostRef.value) return
+  const island = mathIslandOf(e.target)
+  if (! island || ! hostRef.value.contains(island)) return
+  e.preventDefault()
+  const tex = window.prompt(text.value.mathPrompt, island.getAttribute(MATH_ATTR) ?? '')
+  if (tex === null) return
+  if (tex.trim() === '') island.remove()
+  else island.setAttribute(MATH_ATTR, tex.trim())
+  controller.value.previews.sync()
+  controller.value.history.commit()
+  emit('update:modelValue', controller.value.getHTML())
 }
 
 /** A click on a preview opens its code (not in readonly). */
@@ -697,6 +713,7 @@ defineExpose({
       @paste="onPaste"
       @keydown="onKeydown"
       @mousedown="onMousedown"
+      @dblclick="onDblclick"
     />
     <DskWysiwygSlashMenu
       ref="slashMenuRef"

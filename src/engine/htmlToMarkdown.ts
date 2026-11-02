@@ -68,7 +68,13 @@ function block(node: HTMLElement): string {
   const tag = tagOf(node)
   switch (tag) {
     case 'p': {
-      const text = inlineChildren(node).trim()
+      // A formula alone in its paragraph, displayed: `$$` lines around its TeX.
+      const only = Array.from(node.childNodes).filter((n) => !(n.nodeType === Node.TEXT_NODE && (n as Text).data.replace(/\u200B/g, '').trim() === '') && tagOf(n) !== 'br')
+      if (only.length === 1 && isElement(only[0]!) && only[0].getAttribute('data-display') === 'block' && only[0].hasAttribute('data-math')) {
+        return `$$\n${(only[0].getAttribute('data-math') ?? '').trim()}\n$$\n\n`
+      }
+      // A <br> closing a paragraph is the browser's placeholder for an empty line, not a hard break.
+      const text = inlineChildren(node).replace(/(?:\\\n\s*)+$/, '').trim()
       return text === '' ? '' : `${escapeLineStarts(text)}\n\n`
     }
     case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6': {
@@ -178,7 +184,14 @@ function inlineOf(node: Node): string {
     case 'strong': case 'b': return wrap('**')
     case 'em': case 'i': return wrap('*')
     case 's': case 'strike': case 'del': return wrap('~~')
-    case 'u': case 'mark': case 'sup': case 'sub': return `<${tag}>${inner()}</${tag}>`
+    case 'mark': return wrap('==')
+    case 'u': case 'sup': case 'sub': return `<${tag}>${inner()}</${tag}>`
+    case 'span': {
+      // A formula island: its TeX between dollars.
+      const tex = node.getAttribute('data-math')
+      if (tex === null) return inner()
+      return node.getAttribute('data-display') === 'block' ? `$$${tex.trim()}$$` : `$${tex.trim()}$`
+    }
     case 'code': {
       const text = node.textContent ?? ''
       const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((m) => m.length))
@@ -217,8 +230,18 @@ function escapeInline(text: string): string {
   // [[note]] typed as text is an internal link: kept as written.
   return text
     .split(/(\[\[[^\]\n]+\]\])/)
-    .map((part, i) => (i % 2 === 1 ? part : part.replace(/[\\`*_[\]<]/g, '\\$&').replace(/~~/g, '\\~\\~')))
+    .map((part, i) => (i % 2 === 1 ? part : escapeReadAsMarkup(part.replace(/[\\`*_[\]<]/g, '\\$&').replace(/~~/g, '\\~\\~'))))
     .join('')
+}
+
+/**
+ * Dollars and `==` in plain text: escaped only where they would be read as a
+ * formula or a highlight — a price ($5 and $10) stays as written.
+ */
+function escapeReadAsMarkup(text: string): string {
+  return text
+    .replace(/(?<![\\$\w])\$(?![\s$])((?:\\\$|[^$])+?)(?<![\s\\])\$(?![\d$])/g, '\\$$$1\\$$')
+    .replace(/(?<![=\\])==(?=[^\s=])(.+?)(?<=[^\s=])==(?!=)/g, '\\==$1==')
 }
 
 /** A block marker at the start of a line of plain text: `#`, `>`, `-`, `+`, `1.`, `---`. */

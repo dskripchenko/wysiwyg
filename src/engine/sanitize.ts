@@ -17,6 +17,8 @@
  * The on* handlers are never allowed, whatever the list says.
  */
 
+import { mathToIslands } from './mathIslands'
+
 /** Extra attributes kept per tag, on top of the built-in whitelist. */
 export type AllowedAttributes = Record<string, readonly string[]>
 
@@ -31,6 +33,7 @@ const ALLOWED_TAGS = new Set([
   'em', 'i',
   'u',
   's', 'strike', 'del',
+  'mark',
   'code',
   'pre',
   'ul', 'ol', 'li',
@@ -51,7 +54,8 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   // The language-* class on a <code> is needed for the syntax highlight;
   // dsk-tok-* on a <span> is needed to render the tokens.
   code: new Set(['class']),
-  span: new Set(['class']),
+  // data-math: a formula island (its TeX), data-display: inline or block.
+  span: new Set(['class', 'data-math', 'data-display']),
 }
 
 /** The whitelist of class prefixes preserved on code and span. */
@@ -65,6 +69,8 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   // The editor's own preview islands (copied along with a diagram) are
   // dropped whole: unwrapped, their SVG labels would turn into stray text.
   for (const island of Array.from(root.querySelectorAll('[data-dsk-preview]'))) island.remove()
+  // Drawn formulas (MathML with its TeX) become islands holding the TeX alone.
+  mathToIslands(root)
   cleanNode(root, options.allowedAttributes ?? {})
   return root.innerHTML
 }

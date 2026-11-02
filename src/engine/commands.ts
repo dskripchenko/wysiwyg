@@ -11,6 +11,7 @@
  *   4. emits a change through CustomEvent('input', {bubbles: true}) on the host,
  *      so that Vue's v-model picks it up.
  */
+import { mathIsland } from './mathIslands'
 import {
   currentBlockTag,
   findAncestorAnchor,
@@ -448,4 +449,50 @@ export function insertCodeBlock(host: HTMLElement, language: string, code = ''):
     sel.addRange(caret)
   }
   emitInput(host)
+}
+
+/**
+ * A formula at the caret: displayed — a paragraph of its own after the
+ * block (or in place of an empty one); inline — in the text, the caret after it.
+ */
+export function insertMath(host: HTMLElement, tex: string, block: boolean): void {
+  const range = rangeWithinHost(host)
+  const island = mathIsland(document, tex, block)
+  if (block) {
+    const p = document.createElement('p')
+    p.appendChild(island)
+    let at: Element | null = range ? blockAncestor(range.startContainer, host) : null
+    while (at && at.parentElement !== host) at = at.parentElement
+    if (at && at.tagName.toLowerCase() === 'p' && (at.textContent ?? '').replace(/[​\s]/g, '') === '') at.replaceWith(p)
+    else if (at) at.after(p)
+    else host.appendChild(p)
+    if (! p.nextElementSibling) {
+      const next = document.createElement('p')
+      next.appendChild(document.createElement('br'))
+      p.after(next)
+    }
+    placeCaret(p.nextElementSibling!, 0)
+    return
+  }
+  if (! range) {
+    host.appendChild(island)
+    return
+  }
+  range.deleteContents()
+  range.insertNode(island)
+  // A caret target after the island: the text goes on beside it, not into it.
+  const after = document.createTextNode('​')
+  island.after(after)
+  placeCaret(after, 1)
+}
+
+function placeCaret(node: Node, offset: number): void {
+  const caret = document.createRange()
+  caret.setStart(node, offset)
+  caret.collapse(true)
+  const sel = window.getSelection()
+  if (sel) {
+    sel.removeAllRanges()
+    sel.addRange(caret)
+  }
 }
