@@ -187,6 +187,9 @@ function inlineOf(node: Node): string {
     case 'mark': return wrap('==')
     case 'u': case 'sup': case 'sub': return `<${tag}>${inner()}</${tag}>`
     case 'span': {
+      // A tag: written as it reads, its characters unescaped (`#my_tag` is one tag).
+      const tag = node.getAttribute('data-tag')
+      if (tag !== null) return `#${tag}`
       // A formula island: its TeX between dollars.
       const tex = node.getAttribute('data-math')
       if (tex === null) return inner()
@@ -249,7 +252,8 @@ function escapeLineStarts(text: string): string {
   return text
     .split('\n')
     .map((line) => line
-      .replace(/^(\s*)([#>+])/, '$1\\$2')
+      // `#` starts a heading only before a space (or alone): `#tag` stays a tag.
+      .replace(/^(\s*)(#{1,6}(?=\s|$)|[>+])/, '$1\\$2')
       .replace(/^(\s*)-(\s|$)/, '$1\\-$2')
       .replace(/^(\s*)(\d+)([.)])(\s|$)/, '$1$2\\$3$4')
       .replace(/^(\s*)(=+|-{3,})\s*$/, '$1\\$2'))

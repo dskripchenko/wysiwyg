@@ -448,3 +448,4 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 .dsk-wysiwyg__content math.dsk-math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Noto Sans Math", math; }
 .dsk-wysiwyg__content .dsk-math-error { color: #d1242f; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-bottom: 1px dotted; }
 .dsk-wysiwyg__content mark { background: #fff3bf; color: inherit; border-radius: 2px; padding: 0 0.1em; }
+.dsk-wysiwyg__content .uid-markdown__tag { display: inline-block; padding: 0 0.4em; border-radius: 999px; background: #ddf4ff; color: #0969da; font-size: 0.9em; line-height: 1.5; white-space: nowrap; }
