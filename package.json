@@ -1,6 +1,6 @@
 {
   "name": "@dskripchenko/wysiwyg",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "publishConfig": {
     "access": "public"
   },
@@ -76,6 +76,6 @@
   },
   "dependencies": {
     "@dskripchenko/math": "^0.1.0",
-    "@dskripchenko/syntax": "^0.3.2"
+    "@dskripchenko/syntax": "^0.4.0"
   }
 }

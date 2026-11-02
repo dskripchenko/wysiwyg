@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+### Changed
+
+- `@dskripchenko/syntax` 0.4: LaTeX code blocks (`latex`, `tex`, `math`) are highlighted.
+
 ## 0.10.0
 
 ### Added
