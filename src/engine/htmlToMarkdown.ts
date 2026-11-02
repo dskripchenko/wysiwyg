@@ -160,7 +160,9 @@ function inlineChildren(node: Node): string {
 }
 
 function inlineOf(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) return escapeInline((node as Text).data.replace(/\u200B/g, '').replace(/\s+/g, ' '))
+  // A line break in the text is the source's soft break: kept, so a paragraph wrapped in the
+  // file stays wrapped where it was (a save after an edit changes only the edit).
+  if (node.nodeType === Node.TEXT_NODE) return escapeInline((node as Text).data.replace(/\u200B/g, '').replace(/[^\S\n]+/g, ' ').replace(/ ?\n[\s]*/g, '\n'))
   if (!isElement(node) || node.hasAttribute('data-dsk-preview')) return ''
   const tag = tagOf(node)
   const inner = (): string => inlineChildren(node)

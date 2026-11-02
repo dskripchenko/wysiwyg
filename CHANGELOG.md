@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+### Fixed
+
+- `htmlToMarkdown` keeps the source's soft line breaks: a paragraph, a list item or a quote wrapped in the file stays wrapped where it was, so a save after an edit in the visual mode changes only the edit (it used to join every wrapped paragraph into one line). A list item's next lines stay indented under its marker.
+
 ## 0.8.0
 
 ### Changed

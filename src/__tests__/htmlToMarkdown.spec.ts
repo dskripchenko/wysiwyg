@@ -22,6 +22,7 @@ const CASES: Record<string, string> = {
   fence: '````md\n```js\ncode\n```\n````',
   table: '| Name | Price | Note |\n| :--- | ---: | :---: |\n| A | 1.5 | ok |\n| B \\| C | 2 | |',
   rule: 'Above\n\n---\n\nBelow',
+  softWrap: 'A paragraph wrapped\nin the source, as editors wrap it,\nstays wrapped.\n\n> A quote\n> wrapped too.',
 }
 
 describe('htmlToMarkdown round trip', () => {
@@ -35,6 +36,13 @@ describe('htmlToMarkdown round trip', () => {
 
   it('keeps preview islands out and unknown wrappers transparent', () => {
     expect(htmlToMarkdown('<p>a</p><div data-dsk-preview="1"><svg></svg></div><span>b</span>')).toBe('a\n\nb')
+  })
+
+  it('a list item wrapped in the source stays wrapped, indented under its marker', () => {
+    expect(htmlToMarkdown('<ul><li><strong>No installer.</strong> A zip on Windows and macOS, an\nAppImage on Linux.</li><li>two</li></ul>')).toBe('- **No installer.** A zip on Windows and macOS, an\n  AppImage on Linux.\n- two')
+    expect(htmlToMarkdown('<ol><li>one\n  two</li></ol>')).toBe('1. one\n   two')
+    // Spaces still collapse; a break at the start of a line that would mean markup is escaped.
+    expect(htmlToMarkdown('<p>a   b\n- c</p>')).toBe('a b\n\\- c')
   })
 
   it('a paragraph inside a list item stays in the item', () => {
