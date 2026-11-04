@@ -15,6 +15,7 @@ Werden am Anfang eines Blocks ausgelöst (eines von `<p>`, `<div>`,
 | `### ` | `<h3>` |
 | `- ` oder `* ` | `<ul><li>` |
 | `1. ` | `<ol><li>` |
+| `[ ] ` / `[x] ` (am Anfang eines Listeneintrags) | ein Aufgabeneintrag (`<li data-checked>`) |
 | `> ` | `<blockquote>` |
 | ` ``` ` | `<pre><code>` |
 

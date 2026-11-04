@@ -21,6 +21,7 @@ Trigger at the start of a block (any of `<p>`, `<div>`, `<h1>`-`<h3>`,
 | `### ` | `<h3>` |
 | `- ` or `* ` | `<ul><li>` |
 | `1. ` | `<ol><li>` |
+| `[ ] ` / `[x] ` (at the start of a list item) | a task item (`<li data-checked>`) |
 | `> ` | `<blockquote>` |
 | ` ``` ` | `<pre><code>` |
 

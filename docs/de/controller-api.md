@@ -37,6 +37,7 @@ function insertGreeting() {
 | `heading(level: 1..6)` | Setzt den aktuellen Block auf `<h{level}>`. |
 | `paragraph()` | Setzt den aktuellen Block auf `<p>`. |
 | `bulletList()` / `orderedList()` | Umschließt den aktuellen Block mit `<ul>`/`<ol>`. |
+| `taskList()` | Macht die aktuelle Liste zur Aufgabenliste (`- [ ]`) oder wieder zur normalen; außerhalb einer Liste beginnt sie eine. Ein Klick auf das Kästchen eines Eintrags hakt ihn ab. |
 | `blockquote()` | Setzt den aktuellen Block auf `<blockquote>`. |
 | `codeBlock()` | Setzt den aktuellen Block auf `<pre>`. |
 | `insertCodeBlock(language: string, code?: string)` | Fügt `<pre><code class="language-X">code</code></pre>` ein (ein leerer aktueller Absatz wird ersetzt), der Cursor steht am Ende des Codes. |

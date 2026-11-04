@@ -37,6 +37,7 @@ function insertGreeting() {
 | `heading(level: 1..6)` | Превращает текущий блок в `<h{level}>`. |
 | `paragraph()` | Превращает текущий блок в `<p>`. |
 | `bulletList()` / `orderedList()` | Оборачивает текущий блок в `<ul>`/`<ol>`. |
+| `taskList()` | Делает текущий список списком задач (`- [ ]`) или снова обычным; вне списка — начинает такой. Щелчок по флажку пункта отмечает его. |
 | `blockquote()` | Превращает текущий блок в `<blockquote>`. |
 | `codeBlock()` | Превращает текущий блок в `<pre>`. |
 | `insertCodeBlock(language: string, code?: string)` | Вставляет `<pre><code class="language-X">code</code></pre>` (пустой текущий абзац заменяется), курсор — в конце кода. |
