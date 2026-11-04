@@ -319,6 +319,43 @@ export function toggleList(host: HTMLElement, listTag: 'ul' | 'ol'): void {
   emitInput(host)
 }
 
+/**
+ * A task list (GFM `- [ ] …`): its items carry `data-checked`, drawn as a box
+ * and toggled by a click on it. In a list, the list's items become tasks (or,
+ * already tasks, plain items again); elsewhere the block becomes the first
+ * task of a new list.
+ */
+export function toggleTaskList(host: HTMLElement): void {
+  const range = rangeWithinHost(host)
+  if (!range) return
+  let n: Node | null = range.startContainer
+  while (n && n !== host) {
+    if (n instanceof HTMLElement && (n.tagName === 'UL' || n.tagName === 'OL')) {
+      const items = Array.from(n.children).filter((c): c is HTMLElement => c.tagName === 'LI')
+      const tasks = items.some((li) => li.hasAttribute('data-checked'))
+      for (const li of items) {
+        if (tasks) li.removeAttribute('data-checked')
+        else li.setAttribute('data-checked', 'false')
+      }
+      emitInput(host)
+      return
+    }
+    n = n.parentNode
+  }
+  toggleList(host, 'ul')
+  const after = rangeWithinHost(host)
+  const li = after?.startContainer instanceof Element ? after.startContainer.closest('li') : after?.startContainer.parentElement?.closest('li')
+  if (li && host.contains(li)) li.setAttribute('data-checked', 'false')
+  emitInput(host)
+}
+
+/** A task item ticked or unticked; true when it was one. */
+export function toggleTask(li: Element): boolean {
+  if (li.tagName !== 'LI' || !li.hasAttribute('data-checked')) return false
+  li.setAttribute('data-checked', li.getAttribute('data-checked') === 'true' ? 'false' : 'true')
+  return true
+}
+
 function unwrapList(list: HTMLElement): void {
   const parent = list.parentNode
   if (!parent) return

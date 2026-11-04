@@ -19,6 +19,7 @@ import {
   setLink,
   toggleInlineMark,
   toggleList,
+  toggleTaskList,
 } from './commands'
 import { HistoryStack } from './history'
 import {
@@ -73,6 +74,8 @@ export interface ChainAPI {
   heading(level: 1 | 2 | 3): ChainAPI
   paragraph(): ChainAPI
   bulletList(): ChainAPI
+  /** A task list (`- [ ] …`): the list's items become tasks, or plain items again. */
+  taskList(): ChainAPI
   orderedList(): ChainAPI
   blockquote(): ChainAPI
   codeBlock(): ChainAPI
@@ -173,6 +176,7 @@ export class EditorController {
       heading: (level) => { setBlockTag(this.host, `h${level}`); dirty = true; return api },
       paragraph: () => { setBlockTag(this.host, 'p'); dirty = true; return api },
       bulletList: () => { toggleList(this.host, 'ul'); dirty = true; return api },
+      taskList: () => { toggleTaskList(this.host); dirty = true; return api },
       orderedList: () => { toggleList(this.host, 'ol'); dirty = true; return api },
       blockquote: () => { setBlockTag(this.host, 'blockquote'); dirty = true; return api },
       codeBlock: () => { setBlockTag(this.host, 'pre'); dirty = true; return api },

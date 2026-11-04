@@ -67,6 +67,8 @@ export interface WysiwygSlashLabels {
   paragraphHint: string
   bulletList: string
   orderedList: string
+  /** A list of tasks with boxes to tick (`- [ ] …`). */
+  taskList: string
   blockquote: string
   codeBlock: string
   horizontalRule: string
@@ -133,6 +135,7 @@ export const en: WysiwygLabels = {
     paragraphHint: 'Plain text',
     bulletList: 'Bulleted list',
     orderedList: 'Numbered list',
+    taskList: 'Task list',
     blockquote: 'Quote',
     codeBlock: 'Code block',
     horizontalRule: 'Horizontal rule',
@@ -183,6 +186,7 @@ export const ru: WysiwygLabels = {
     paragraphHint: 'Обычный текст',
     bulletList: 'Маркированный список',
     orderedList: 'Нумерованный список',
+    taskList: 'Список задач',
     blockquote: 'Цитата',
     codeBlock: 'Блок кода',
     horizontalRule: 'Горизонтальная линия',

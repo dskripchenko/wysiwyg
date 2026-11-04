@@ -239,6 +239,27 @@ html.dsk-wysiwyg-fullscreen-open body {
   margin: 0.5em 0;
 }
 .dsk-wysiwyg__content li:not([data-dsk-preview-live] *) { margin: 0.2em 0; }
+/* A task item: its box drawn in the list's gutter, ticked by a click on it. */
+.dsk-wysiwyg__content li[data-checked]:not([data-dsk-preview-live] *) { position: relative; list-style: none; }
+.dsk-wysiwyg__content li[data-checked]:not([data-dsk-preview-live] *)::before {
+  content: '';
+  position: absolute;
+  left: -1.4em;
+  top: 0.28em;
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid var(--dsk-wysiwyg-task-border, currentColor);
+  border-radius: 0.22em;
+  opacity: 0.75;
+  cursor: pointer;
+}
+.dsk-wysiwyg__content li[data-checked="true"]:not([data-dsk-preview-live] *)::before {
+  opacity: 1;
+  border-color: var(--dsk-wysiwyg-task-checked, #2563eb);
+  background: var(--dsk-wysiwyg-task-checked, #2563eb) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 80% no-repeat;
+}
+.dsk-wysiwyg__content li[data-checked="true"]:not([data-dsk-preview-live] *) { color: var(--dsk-wysiwyg-task-done, inherit); }
 .dsk-wysiwyg__content blockquote:not([data-dsk-preview-live] *) {
   margin: 0.5em 0;
   padding-left: 1em;

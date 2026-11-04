@@ -6,7 +6,9 @@
  *   - it removes the unwanted tags (script/iframe/object/embed/style/meta/link);
  *   - the tag whitelist is p/h1-h3/strong/em/u/s/code/pre/ul/ol/li/blockquote/
  *     a/img/br/hr/span (span without attributes, kept for neutral grouping);
- *   - the br tags inside a p are preserved (for shift+enter).
+ *   - the br tags inside a p are preserved (for shift+enter);
+ *   - a task item — a checkbox opening a list item, as Markdown renderers and
+ *     GitHub write one — becomes `<li data-checked="true|false">`.
  *
  * For safety all of the work goes through DOMParser (not through innerHTML on a
  * live DOM), so that an <img onerror=...> is never executed.
@@ -48,6 +50,8 @@ const ALLOWED_TAGS = new Set([
 ])
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
+  // data-checked: a task item ("true" or "false"), written back as `- [x]` / `- [ ]`.
+  li: new Set(['data-checked']),
   // data-wikilink: an internal link ([[note]]), written back as one.
   a: new Set(['href', 'target', 'rel', 'title', 'data-wikilink', 'class']),
   img: new Set(['src', 'alt', 'title', 'width', 'height']),
@@ -71,8 +75,35 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   for (const island of Array.from(root.querySelectorAll('[data-dsk-preview]'))) island.remove()
   // Drawn formulas (MathML with its TeX) become islands holding the TeX alone.
   mathToIslands(root)
+  tasksToItems(root)
   cleanNode(root, options.allowedAttributes ?? {})
   return root.innerHTML
+}
+
+/**
+ * A list item opened by a checkbox (in the item, or in its first paragraph):
+ * the box becomes the item's `data-checked`, the box itself goes.
+ */
+function tasksToItems(root: Element): void {
+  for (const li of Array.from(root.querySelectorAll('li'))) {
+    let first: ChildNode | null = li.firstChild
+    // Past blank text and into a paragraph that opens the item.
+    while (first && first.nodeType === Node.TEXT_NODE && (first.textContent ?? '').trim() === '') first = first.nextSibling
+    if (first instanceof Element && first.tagName === 'P') {
+      let inner: ChildNode | null = first.firstChild
+      while (inner && inner.nodeType === Node.TEXT_NODE && (inner.textContent ?? '').trim() === '') inner = inner.nextSibling
+      first = inner
+    }
+    if (!(first instanceof Element) || first.tagName !== 'INPUT' || (first.getAttribute('type') ?? '').toLowerCase() !== 'checkbox') {
+      if (li.hasAttribute('data-checked')) li.setAttribute('data-checked', li.getAttribute('data-checked') === 'true' ? 'true' : 'false')
+      continue
+    }
+    li.setAttribute('data-checked', first.hasAttribute('checked') ? 'true' : 'false')
+    // The space after the box was the separator, not text.
+    const next = first.nextSibling
+    if (next && next.nodeType === Node.TEXT_NODE) next.textContent = (next.textContent ?? '').replace(/^\s+/, '')
+    first.remove()
+  }
 }
 
 function cleanNode(node: Element, extra: AllowedAttributes): void {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.0
+
+### Added
+
+- Task lists. `- [ ]` / `- [x]` items are edited as list items with a box to tick (`<li data-checked="true|false">`, the box drawn in the list's gutter): a click on the box ticks or unticks it, `[ ] ` or `[x] ` typed at the start of a list item makes it a task, **Task list** in the slash menu (`/tasks`, `/todo`) turns a list into tasks and back (`chain().taskList()`), and Enter after a task starts an unticked one. `htmlToMarkdown` writes them back as GFM (`- [x] `, `1. [ ] `, nested too). The sanitizer turns a checkbox opening a list item — as Markdown renderers and GitHub write one — into the item's state, and keeps `data-checked` (normalised to `true` / `false`).
+- CSS variables for the box: `--dsk-wysiwyg-task-border`, `--dsk-wysiwyg-task-checked`, `--dsk-wysiwyg-task-done`.
+
 ## 0.12.0
 
 ### Added
