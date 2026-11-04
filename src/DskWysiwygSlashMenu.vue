@@ -63,6 +63,8 @@ function builtinCommands(l: WysiwygSlashLabels, mathPrompt: string): SlashComman
       apply: (c) => c.chain().focus().bulletList().run() },
     { key: 'ol', label: l.orderedList, aliases: ['ol', 'numbered', 'ordered'],
       apply: (c) => c.chain().focus().orderedList().run() },
+    { key: 'tasks', label: l.taskList, aliases: ['tasks', 'todo', 'checklist', 'check'],
+      apply: (c) => c.chain().focus().taskList().run() },
     { key: 'quote', label: l.blockquote, aliases: ['quote', 'blockquote'],
       apply: (c) => c.chain().focus().blockquote().run() },
     { key: 'code', label: l.codeBlock, aliases: ['code', 'codeblock', 'pre'],

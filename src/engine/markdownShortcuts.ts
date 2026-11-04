@@ -7,6 +7,7 @@
  *   `### ` (Space)      → h3
  *   `- ` or `* `         → ul + li
  *   `1. ` (any digit)     → ol + li
+ *   `[ ] ` / `[x] ` in a list item → a task item
  *   `> ` (Space)        → blockquote
  *   ` ``` ` (3 backtick) → pre/code
  *
@@ -52,6 +53,17 @@ export function applyMarkdownShortcut(host: HTMLElement): ShortcutResult {
   if (headingMatch) {
     const level = headingMatch[1].length
     replaceBlockTag(block, `h${level}`, host)
+    return { applied: true }
+  }
+
+  // In a list item: a box typed at its start makes it a task.
+  const box = /^\[([ xX]?)\] $/.exec(before)
+  if (box && block.tagName.toLowerCase() === 'li') {
+    block.setAttribute('data-checked', box[1] && box[1] !== ' ' ? 'true' : 'false')
+    ;(node as Text).data = text.slice(before.length)
+    if (block.textContent === '') block.replaceChildren(document.createElement('br'))
+    setCaretToStart(block)
+    host.dispatchEvent(new InputEvent('input', { bubbles: true }))
     return { applied: true }
   }
 

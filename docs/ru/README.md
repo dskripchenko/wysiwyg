@@ -112,6 +112,7 @@ API `chain()` (намеренно похож на Tiptap для лёгкой м�
 | `.bold()` / `.italic()` / `.underline()` / `.strike()` / `.code()` | toggle inline-mark |
 | `.heading(1\|2\|3)` / `.paragraph()` | block-level format |
 | `.bulletList()` / `.orderedList()` | toggle list |
+| `.taskList()` | toggle a task list (`- [ ]`) |
 | `.blockquote()` / `.codeBlock()` | toggle block |
 | `.setLink(url \| null)` | wrap selection в `<a>` / unwrap |
 | `.setImage(src, alt?)` | вставить `<img>` |
@@ -199,6 +200,7 @@ Dark-вариант через `@media (prefers-color-scheme: dark)` встро�
 | `# ` / `## ` / `### ` | Heading 1/2/3 |
 | `- ` или `* ` | Bullet list |
 | `1. ` | Ordered list |
+| `[ ] ` / `[x] ` (in a list item) | Task item |
 | `> ` | Blockquote |
 | ` ``` ` (3 backticks + space) | Code block |
 

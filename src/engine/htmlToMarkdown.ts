@@ -12,7 +12,8 @@
  *   - pre/code         → a fenced block with the `language-X` class's language,
  *                        the fence longer than any run of backticks inside
  *   - ul/ol/li         → `- ` / `1. `, nested by indentation; several
- *                        paragraphs in an item stay in it
+ *                        paragraphs in an item stay in it; a task item
+ *                        (`data-checked`) → `- [x] ` / `- [ ] `
  *   - blockquote       → `> `, nested quotes too
  *   - table            → a GFM table, the column alignment from text-align
  *   - a, img           → `[text](href "title")`, `![alt](src "title")`
@@ -116,9 +117,11 @@ function list(node: HTMLElement): string {
     if (tagOf(li) !== 'li') continue
     const marker = ordered ? `${n++}. ` : '- '
     const pad = ' '.repeat(marker.length)
+    const task = (li as HTMLElement).getAttribute('data-checked')
+    const box = task === null ? '' : task === 'true' ? '[x] ' : '[ ] '
     const body = itemBody(li as HTMLElement)
     const lines = body.split('\n')
-    items.push(marker + lines[0] + (lines.length > 1 ? '\n' + lines.slice(1).map((l) => (l === '' ? '' : pad + l)).join('\n') : ''))
+    items.push(marker + box + lines[0] + (lines.length > 1 ? '\n' + lines.slice(1).map((l) => (l === '' ? '' : pad + l)).join('\n') : ''))
   }
   // A list whose items hold several blocks is a loose list: a blank line between items.
   const loose = items.some((i) => /\n\n/.test(i))

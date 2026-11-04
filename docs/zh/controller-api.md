@@ -37,6 +37,7 @@ function insertGreeting() {
 | `heading(level: 1..6)` | 将当前块设为 `<h{level}>`。 |
 | `paragraph()` | 将当前块设为 `<p>`。 |
 | `bulletList()` / `orderedList()` | 用 `<ul>`/`<ol>` 包裹当前块。 |
+| `taskList()` | 把当前列表变为任务列表（`- [ ]`）或恢复为普通列表；不在列表中时新建一个。点击条目的复选框即可勾选。 |
 | `blockquote()` | 将当前块设为 `<blockquote>`。 |
 | `codeBlock()` | 将当前块设为 `<pre>`。 |
 | `insertCodeBlock(language: string, code?: string)` | 插入 `<pre><code class="language-X">code</code></pre>`（空的当前段落会被替换），光标置于代码末尾。 |

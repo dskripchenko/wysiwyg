@@ -20,6 +20,7 @@ import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRende
 import { PREVIEW_ATTR, inLiveIsland } from './engine/blockPreviews'
 import { MATH_ATTR, mathIslandOf } from './engine/mathIslands'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
+import { toggleTask } from './engine/commands'
 import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
@@ -214,6 +215,14 @@ function onDblclick(e: MouseEvent): void {
 /** A click on a preview opens its code (not in readonly). */
 function onMousedown(e: MouseEvent): void {
   if (props.readonly || ! controller.value || ! hostRef.value) return
+  // A task item's box (drawn in the list's gutter, left of the item's text): ticked or unticked.
+  const target = e.target as HTMLElement | null
+  if (target?.tagName === 'LI' && target.hasAttribute('data-checked') && hostRef.value.contains(target) && e.clientX < target.getBoundingClientRect().left) {
+    e.preventDefault()
+    toggleTask(target)
+    hostRef.value.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    return
+  }
   // A live block's widget handles its own clicks (its inputs take the focus).
   if (inLiveIsland(e.target)) return
   const island = (e.target as Element | null)?.closest?.(`[${PREVIEW_ATTR}]`)
@@ -522,6 +531,27 @@ function handleEnter(e: KeyboardEvent): boolean {
         hostRef.value.dispatchEvent(new InputEvent('input', { bubbles: true }))
         return true
       }
+    }
+    // A task item: the next one starts unticked (Chrome would copy the box's state along).
+    if (block.hasAttribute('data-checked')) {
+      e.preventDefault()
+      if (! range.collapsed) range.deleteContents()
+      const tail = document.createRange()
+      tail.setStart(range.endContainer, range.endOffset)
+      tail.setEnd(block, block.childNodes.length)
+      const next = document.createElement('li')
+      next.setAttribute('data-checked', 'false')
+      next.appendChild(tail.extractContents())
+      if (next.textContent === '' && ! next.querySelector('img, ul, ol')) next.replaceChildren(document.createElement('br'))
+      if (block.textContent === '' && ! block.querySelector('img, ul, ol')) block.replaceChildren(document.createElement('br'))
+      block.after(next)
+      const r = document.createRange()
+      r.setStart(next, 0)
+      r.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(r)
+      hostRef.value.dispatchEvent(new InputEvent('input', { bubbles: true }))
+      return true
     }
     // For a non-empty li, let Chrome create the new <li> itself.
     return false
