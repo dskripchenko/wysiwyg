@@ -52,6 +52,7 @@ const html = ref('<p>你好 <strong>世界</strong>！</p>')
 - **代码语法高亮** — `<pre><code class="language-X">` 块中的
   js/ts/tsx/jsx/php/html/css/json。
 - **HTML→Markdown** — `htmlToMarkdown(html)` 助手。
+- **块 ID** — 段落、标题、列表项或表格单元格末尾的 ` ^id` 显示为不可编辑的低调标记，始终留在块的末尾，并以 ` ^id` 写回。
 - **源代码模式** — 切换到原始 HTML 编辑器，查看时美化，保存时压缩，
   语法高亮覆盖层。
 - **Sanitize** — 基于 DOMParser 的白名单（自有实现）。

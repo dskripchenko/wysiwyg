@@ -56,6 +56,9 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
   renderer is the host's, so the editor stays dependency-free.
 - **HTML→Markdown** — `htmlToMarkdown(html)` helper; code blocks keep
   their language.
+- **Block ids** — ` ^id` at the end of a paragraph, heading, list item or
+  table cell is a quiet mark that cannot be typed into and stays at the end
+  of its block; it is written back as ` ^id`.
 - **Source mode** — toggle to raw HTML editor with beautify on view,
   minify on save, syntax highlighting overlay.
 - **Sanitize** — DOMParser-based whitelist (own implementation).

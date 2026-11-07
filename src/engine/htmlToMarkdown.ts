@@ -143,7 +143,7 @@ function itemBody(li: HTMLElement): string {
     if (tagOf(n) === 'ul' || tagOf(n) === 'ol') nested.push(list(n as HTMLElement))
     else text += inlineOf(n)
   }
-  return [escapeLineStarts(text.trim()), ...nested].filter((x) => x !== '').join('\n')
+  return [escapeLineStarts(tidyBlockId(text).trim()), ...nested].filter((x) => x !== '').join('\n')
 }
 
 function table(node: HTMLElement): string {
@@ -165,7 +165,7 @@ function table(node: HTMLElement): string {
 function inlineChildren(node: Node): string {
   let out = ''
   for (const child of Array.from(node.childNodes)) out += inlineOf(child)
-  return out
+  return tidyBlockId(out)
 }
 
 function inlineOf(node: Node): string {
@@ -193,6 +193,9 @@ function inlineOf(node: Node): string {
       // An embedded note: written as the embed it is, whatever the host drew in it.
       const embed = node.getAttribute('data-embed')
       if (embed !== null) return `![[${embed}]]`
+      // A block id island: ` ^id`, at the end of its block where the editor keeps it.
+      const blockId = node.getAttribute('data-block-id')
+      if (blockId !== null) return ` ^${blockId}`
       // A tag: written as it reads, its characters unescaped (`#my_tag` is one tag).
       const tag = node.getAttribute('data-tag')
       if (tag !== null) return `#${tag}`
@@ -232,6 +235,11 @@ function inlineOf(node: Node): string {
     default:
       return inner()
   }
+}
+
+/** One space before a block id, whatever the text before it ended with. */
+function tidyBlockId(text: string): string {
+  return text.replace(/\s+ \^([A-Za-z0-9-]+)(\s*)$/, ' ^$1$2')
 }
 
 /** Characters that would start markup anywhere in a line. */

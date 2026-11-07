@@ -53,6 +53,7 @@ const html = ref('<p>Hallo <strong>Welt</strong>!</p>')
 - **Syntax-Highlighting** — js/ts/tsx/jsx/php/html/css/json in
   `<pre><code class="language-X">`-Blöcken.
 - **HTML→Markdown** — `htmlToMarkdown(html)`-Helper.
+- **Block-IDs** — ` ^id` am Ende eines Absatzes, einer Überschrift, eines Listenpunkts oder einer Tabellenzelle ist eine dezente, nicht editierbare Marke am Ende ihres Blocks und wird als ` ^id` zurückgeschrieben.
 - **Source-Modus** — Umschalten auf Raw-HTML-Editor mit Beautify auf
   Anzeige, Minify auf Speichern, Syntax-Highlighting-Overlay.
 - **Sanitize** — DOMParser-basierte Whitelist (eigene Implementierung).

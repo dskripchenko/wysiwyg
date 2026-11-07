@@ -21,6 +21,7 @@
  * with the same contract as the kit's UidMarkdown blockRenderers.
  */
 import { MATH_ATTR, stripMathDrawings, syncMath } from './mathIslands'
+import { BLOCK_ID_ATTR, stripBlockIdDrawings, syncBlockIds } from './blockIds'
 
 export interface BlockRenderResult {
   /** Markup put into the island as is: the renderer answers for its safety. */
@@ -71,10 +72,11 @@ type PreviewState = 'view' | 'edit' | 'error'
 
 /** The HTML of the host without the islands and the preview state. */
 export function serializeHost(host: HTMLElement): string {
-  if (! host.querySelector(`[${PREVIEW_ATTR}], [${STATE_ATTR}], span[${MATH_ATTR}]`)) return host.innerHTML
+  if (! host.querySelector(`[${PREVIEW_ATTR}], [${STATE_ATTR}], span[${MATH_ATTR}], span[${BLOCK_ID_ATTR}]`)) return host.innerHTML
   const clone = host.cloneNode(true) as HTMLElement
   stripPreviews(clone)
   stripMathDrawings(clone)
+  stripBlockIdDrawings(clone)
   return clone.innerHTML
 }
 
@@ -176,6 +178,8 @@ export class BlockPreviews {
   sync(): void {
     // Formulas are islands too: drawn where their TeX changed.
     syncMath(this.host)
+    // Block ids too: drawn, and kept at the end of their blocks.
+    syncBlockIds(this.host)
     const pres = this.previewable()
     const live = new Set<HTMLElement>()
     for (const pre of pres) {
