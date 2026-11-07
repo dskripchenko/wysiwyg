@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.1
+
+### Fixed
+
+- The kit (`@dskripchenko/ui`) is loaded with its exports named at the import (`const { UidIcon } = await import(...)`) instead of read off the module object. A bundler could not tell which parts were used and kept the whole kit in the application: an app using only some components grew by every component of the kit.
+
 ## 0.13.0
 
 ### Added

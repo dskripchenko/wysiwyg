@@ -1,10 +1,10 @@
 {
   "name": "@dskripchenko/wysiwyg",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "publishConfig": {
     "access": "public"
   },
-  "description": "Vue 3 WYSIWYG-редактор без сторонних editor-движков. Собственный contenteditable-engine, selection API, sanitize, history. UI на @dskripchenko/ui.",
+  "description": "A Vue 3 WYSIWYG editor with no third-party editor engine: its own contenteditable engine, selection API, sanitizer and history. The interface is built on @dskripchenko/ui.",
   "license": "MIT",
   "author": "Denis Skripchenko <denskrp90@gmail.com>",
   "homepage": "https://github.com/dskripchenko/wysiwyg#readme",

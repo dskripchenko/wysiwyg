@@ -237,9 +237,10 @@ function makeKitLocaleProbe(target: Ref<KitLocaleRef | null>): Component {
   return defineAsyncComponent({
     loader: async () => {
       try {
-        const mod = (await import('@dskripchenko/ui')) as unknown as { useLocale?: () => KitLocaleRef }
-        if (typeof mod.useLocale !== 'function') return empty as never
-        const useLocale = mod.useLocale
+        // Named at the import, not read off the module object: a bundler then
+        // keeps only this export of the kit instead of all of it.
+        const { useLocale } = (await import('@dskripchenko/ui')) as unknown as { useLocale?: () => KitLocaleRef }
+        if (typeof useLocale !== 'function') return empty as never
         return {
           name: 'DskWysiwygKitLocaleProbe',
           setup() {
