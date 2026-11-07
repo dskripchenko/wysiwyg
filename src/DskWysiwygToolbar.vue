@@ -104,8 +104,9 @@ const emit = defineEmits<{
 const UidIcon = defineAsyncComponent({
   loader: async () => {
     try {
-      const mod = await import('@dskripchenko/ui')
-      return (mod as unknown as { UidIcon: unknown }).UidIcon as never
+      // Named at the import: a bundler then keeps only UidIcon of the kit.
+      const { UidIcon: icon } = (await import('@dskripchenko/ui')) as unknown as { UidIcon: unknown }
+      return icon as never
     } catch {
       return { setup: () => () => null } as never
     }
@@ -141,7 +142,7 @@ const ICONS: Record<string, unknown> = {
 // The icons draw through UidIcon: without the kit the buttons keep their text symbols.
 const kitLoaded = ref(false)
 import('@dskripchenko/ui').then(
-  (kit) => (kitLoaded.value = Boolean((kit as { UidIcon?: unknown }).UidIcon)),
+  ({ UidIcon: icon }) => (kitLoaded.value = Boolean(icon)),
   () => undefined,
 )
 const icons = computed<Record<string, unknown>>(() => (kitLoaded.value ? ICONS : {}))
