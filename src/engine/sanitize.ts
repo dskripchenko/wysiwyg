@@ -20,6 +20,7 @@
  */
 
 import { mathToIslands } from './mathIslands'
+import { BLOCK_ID_ATTR, blockIdsToIslands, isBlockId } from './blockIds'
 
 /** Extra attributes kept per tag, on top of the built-in whitelist. */
 export type AllowedAttributes = Record<string, readonly string[]>
@@ -59,7 +60,8 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   // dsk-tok-* on a <span> is needed to render the tokens.
   code: new Set(['class']),
   // data-math: a formula island (its TeX), data-display: inline or block.
-  span: new Set(['class', 'data-math', 'data-display', 'data-tag', 'data-embed']),
+  // data-block-id: a block id island (` ^id` at the end of the block).
+  span: new Set(['class', 'data-math', 'data-display', 'data-tag', 'data-embed', 'data-block-id']),
 }
 
 /** The whitelist of class prefixes preserved on code and span. */
@@ -75,6 +77,8 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   for (const island of Array.from(root.querySelectorAll('[data-dsk-preview]'))) island.remove()
   // Drawn formulas (MathML with its TeX) become islands holding the TeX alone.
   mathToIslands(root)
+  // Block ids (` ^id`, or the renderer's attributes) become islands holding the id alone.
+  blockIdsToIslands(root)
   tasksToItems(root)
   cleanNode(root, options.allowedAttributes ?? {})
   return root.innerHTML
@@ -130,6 +134,11 @@ function cleanNode(node: Element, extra: AllowedAttributes): void {
         .join(' ')
       if (kept === '') node.removeAttribute('class')
       else node.setAttribute('class', kept)
+      continue
+    }
+    // A block id island keeps only a well-formed id.
+    if (attr.name === BLOCK_ID_ATTR && !isBlockId(attr.value)) {
+      node.removeAttribute(attr.name)
       continue
     }
     // A guard against javascript: in href and src.

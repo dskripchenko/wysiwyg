@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.0
+
+### Added
+
+- Block ids. ` ^id` at the end of a paragraph, heading, list item or table cell (letters, digits and dashes, at least one letter) is an island in the editor — `<span data-block-id="id">` — drawn as a quiet `^id` mark that cannot be typed into. It stays at the end of its block: text typed after it goes before it, both on screen and in what the editor gives out. `htmlToMarkdown` writes it back as ` ^id`. The sanitizer turns a trailing ` ^id` in the text, and the attributes `@dskripchenko/ui` 1.30+ puts on a block (`data-block-id`, `id="^id"`), into the island, and keeps `data-block-id` only when it is a valid id.
+
+### Changed
+
+- The development copy of `@dskripchenko/ui` is 1.31 (the peer range stays `^1.0`).
+
 ## 0.13.1
 
 ### Fixed

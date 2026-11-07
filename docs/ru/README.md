@@ -279,6 +279,10 @@ const md = htmlToMarkdown('<h1>Hello</h1><p><strong>World</strong></p>')
 Поддержка: p, h1-h3, strong/b, em/i, u, s, code, pre, ul/ol/li,
 blockquote, a, img, hr, br.
 
+Идентификатор блока — ` ^id` в конце абзаца, заголовка, пункта списка
+или ячейки — в редакторе показан тихой нередактируемой меткой, которая
+всегда остаётся в конце своего блока, и записывается обратно как ` ^id`.
+
 ## Code syntax highlighting
 
 `<pre><code class="language-js">…</code></pre>` блоки автоматически

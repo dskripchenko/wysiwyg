@@ -466,6 +466,8 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
 .dsk-wysiwyg__content .dsk-math-island { cursor: default; border-radius: 3px; }
 .dsk-wysiwyg__content .dsk-math-island:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
 .dsk-wysiwyg__content .dsk-math-island[data-display="block"] { display: block; text-align: center; margin: 0.5em 0; }
+/* A block id: a quiet mark at the end of its block, not typed into; its colours follow the text's, in either theme. */
+.dsk-wysiwyg__content .dsk-block-id { display: inline-block; margin-left: 0.4em; padding: 0 0.35em; border: 1px dashed color-mix(in srgb, currentColor 30%, transparent); border-radius: 4px; color: color-mix(in srgb, currentColor 55%, transparent); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75em; font-weight: normal; font-style: normal; line-height: 1.4; vertical-align: 0.1em; white-space: nowrap; cursor: default; user-select: none; }
 .dsk-wysiwyg__content math.dsk-math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Noto Sans Math", math; }
 .dsk-wysiwyg__content .dsk-math-error { color: #d1242f; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-bottom: 1px dotted; }
 .dsk-wysiwyg__content mark { background: #fff3bf; color: inherit; border-radius: 2px; padding: 0 0.1em; }
