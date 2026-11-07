@@ -30,7 +30,8 @@
   --dsk-wysiwyg-btn-active-bg: rgba(45, 212, 191, 0.16);
   --dsk-wysiwyg-btn-active-fg: #0d9488;
   --dsk-wysiwyg-btn-hover-bg: rgba(0, 0, 0, 0.05);
-  --dsk-wysiwyg-link-color: #2563eb;
+  /* The kit's accent when the host has the kit (its pages colour links so), blue without it. */
+  --dsk-wysiwyg-link-color: var(--uid-accent, #2563eb);
   --dsk-wysiwyg-code-bg: #f3f4f6;
   --dsk-wysiwyg-code-fg: #b91c1c;
   --dsk-wysiwyg-blockquote-border: #d1d5db;
@@ -359,6 +360,11 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   color: var(--dsk-wysiwyg-link-color);
   text-decoration: underline;
 }
+/* An internal link ([[note]]): dotted, as the kit draws it on a page. */
+.dsk-wysiwyg__content a.uid-markdown__wikilink:not([data-dsk-preview-live] *) {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
 .dsk-wysiwyg__content img:not([data-dsk-preview-live] *) {
   max-width: 100%;
   height: auto;
@@ -408,6 +414,7 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   --dsk-wysiwyg-code-bg: #27272a;
   --dsk-wysiwyg-code-fg: #f87171;
   --dsk-wysiwyg-blockquote-border: #52525b;
+  --dsk-wysiwyg-link-color: var(--uid-accent, #60a5fa);
   --dsk-wysiwyg-tok-keyword: #c084fc;
   --dsk-wysiwyg-tok-string: #86efac;
   --dsk-wysiwyg-tok-comment: #71717a;
@@ -429,6 +436,7 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
     --dsk-wysiwyg-code-bg: #27272a;
     --dsk-wysiwyg-code-fg: #f87171;
     --dsk-wysiwyg-blockquote-border: #52525b;
+    --dsk-wysiwyg-link-color: var(--uid-accent, #60a5fa);
     --dsk-wysiwyg-tok-keyword: #c084fc;
     --dsk-wysiwyg-tok-string: #86efac;
     --dsk-wysiwyg-tok-comment: #71717a;
@@ -452,6 +460,7 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   --dsk-wysiwyg-code-bg: #f3f4f6;
   --dsk-wysiwyg-code-fg: #b91c1c;
   --dsk-wysiwyg-blockquote-border: #d1d5db;
+  --dsk-wysiwyg-link-color: var(--uid-accent, #2563eb);
   --dsk-wysiwyg-tok-keyword: #7c3aed;
   --dsk-wysiwyg-tok-string: #16a34a;
   --dsk-wysiwyg-tok-comment: #6b7280;

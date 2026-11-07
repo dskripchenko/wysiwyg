@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.1
+
+### Fixed
+
+- Links in the content take the kit's accent (`--uid-accent`) when the host uses `@dskripchenko/ui`, the colour the kit's renderer gives them on a page; without the kit they stay blue. The dark palettes had no link colour of their own, so links stayed dark blue on a dark background: they now fall back to a light blue. `--dsk-wysiwyg-link-color` still overrides both.
+- An internal link (`[[note]]`, `a.uid-markdown__wikilink`) is underlined dotted, as the kit draws it, instead of the browser's solid line.
+
 ## 0.14.0
 
 ### Added
