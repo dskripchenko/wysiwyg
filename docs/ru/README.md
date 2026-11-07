@@ -183,7 +183,7 @@ const safe = sanitizeHtml(unsafeUserInput)
   --dsk-wysiwyg-toolbar-bg: #f9fafb;
   --dsk-wysiwyg-btn-active-bg: rgba(45, 212, 191, 0.16);
   --dsk-wysiwyg-btn-active-fg: #0d9488;
-  --dsk-wysiwyg-link-color: #2563eb;
+  --dsk-wysiwyg-link-color: var(--uid-accent, #2563eb); /* акцент кита, если он подключён */
   --dsk-wysiwyg-code-bg: #f3f4f6;
   /* … см. src/style.css */
 }
