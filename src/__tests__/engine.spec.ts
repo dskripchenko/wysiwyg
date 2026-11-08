@@ -34,6 +34,13 @@ describe('EditorController', () => {
     expect(c.getHTML()).not.toContain('script')
   })
 
+  it('setContent drops the line breaks between blocks, not inside them', () => {
+    const host = setupHost()
+    const c = new EditorController(host)
+    c.setContent('<h1>A</h1>\n<p>one  two</p>\n<ul>\n<li>x</li>\n</ul>\n<pre><code>a\n\nb</code></pre>')
+    expect(host.innerHTML).toBe('<h1>A</h1><p>one  two</p><ul><li>x</li></ul><pre><code>a\n\nb</code></pre>')
+  })
+
   it('setContent keeps the host markers the controller was given', () => {
     const host = setupHost()
     const c = new EditorController(host, { allowedAttributes: { img: ['data-signature-stamp'] } })

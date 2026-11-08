@@ -206,6 +206,7 @@ export class EditorController {
   /** Set the content (sanitized) and reset the history. */
   setContent(html: string): void {
     this.host.innerHTML = sanitizeHtml(html, this.sanitizeOptions)
+    dropBlockGaps(this.host)
     // When the editor is empty we guarantee at least one block <p><br>, so that
     // the user's typing lands in a block context right away. Without it the
     // markdown shortcuts and handleEnter cannot find a blockAncestor.
@@ -222,4 +223,25 @@ export class EditorController {
   destroy(): void {
     this.previews.destroy()
   }
+}
+
+const GAP_PARENTS = new Set(['UL', 'OL', 'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'BLOCKQUOTE', 'DETAILS'])
+
+/**
+ * Line breaks between blocks in the given HTML ("</p>\n<h2>") are only
+ * formatting, but the content keeps whitespace (pre-wrap) and would show
+ * each of them as an empty line. They are dropped from the content's top
+ * level and from containers that hold only blocks.
+ */
+function dropBlockGaps(root: HTMLElement): void {
+  const walk = (parent: Element): void => {
+    for (const node of Array.from(parent.childNodes)) {
+      if (node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim() === '') {
+        node.remove()
+      } else if (node instanceof Element && GAP_PARENTS.has(node.tagName)) {
+        walk(node)
+      }
+    }
+  }
+  walk(root)
 }
