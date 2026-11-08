@@ -15,7 +15,7 @@
  *   - images: emit('image-request'), the host wires up the upload and then
  *     calls `controller.chain().focus().setImage(url).run()`.
  */
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRenderers } from './engine'
 import { PREVIEW_ATTR, inLiveIsland } from './engine/blockPreviews'
 import { MATH_ATTR, mathIslandOf } from './engine/mathIslands'
@@ -65,6 +65,18 @@ interface Props {
   locale?: WysiwygLocale
   /** Single strings over the language's own: `{ toolbar: { bold: 'Fett' } }`. */
   labels?: WysiwygPartialLabels
+  /**
+   * A small toolbar floating above a selection in the content: `true` for a
+   * default set (bold, italic, underline, strike, inline code, link, heading 2,
+   * bullet list), or the items to show. Not shown in source mode or readonly.
+   */
+  bubble?: ToolbarItem[] | boolean
+  /**
+   * No frame of its own: no border, radius, background or padding around the
+   * content, and a toolbar without a background — the content reads as part
+   * of the page around it.
+   */
+  frameless?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -82,6 +94,8 @@ const props = withDefaults(defineProps<Props>(), {
   allowedAttributes: () => ({}),
   blockRenderers: () => ({}),
   slashCommands: () => [],
+  bubble: false,
+  frameless: false,
 })
 
 const emit = defineEmits<{
@@ -96,6 +110,7 @@ const { locale: uiLocale, labels: text, KitLocaleProbe, probeKit } = useWysiwygL
 /** The placeholder prop wins over the language's own. */
 const placeholderText = computed<string>(() => props.placeholder ?? text.value.placeholder)
 
+const rootRef = ref<HTMLElement | null>(null)
 const hostRef = ref<HTMLElement | null>(null)
 const slashMenuRef = ref<InstanceType<typeof DskWysiwygSlashMenu> | null>(null)
 /** Source mode: the raw HTML is shown in a textarea and hostRef is hidden. */
@@ -157,6 +172,8 @@ onMounted(() => {
     if (document.activeElement === hostRef.value || hostRef.value.contains(document.activeElement)) {
       selectionVersion.value++
       controller.value?.previews.followSelection(currentRange())
+    } else if (bubbleRect.value) {
+      hideBubble()
     }
   }
   document.addEventListener('selectionchange', onSelectionChange)
@@ -396,6 +413,8 @@ function onBlur(): void {
   // mousedown.prevent in the slash menu preserves the selection, so closing on
   // blur is safe for it — the choice has already been made.
   closeSlashMenu()
+  // The bubble's buttons keep the focus (mousedown.prevent): a blur means the user left.
+  hideBubble()
   controller.value.previews.closeAll()
   const codes = hostRef.value.querySelectorAll<HTMLElement>('pre > code[class*="language-"]')
   let dirty = false
@@ -606,6 +625,12 @@ function onKeydown(e: KeyboardEvent): void {
     }
     if (e.key === 'Escape')    { e.preventDefault(); closeSlashMenu(); return }
   }
+  // Escape hides the bubble; the next change of the selection brings it back.
+  if (e.key === 'Escape' && bubbleRect.value) {
+    e.preventDefault()
+    hideBubble()
+    return
+  }
   // Inside an open code block: Enter is a line break of the code, Escape leaves it.
   const openCode = controller.value.previews.openCodeAt(currentRange())
   if (openCode && e.key === 'Escape') {
@@ -680,6 +705,66 @@ function resolveToolbarHost(): void {
 onMounted(resolveToolbarHost)
 watch(() => props.toolbarTarget, resolveToolbarHost)
 
+/**
+ * The bubble: a compact toolbar over a non-collapsed selection in the content.
+ * It follows the existing selection tracking (selectionVersion) and is placed
+ * relative to the root (position: relative), so a scrolling page moves both.
+ */
+const BUBBLE_ITEMS: ToolbarItem[] = ['bold', 'italic', 'underline', 'strike', 'code', '|', 'link', '|', 'h2', 'bullet-list']
+/** The gap between the selection and the bubble, px. */
+const BUBBLE_GAP = 8
+const bubbleItems = computed<ToolbarItem[] | null>(() => {
+  if (props.bubble === true) return BUBBLE_ITEMS
+  return Array.isArray(props.bubble) && props.bubble.length > 0 ? props.bubble : null
+})
+const bubbleRef = ref<HTMLElement | null>(null)
+/** The selection's box relative to the root's padding box; null hides the bubble. */
+const bubbleRect = ref<{ top: number, bottom: number, center: number } | null>(null)
+const bubbleStyle = ref<Record<string, string>>({})
+const bubbleShown = computed<boolean>(() => bubbleItems.value !== null && bubbleRect.value !== null && ! props.readonly && ! sourceMode.value)
+
+function hideBubble(): void {
+  bubbleRect.value = null
+}
+
+function updateBubble(): void {
+  const root = rootRef.value
+  if (! bubbleItems.value || props.readonly || sourceMode.value || ! root || ! hostRef.value) { hideBubble(); return }
+  const range = currentRange()
+  if (! range || range.collapsed || ! hostRef.value.contains(range.endContainer)) { hideBubble(); return }
+  // jsdom has no layout for ranges: the box then stays at the root's corner.
+  const r = typeof range.getBoundingClientRect === 'function' ? range.getBoundingClientRect() : null
+  const box = root.getBoundingClientRect()
+  const top = (r?.top ?? box.top) - box.top - root.clientTop
+  const bottom = (r?.bottom ?? box.top) - box.top - root.clientTop
+  const center = (r ? r.left + r.width / 2 : box.left) - box.left - root.clientLeft
+  bubbleRect.value = { top, bottom, center }
+  void nextTick(placeBubble)
+}
+
+/** Centred above the selection, below it when there is no room above, kept inside the root. */
+function placeBubble(): void {
+  const rect = bubbleRect.value
+  const el = bubbleRef.value
+  const root = rootRef.value
+  if (! rect || ! el || ! root) return
+  const width = el.offsetWidth
+  const height = el.offsetHeight
+  const left = Math.min(Math.max(0, rect.center - width / 2), Math.max(0, root.clientWidth - width))
+  let top = rect.top - height - BUBBLE_GAP
+  if (top < 0) top = rect.bottom + BUBBLE_GAP
+  top = Math.min(Math.max(0, top), Math.max(0, root.clientHeight - height))
+  bubbleStyle.value = { top: `${top}px`, left: `${left}px` }
+}
+
+watch(selectionVersion, updateBubble)
+watch([() => props.readonly, sourceMode, bubbleItems], updateBubble)
+
+/** The content scrolls inside a max-height: the bubble follows its selection. */
+function onContentScroll(): void {
+  if (bubbleRect.value) updateBubble()
+}
+
 const wrapStyle = computed(() => ({
   '--dsk-wysiwyg-min-height': props.minHeight,
   '--dsk-wysiwyg-max-height': props.maxHeight ?? 'none',
@@ -694,7 +779,7 @@ defineExpose({
 </script>
 
 <template>
-  <div :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen }]" :style="wrapStyle">
+  <div ref="rootRef" :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen, 'dsk-wysiwyg--frameless': frameless }]" :style="wrapStyle">
     <component :is="KitLocaleProbe" v-if="probeKit" />
     <Teleport :to="toolbarHost ?? 'body'" :disabled="!toolbarHost">
     <DskWysiwygToolbar
@@ -744,6 +829,7 @@ defineExpose({
       @keydown="onKeydown"
       @mousedown="onMousedown"
       @dblclick="onDblclick"
+      @scroll="onContentScroll"
     />
     <DskWysiwygSlashMenu
       ref="slashMenuRef"
@@ -758,6 +844,28 @@ defineExpose({
       @select="onSlashSelect"
       @close="closeSlashMenu"
     />
+    <!-- mousedown.prevent: a press on the bubble keeps the focus and the selection in the content. -->
+    <div
+      v-if="bubbleShown"
+      ref="bubbleRef"
+      class="dsk-wysiwyg-bubble"
+      :style="bubbleStyle"
+      @mousedown.prevent
+    >
+      <DskWysiwygToolbar
+        :controller="controller"
+        :items="bubbleItems ?? []"
+        :selection-version="selectionVersion"
+        :source-active="sourceMode"
+        :fullscreen-active="fullscreen"
+        :locale="uiLocale"
+        :labels="labels"
+        @toggle-fullscreen="toggleFullscreen"
+        @image-request="emit('image-request')"
+        @link-request="(url) => emit('link-request', url)"
+        @toggle-source="toggleSource"
+      />
+    </div>
   </div>
 </template>
 

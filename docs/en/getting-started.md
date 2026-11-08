@@ -49,6 +49,8 @@ DOMParser whitelist before emitting.
 | `toolbar` | `boolean` | `true` | Show the toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | (default set) | Override toolbar order. |
 | `toolbarTarget` | `string \| HTMLElement` | — | Show the toolbar in this element (or the element this selector finds) instead of above the content — the host's own bar or a floating panel. Still the editor's toolbar; back above the content when the target is not in the document. |
+| `bubble` | `ToolbarItem[] \| boolean` | `false` | A compact toolbar floating above a selection in the content: `true` for bold, italic, underline, strike, inline code, link, heading 2 and bullet list, or the items to show. See [Customization](customization.md#edit-in-place-bubble-toolbar-and-frameless). |
+| `frameless` | `boolean` | `false` | No border, radius, background or padding around the content; the toolbar has no background. The content reads as part of the page. |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS length on the root. |
 | `maxHeight` | `string` | `undefined` | CSS length on the root. |

@@ -66,6 +66,9 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
 - **Hotkeys** — ⌘B, ⌘I, ⌘U, ⌘Z, ⌘⇧Z.
 - **Themes** — `data-theme="dark"` / `:root.dark` /
   `prefers-color-scheme: dark` aware.
+- **Edit in place** — `bubble`: a small dark toolbar floating above the
+  selection; `frameless`: no border, background or padding, so the content
+  reads as part of the page.
 - **Resizable** — user can resize the widget vertically (min/max via
   props).
 

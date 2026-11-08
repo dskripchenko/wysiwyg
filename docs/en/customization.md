@@ -127,6 +127,44 @@ To extend: fork or wrap with your own `sanitizeHtml` before saving.
 - [Controller API](controller-api.md)
 - [Extensions](extensions.md)
 
+## Edit in place: bubble toolbar and frameless
+
+For editing a page where it stands, drop the frame and let formatting come
+from a small dark bar that floats above the selection:
+
+```vue
+<DskWysiwyg v-model="html" frameless bubble :toolbar="false" :resizable="false" />
+```
+
+`bubble` shows the bar while the selection in the content is not collapsed
+(not in source mode or readonly); it hides when the selection collapses,
+leaves the editor, or on Escape. A press on its buttons keeps the
+selection. It is centred above the selection, goes below it when there is no
+room above, and stays inside the editor. `true` gives bold, italic,
+underline, strike, inline code, link, heading 2 and bullet list; an array
+picks the items (`:bubble="['bold', 'italic', 'link']"`).
+
+`frameless` removes the border, radius, background and padding around the
+content and the toolbar's background, and takes the page's text colour and
+size. `--dsk-wysiwyg-frameless-padding` (0 by default) sets the padding back.
+
+The bar's tokens (a darker shade with an edge in the dark theme):
+
+```css
+.dsk-wysiwyg {
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-fg: #f4f4f5;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-radius: 8px;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --dsk-wysiwyg-bubble-hover-bg: rgba(255, 255, 255, 0.1);
+  --dsk-wysiwyg-bubble-active-bg: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-active-fg: #5eead4;
+  --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-z: 20;
+}
+```
+
 ## Fullscreen
 
 The `fullscreen` toolbar item (in the default set, after `source`) spreads

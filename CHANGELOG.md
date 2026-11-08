@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.0
+
+### Added
+
+- `bubble` — a compact toolbar floating above a non-collapsed selection in the content: `true` for bold, italic, underline, strike, inline code, link, heading 2 and bullet list, or the `ToolbarItem[]` to show. Centred above the selection (below it when there is no room above), kept inside the editor and placed relative to its root, so it follows a scrolling page and a scrolling content. It hides when the selection collapses, leaves the editor, or on Escape, and is not shown in source mode or readonly; a press on its buttons keeps the selection. A dark pill by default, themed through `--dsk-wysiwyg-bubble-bg`, `-fg`, `-border`, `-radius`, `-shadow`, `-hover-bg`, `-active-bg`, `-active-fg`, `-divider` and `-z`; a shade lighter with an edge in the dark theme.
+- `frameless` — no border, radius, background or padding around the content, a toolbar without a background, and the page's text colour and size (`.dsk-wysiwyg--frameless`; `--dsk-wysiwyg-frameless-padding` sets the padding back). Fullscreen keeps its own background and padding.
+
 ## 0.14.1
 
 ### Fixed
