@@ -49,6 +49,8 @@ const html = ref('<p>Привет</p>')
 | `toolbar` | `boolean` | `true` | Показать toolbar. |
 | `toolbarItems` | `ToolbarItem[]` | весь набор | Кастомный список. |
 | `toolbarTarget` | `string \| HTMLElement` | — | Тулбар в элементе программы, а не над содержимым. |
+| `bubble` | `ToolbarItem[] \| boolean` | `false` | Компактный тулбар над выделением в содержимом: `true` — жирный, курсив, подчёркнутый, зачёркнутый, код, ссылка, заголовок 2 и маркированный список; или свой список кнопок. См. [Кастомизация](customization.md#правка-на-месте-плавающий-тулбар-и-frameless). |
+| `frameless` | `boolean` | `false` | Без рамки, скругления, фона и отступов вокруг содержимого; у тулбара нет фона. Содержимое выглядит частью страницы. |
 | `readonly` | `boolean` | `false` | Read-only режим. |
 | `minHeight` | `string` | `'200px'` | Min-height area. |
 | `maxHeight` | `string` | — | Max-height (overflow-y auto). |

@@ -46,6 +46,17 @@
   --dsk-wysiwyg-tok-attr: #b45309;
   --dsk-wysiwyg-tok-function: #0891b2;
   --dsk-wysiwyg-tok-punct: #6b7280;
+  /* The bubble: a dark floating format bar over a selection, in either theme. */
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-fg: #f4f4f5;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-radius: 8px;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --dsk-wysiwyg-bubble-hover-bg: rgba(255, 255, 255, 0.1);
+  --dsk-wysiwyg-bubble-active-bg: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-active-fg: #5eead4;
+  --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-z: 20;
 
   position: relative;
   display: flex;
@@ -71,6 +82,27 @@
 }
 .dsk-wysiwyg--readonly {
   background: var(--dsk-wysiwyg-toolbar-bg);
+}
+
+/* Frameless: no frame of its own, the content reads as part of the page.
+   Fullscreen (below) brings its background and padding back. */
+.dsk-wysiwyg--frameless {
+  --dsk-wysiwyg-padding: var(--dsk-wysiwyg-frameless-padding, 0);
+  border-width: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  /* It grows with its text, like the page around it. */
+  resize: none;
+}
+.dsk-wysiwyg--frameless > .dsk-wysiwyg-toolbar {
+  padding-inline: 0;
+  background: transparent;
+}
+.dsk-wysiwyg--frameless.dsk-wysiwyg--fullscreen {
+  --dsk-wysiwyg-padding: 12px 16px;
+  color: var(--dsk-wysiwyg-fg);
 }
 
 /* Fullscreen: the editor covers the window; the page under it stays put. */
@@ -152,6 +184,36 @@ html.dsk-wysiwyg-fullscreen-open body {
   width: 1px;
   margin: 4px 4px;
   background: var(--dsk-wysiwyg-border);
+}
+
+/* The bubble: a compact toolbar floating over the selection; DskWysiwyg sets
+   its top/left relative to the root. Its buttons take the bubble's tokens. */
+.dsk-wysiwyg-bubble {
+  position: absolute;
+  z-index: var(--dsk-wysiwyg-bubble-z);
+  max-width: 100%;
+}
+.dsk-wysiwyg-bubble > .dsk-wysiwyg-toolbar {
+  --dsk-wysiwyg-fg: var(--dsk-wysiwyg-bubble-fg);
+  --dsk-wysiwyg-toolbar-bg: var(--dsk-wysiwyg-bubble-bg);
+  --dsk-wysiwyg-border: var(--dsk-wysiwyg-bubble-divider);
+  --dsk-wysiwyg-btn-hover-bg: var(--dsk-wysiwyg-bubble-hover-bg);
+  --dsk-wysiwyg-btn-active-bg: var(--dsk-wysiwyg-bubble-active-bg);
+  --dsk-wysiwyg-btn-active-fg: var(--dsk-wysiwyg-bubble-active-fg);
+  flex-wrap: nowrap;
+  padding: 4px;
+  border: 1px solid var(--dsk-wysiwyg-bubble-border);
+  border-radius: var(--dsk-wysiwyg-bubble-radius);
+  background: var(--dsk-wysiwyg-bubble-bg);
+  box-shadow: var(--dsk-wysiwyg-bubble-shadow);
+  color: var(--dsk-wysiwyg-bubble-fg);
+  white-space: nowrap;
+  line-height: 1;
+}
+.dsk-wysiwyg-bubble .dsk-wysiwyg-toolbar__btn {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
 }
 
 /* Contenteditable host */
@@ -423,6 +485,10 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   --dsk-wysiwyg-tok-attr: #60a5fa;
   --dsk-wysiwyg-tok-function: #38bdf8;
   --dsk-wysiwyg-tok-punct: #d4d4d8;
+  /* On a dark page the bubble steps up a shade and gets an edge. */
+  --dsk-wysiwyg-bubble-bg: #27272a;
+  --dsk-wysiwyg-bubble-border: #3f3f46;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 /* OS-уровневая dark-тема — только если host не переопределил явно. */
 @media (prefers-color-scheme: dark) {
@@ -445,6 +511,9 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
     --dsk-wysiwyg-tok-attr: #60a5fa;
     --dsk-wysiwyg-tok-function: #38bdf8;
     --dsk-wysiwyg-tok-punct: #d4d4d8;
+    --dsk-wysiwyg-bubble-bg: #27272a;
+    --dsk-wysiwyg-bubble-border: #3f3f46;
+    --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 }
 /* Light-override: если host явно ставит [data-theme='light'] — возвращаем
@@ -469,6 +538,9 @@ pre[data-dsk-preview-state='error'] + .dsk-wysiwyg__preview {
   --dsk-wysiwyg-tok-attr: #b45309;
   --dsk-wysiwyg-tok-function: #0891b2;
   --dsk-wysiwyg-tok-punct: #6b7280;
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
 /* A formula: one island, drawn in a math font; a double click edits its TeX. */

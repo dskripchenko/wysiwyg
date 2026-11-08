@@ -43,6 +43,8 @@ interne DOMParser-Whitelist sanitisiert.
 | `toolbar` | `boolean` | `true` | Zeigt die Toolbar an. |
 | `toolbarItems` | `ToolbarItem[]` | (Standardsatz) | Überschreibt die Reihenfolge der Toolbar. |
 | `toolbarTarget` | `string \| HTMLElement` | — | Zeigt die Toolbar in diesem Element (oder dem, das der Selektor findet) statt über dem Inhalt — in der eigenen Leiste oder einem schwebenden Panel der Anwendung. Es bleibt die Toolbar des Editors; fehlt das Ziel im Dokument, bleibt sie über dem Inhalt. |
+| `bubble` | `ToolbarItem[] \| boolean` | `false` | Eine kompakte Toolbar, die über einer Auswahl im Inhalt schwebt: `true` für Fett, Kursiv, Unterstrichen, Durchgestrichen, Inline-Code, Link, Überschrift 2 und Aufzählung, oder die gewünschten Elemente. Siehe [Anpassung](customization.md#bearbeiten-an-ort-und-stelle-schwebende-toolbar-und-frameless). |
+| `frameless` | `boolean` | `false` | Kein Rahmen, Radius, Hintergrund oder Innenabstand um den Inhalt; die Toolbar ohne Hintergrund. Der Inhalt wirkt wie ein Teil der Seite. |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS-Länge am Root-Element. |
 | `maxHeight` | `string` | `undefined` | CSS-Länge am Root-Element. |

@@ -123,6 +123,44 @@ function insertSignature() {
 - [Controller API](controller-api.md)
 - [Расширения](extensions.md)
 
+## Правка на месте: плавающий тулбар и frameless
+
+Чтобы править страницу там, где она стоит, уберите рамку, а форматирование
+отдайте небольшой тёмной панели над выделением:
+
+```vue
+<DskWysiwyg v-model="html" frameless bubble :toolbar="false" :resizable="false" />
+```
+
+`bubble` показывает панель, пока выделение в содержимом не схлопнуто (не в
+режиме исходника и не в readonly); она прячется, когда выделение схлопнуто,
+ушло из редактора, или по Escape. Нажатие на её кнопки не сбрасывает
+выделение. Панель стоит по центру над выделением, под ним — если сверху нет
+места, и не выходит за редактор. `true` — жирный, курсив, подчёркнутый,
+зачёркнутый, код, ссылка, заголовок 2 и маркированный список; массив задаёт
+свои кнопки (`:bubble="['bold', 'italic', 'link']"`).
+
+`frameless` убирает рамку, скругление, фон и отступы вокруг содержимого и фон
+тулбара, а цвет и размер текста берёт со страницы.
+`--dsk-wysiwyg-frameless-padding` (по умолчанию 0) возвращает отступы.
+
+Токены панели (в тёмной теме — на тон светлее и с краем):
+
+```css
+.dsk-wysiwyg {
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-fg: #f4f4f5;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-radius: 8px;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --dsk-wysiwyg-bubble-hover-bg: rgba(255, 255, 255, 0.1);
+  --dsk-wysiwyg-bubble-active-bg: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-active-fg: #5eead4;
+  --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-z: 20;
+}
+```
+
 ## Полноэкранный режим
 
 Кнопка `fullscreen` (в наборе по умолчанию, после `source`) разворачивает

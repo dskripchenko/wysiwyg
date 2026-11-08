@@ -61,6 +61,9 @@ const html = ref('<p>Hallo <strong>Welt</strong>!</p>')
 - **Hotkeys** — ⌘B, ⌘I, ⌘U, ⌘Z, ⌘⇧Z.
 - **Themes** — `data-theme="dark"` / `:root.dark` /
   `prefers-color-scheme: dark`-aware.
+- **Bearbeiten an Ort und Stelle** — `bubble`: eine kleine dunkle Toolbar
+  über der Auswahl; `frameless`: ohne Rahmen, Hintergrund und Innenabstand,
+  sodass der Inhalt wie ein Teil der Seite wirkt.
 - **Resizable** — Benutzer kann das Widget vertikal in der Größe
   ändern (min/max über Props).
 

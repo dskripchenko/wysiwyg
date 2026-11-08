@@ -125,6 +125,45 @@ Zum Erweitern: forken oder vor dem Speichern mit einer eigenen
 - [Controller-API](controller-api.md)
 - [Erweiterungen](extensions.md)
 
+## Bearbeiten an Ort und Stelle: schwebende Toolbar und frameless
+
+Um eine Seite dort zu bearbeiten, wo sie steht, entfällt der Rahmen, und die
+Formatierung kommt aus einer kleinen dunklen Leiste über der Auswahl:
+
+```vue
+<DskWysiwyg v-model="html" frameless bubble :toolbar="false" :resizable="false" />
+```
+
+`bubble` zeigt die Leiste, solange die Auswahl im Inhalt nicht leer ist
+(nicht im Quelltextmodus oder readonly); sie verschwindet, wenn die Auswahl
+leer wird, den Editor verlässt, oder mit Escape. Ein Klick auf ihre Buttons
+behält die Auswahl. Sie steht zentriert über der Auswahl, darunter, wenn oben
+kein Platz ist, und bleibt im Editor. `true` ergibt Fett, Kursiv,
+Unterstrichen, Durchgestrichen, Inline-Code, Link, Überschrift 2 und
+Aufzählung; ein Array wählt die Elemente (`:bubble="['bold', 'italic', 'link']"`).
+
+`frameless` entfernt Rahmen, Radius, Hintergrund und Innenabstand um den
+Inhalt sowie den Hintergrund der Toolbar und übernimmt Textfarbe und -größe
+der Seite. `--dsk-wysiwyg-frameless-padding` (standardmäßig 0) setzt den
+Innenabstand zurück.
+
+Die Tokens der Leiste (im dunklen Theme eine Stufe heller, mit Rand):
+
+```css
+.dsk-wysiwyg {
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-fg: #f4f4f5;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-radius: 8px;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --dsk-wysiwyg-bubble-hover-bg: rgba(255, 255, 255, 0.1);
+  --dsk-wysiwyg-bubble-active-bg: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-active-fg: #5eead4;
+  --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-z: 20;
+}
+```
+
 ## Vollbild
 
 Das Toolbar-Element `fullscreen` (im Standardsatz, nach `source`) breitet den

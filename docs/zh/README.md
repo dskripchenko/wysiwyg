@@ -60,6 +60,8 @@ const html = ref('<p>你好 <strong>世界</strong>！</p>')
 - **热键** — ⌘B、⌘I、⌘U、⌘Z、⌘⇧Z。
 - **主题** — 感知 `data-theme="dark"` / `:root.dark` /
   `prefers-color-scheme: dark`。
+- **原地编辑** — `bubble`：浮在选区上方的小型深色工具栏；`frameless`：
+  无边框、背景和内边距，内容看起来就是页面的一部分。
 - **可调整大小** — 用户可以垂直调整小部件大小（通过 props 设置
   min/max）。
 

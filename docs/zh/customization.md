@@ -120,6 +120,39 @@ function insertSignature() {
 - [控制器 API](controller-api.md)
 - [扩展](extensions.md)
 
+## 原地编辑：浮动工具栏与 frameless
+
+要在页面原处编辑，可以去掉边框，由选区上方的小型深色工具条提供格式：
+
+```vue
+<DskWysiwyg v-model="html" frameless bubble :toolbar="false" :resizable="false" />
+```
+
+`bubble` 在内容中的选区非空时显示工具条（源码模式和只读模式下不显示）；选区折叠、
+离开编辑器或按 Escape 时隐藏。点击其按钮不会丢失选区。它居中显示在选区上方，上方
+没有空间时显示在下方，并始终保持在编辑器内。`true` 为粗体、斜体、下划线、删除线、
+行内代码、链接、二级标题和无序列表；数组用于指定项（`:bubble="['bold', 'italic', 'link']"`）。
+
+`frameless` 去掉内容周围的边框、圆角、背景和内边距以及工具栏的背景，并沿用页面的
+文字颜色和字号。`--dsk-wysiwyg-frameless-padding`（默认 0）可恢复内边距。
+
+工具条的令牌（深色主题下更浅一级并带边框）：
+
+```css
+.dsk-wysiwyg {
+  --dsk-wysiwyg-bubble-bg: #18181b;
+  --dsk-wysiwyg-bubble-fg: #f4f4f5;
+  --dsk-wysiwyg-bubble-border: transparent;
+  --dsk-wysiwyg-bubble-radius: 8px;
+  --dsk-wysiwyg-bubble-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --dsk-wysiwyg-bubble-hover-bg: rgba(255, 255, 255, 0.1);
+  --dsk-wysiwyg-bubble-active-bg: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-active-fg: #5eead4;
+  --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
+  --dsk-wysiwyg-bubble-z: 20;
+}
+```
+
 ## 全屏
 
 工具栏项 `fullscreen`（位于默认集合中 `source` 之后）让编辑器铺满整个窗口——

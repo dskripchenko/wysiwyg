@@ -42,6 +42,8 @@ HTML 在发出（emit）之前会经过内部基于 DOMParser 的白名单清洗
 | `toolbar` | `boolean` | `true` | 显示工具栏。 |
 | `toolbarItems` | `ToolbarItem[]` | （默认集合） | 覆盖工具栏顺序。 |
 | `toolbarTarget` | `string \| HTMLElement` | — | 在该元素（或选择器找到的元素）中显示工具栏，而不是在内容上方——宿主自己的栏或浮动面板。它仍是编辑器的工具栏；目标不在文档中时仍显示在内容上方。 |
+| `bubble` | `ToolbarItem[] \| boolean` | `false` | 在内容中的选区上方浮动的紧凑工具栏：`true` 为粗体、斜体、下划线、删除线、行内代码、链接、二级标题和无序列表，或指定要显示的项。参见[自定义](customization.md#原地编辑浮动工具栏与-frameless)。 |
+| `frameless` | `boolean` | `false` | 内容周围没有边框、圆角、背景和内边距；工具栏没有背景。内容看起来就是页面的一部分。 |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | 作用于根元素的 CSS 长度。 |
 | `maxHeight` | `string` | `undefined` | 作用于根元素的 CSS 长度。 |
