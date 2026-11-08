@@ -93,6 +93,8 @@
   background: transparent;
   color: inherit;
   font-size: inherit;
+  /* It grows with its text, like the page around it. */
+  resize: none;
 }
 .dsk-wysiwyg--frameless > .dsk-wysiwyg-toolbar {
   padding-inline: 0;
