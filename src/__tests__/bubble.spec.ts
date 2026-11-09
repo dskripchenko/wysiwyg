@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import { nextTick } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 import DskWysiwyg from '../DskWysiwyg.vue'
 
 afterEach(() => {
@@ -77,6 +77,59 @@ describe('bubble', () => {
     await nextTick()
     const html = (w.vm as unknown as { controller: { getHTML(): string } }).controller.getHTML()
     expect(html).toContain('<strong>Hello</strong>')
+    w.unmount()
+  })
+})
+
+describe('bubble actions', () => {
+  const icon = defineComponent({ props: { size: Number }, setup: (p) => () => h('svg', { 'data-icon': '', width: p.size }) })
+
+  it('shows the host\'s actions after a divider, and runs them on the selection', async () => {
+    const calls: Array<{ text: string; block: number }> = []
+    const w = mount(DskWysiwyg, {
+      props: {
+        modelValue: '<p>Hello world</p>',
+        bubble: ['bold'],
+        bubbleActions: [{ key: 'comment', label: 'Comment', icon, run: (ctx: { text: string; block: number }) => calls.push(ctx) }],
+      },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    await select(w, 6, 11)
+    const toolbar = w.find('.dsk-wysiwyg-bubble .dsk-wysiwyg-toolbar')
+    expect(toolbar.findAll('.dsk-wysiwyg-toolbar__divider')).toHaveLength(1)
+    const action = toolbar.find('.dsk-wysiwyg-bubble__action')
+    expect(action.text()).toBe('Comment')
+    expect(action.find('svg[data-icon]').exists()).toBe(true)
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    action.element.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+    await action.trigger('click')
+    expect(calls).toEqual([{ text: 'world', block: 0 }])
+    w.unmount()
+  })
+
+  it('gives the block the selection starts in, and shows alone without bubble items', async () => {
+    const calls: Array<{ text: string; block: number }> = []
+    const w = mount(DskWysiwyg, {
+      props: { modelValue: '<p>One</p><h2>Two words</h2>', bubbleActions: [{ key: 'c', label: 'C', run: (ctx: { text: string; block: number }) => calls.push(ctx) }] },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    const host = w.find('.dsk-wysiwyg__content').element as HTMLElement
+    host.focus()
+    const range = document.createRange()
+    range.setStart(host.children[1]!.firstChild!, 4)
+    range.setEnd(host.children[1]!.firstChild!, 9)
+    window.getSelection()!.removeAllRanges()
+    window.getSelection()!.addRange(range)
+    document.dispatchEvent(new Event('selectionchange'))
+    await nextTick()
+    await nextTick()
+    expect(w.findAll('.dsk-wysiwyg-bubble button')).toHaveLength(1)
+    expect(w.find('.dsk-wysiwyg-bubble .dsk-wysiwyg-toolbar__divider').exists()).toBe(false)
+    await w.find('.dsk-wysiwyg-bubble__action').trigger('click')
+    expect(calls).toEqual([{ text: 'words', block: 1 }])
     w.unmount()
   })
 })

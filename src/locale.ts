@@ -77,6 +77,28 @@ export interface WysiwygSlashLabels {
   mathHint: string
 }
 
+/** The block handles in the gutter (`blockHandles`) and their menu. */
+export interface WysiwygBlockLabels {
+  /** The «+» button: a new block below, with the slash menu open. */
+  add: string
+  /** The «⋮⋮» grip: dragged, it moves the block; clicked, it opens the menu. */
+  grip: string
+  /** The menu's aria-label. */
+  menu: string
+  moveUp: string
+  moveDown: string
+  duplicate: string
+  remove: string
+}
+
+/** The toggle in the header of an open block with a preview. */
+export interface WysiwygPreviewLabels {
+  /** The code beside its preview. */
+  split: string
+  /** The preview alone. */
+  preview: string
+}
+
 export interface WysiwygLabels {
   /** The empty editor's placeholder (the `placeholder` prop wins over it). */
   placeholder: string
@@ -84,6 +106,8 @@ export interface WysiwygLabels {
   slash: WysiwygSlashLabels
   /** Asked for a formula's TeX (a new one, or a double-clicked one). */
   mathPrompt: string
+  blocks: WysiwygBlockLabels
+  preview: WysiwygPreviewLabels
 }
 
 /** A partial override: any single string of any group. */
@@ -92,6 +116,8 @@ export interface WysiwygPartialLabels {
   mathPrompt?: string
   toolbar?: Partial<WysiwygToolbarLabels>
   slash?: Partial<WysiwygSlashLabels>
+  blocks?: Partial<WysiwygBlockLabels>
+  preview?: Partial<WysiwygPreviewLabels>
 }
 
 export const en: WysiwygLabels = {
@@ -142,6 +168,19 @@ export const en: WysiwygLabels = {
     table: 'Table 3×3',
     math: 'Formula',
     mathHint: 'TeX, on its own line',
+  },
+  blocks: {
+    add: 'Add a block below',
+    grip: 'Drag to move, click for the menu',
+    menu: 'Block actions',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    duplicate: 'Duplicate',
+    remove: 'Delete',
+  },
+  preview: {
+    split: 'Source and preview',
+    preview: 'Preview only',
   },
 }
 
@@ -194,6 +233,19 @@ export const ru: WysiwygLabels = {
     math: 'Формула',
     mathHint: 'TeX, отдельной строкой',
   },
+  blocks: {
+    add: 'Добавить блок ниже',
+    grip: 'Перетащите, чтобы переместить; нажмите, чтобы открыть меню',
+    menu: 'Действия с блоком',
+    moveUp: 'Переместить выше',
+    moveDown: 'Переместить ниже',
+    duplicate: 'Дублировать',
+    remove: 'Удалить',
+  },
+  preview: {
+    split: 'Исходник и превью',
+    preview: 'Только диаграмма',
+  },
 }
 
 export const wysiwygLocales: Record<WysiwygLocale, WysiwygLabels> = { en, ru }
@@ -212,6 +264,8 @@ export function resolveLabels(locale: WysiwygLocale, override?: WysiwygPartialLa
     mathPrompt: override.mathPrompt ?? base.mathPrompt,
     toolbar: { ...base.toolbar, ...stripUndefined(override.toolbar) },
     slash: { ...base.slash, ...stripUndefined(override.slash) },
+    blocks: { ...base.blocks, ...stripUndefined(override.blocks) },
+    preview: { ...base.preview, ...stripUndefined(override.preview) },
   }
 }
 

@@ -57,6 +57,9 @@
   --dsk-wysiwyg-bubble-active-fg: #5eead4;
   --dsk-wysiwyg-bubble-divider: rgba(255, 255, 255, 0.16);
   --dsk-wysiwyg-bubble-z: 20;
+  /* The gutter the block handles stand in, left of the text. */
+  --dsk-wysiwyg-handles-gutter: 52px;
+  --dsk-wysiwyg-drop-color: var(--dsk-wysiwyg-border-focus);
 
   position: relative;
   display: flex;
@@ -215,6 +218,142 @@ html.dsk-wysiwyg-fullscreen-open body {
   height: 26px;
   padding: 0 6px;
 }
+/* A host's action in the bubble: an icon and a label. */
+.dsk-wysiwyg-bubble .dsk-wysiwyg-bubble__action {
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+/* Block handles: «+» and the «⋮⋮» grip in the gutter left of a block. A framed
+   editor makes room for them inside its padding; a frameless one lets them
+   stand outside its box, in the page's margin. */
+.dsk-wysiwyg--handles:not(.dsk-wysiwyg--frameless) .dsk-wysiwyg__content {
+  padding-left: calc(var(--dsk-wysiwyg-handles-gutter) + 8px);
+}
+.dsk-wysiwyg--handles.dsk-wysiwyg--fullscreen .dsk-wysiwyg__content {
+  padding-left: max(calc(var(--dsk-wysiwyg-handles-gutter) + 8px), calc((100% - 960px) / 2));
+}
+.dsk-wysiwyg--handles.dsk-wysiwyg--frameless:not(.dsk-wysiwyg--fullscreen) {
+  overflow: visible;
+}
+.dsk-wysiwyg-handles {
+  position: absolute;
+  z-index: calc(var(--dsk-wysiwyg-bubble-z) - 1);
+  display: flex;
+  gap: 2px;
+  transform: translateX(calc(-100% - 4px));
+}
+.dsk-wysiwyg-handles__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsk-wysiwyg-fg-muted);
+  cursor: pointer;
+  opacity: 0.75;
+  transition: background 80ms ease, opacity 80ms ease;
+}
+.dsk-wysiwyg-handles__btn:hover,
+.dsk-wysiwyg-handles__btn:focus-visible,
+.dsk-wysiwyg-handles__btn[aria-expanded='true'] {
+  background: var(--dsk-wysiwyg-btn-hover-bg);
+  color: var(--dsk-wysiwyg-fg);
+  opacity: 1;
+}
+.dsk-wysiwyg-handles__grip {
+  cursor: grab;
+  /* A touch on the grip drags the block instead of scrolling the page. */
+  touch-action: none;
+}
+.dsk-wysiwyg-handles.is-dragging .dsk-wysiwyg-handles__grip { cursor: grabbing; }
+.dsk-wysiwyg-handles__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--dsk-wysiwyg-bg);
+  color: var(--dsk-wysiwyg-fg);
+  border: 1px solid var(--dsk-wysiwyg-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.dsk-wysiwyg-handles__item {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.dsk-wysiwyg-handles__item:hover:not(:disabled),
+.dsk-wysiwyg-handles__item:focus-visible {
+  background: var(--dsk-wysiwyg-btn-hover-bg);
+  outline: none;
+}
+.dsk-wysiwyg-handles__item:disabled { opacity: 0.4; cursor: default; }
+.dsk-wysiwyg-handles__item--remove { color: var(--dsk-wysiwyg-error-fg); }
+/* Where a dragged block lands. */
+.dsk-wysiwyg-handles__drop {
+  position: absolute;
+  z-index: calc(var(--dsk-wysiwyg-bubble-z) - 1);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--dsk-wysiwyg-drop-color);
+  pointer-events: none;
+}
+/* No room for a gutter on a narrow screen: no handles, no padding for them. */
+@media (max-width: 599px) {
+  .dsk-wysiwyg-handles,
+  .dsk-wysiwyg-handles__drop { display: none; }
+  .dsk-wysiwyg--handles:not(.dsk-wysiwyg--frameless) .dsk-wysiwyg__content { padding-left: 16px; }
+}
+
+/* Other people's carets: a thin line in their colour, the name in a flag
+   above it. An overlay: nothing in it takes the pointer. */
+.dsk-wysiwyg__carets {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--dsk-wysiwyg-bubble-z) - 2);
+  pointer-events: none;
+}
+.dsk-wysiwyg__caret {
+  position: absolute;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--dsk-wysiwyg-caret-color);
+}
+.dsk-wysiwyg__caret-flag {
+  position: absolute;
+  bottom: 100%;
+  left: -1px;
+  padding: 1px 5px;
+  border-radius: 3px 3px 3px 0;
+  background: var(--dsk-wysiwyg-caret-color);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  font-style: normal;
+}
+.dsk-wysiwyg__caret--flag-below .dsk-wysiwyg__caret-flag {
+  top: 100%;
+  bottom: auto;
+  border-radius: 0 3px 3px 3px;
+}
 
 /* Contenteditable host */
 .dsk-wysiwyg__content {
@@ -355,12 +494,107 @@ html.dsk-wysiwyg-fullscreen-open body {
 
 /* Block previews: a code block with a renderer (```mermaid, say) shows as what
    it draws. The island is not content — getHTML drops it. */
-.dsk-wysiwyg__content pre[data-dsk-preview-state='view'] { display: none; }
+.dsk-wysiwyg__content pre[data-dsk-preview-state='view'],
+.dsk-wysiwyg__content pre[data-dsk-preview-state='preview'] { display: none; }
 .dsk-wysiwyg__content pre[data-dsk-preview-state='edit'],
 .dsk-wysiwyg__content pre[data-dsk-preview-state='error'] {
   margin-bottom: 0;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+}
+/* An open block: a frame with a header — the language and the code's first
+   word, and the toggle between the code beside its preview and the preview alone. */
+.dsk-wysiwyg__live-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin: 0.5em 0 0;
+  padding: 4px 4px 4px 10px;
+  border: 1px solid var(--dsk-wysiwyg-border);
+  /* The preview's top edge is the line under the header. */
+  border-bottom-width: 0;
+  border-radius: 6px 6px 0 0;
+  background: var(--dsk-wysiwyg-toolbar-bg);
+  color: var(--dsk-wysiwyg-fg-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  user-select: none;
+  cursor: default;
+}
+.dsk-wysiwyg__live-title {
+  flex: 1 1 8em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.dsk-wysiwyg__live-modes {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--dsk-wysiwyg-border);
+  border-radius: 6px;
+  background: var(--dsk-wysiwyg-bg);
+}
+.dsk-wysiwyg__live-mode {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsk-wysiwyg-fg-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.dsk-wysiwyg__live-mode:hover { color: var(--dsk-wysiwyg-fg); }
+.dsk-wysiwyg__live-mode[aria-pressed='true'] {
+  background: var(--dsk-wysiwyg-btn-active-bg);
+  color: var(--dsk-wysiwyg-btn-active-fg);
+}
+.dsk-wysiwyg__content pre[data-dsk-preview-state='edit'] {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+/* The code beside its preview: the code floats in the left half, the preview's
+   box spans the frame and keeps its drawing in the right half; the editor
+   makes the preview at least as tall as the code (min-height). */
+.dsk-wysiwyg__content pre[data-dsk-preview-state='edit']:not([data-dsk-preview-narrow]) {
+  float: left;
+  box-sizing: border-box;
+  width: 50%;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsk-wysiwyg-fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dsk-wysiwyg__content pre[data-dsk-preview-state='edit']:not([data-dsk-preview-narrow]) + .dsk-wysiwyg__preview {
+  display: block;
+  box-sizing: border-box;
+  padding-left: calc(50% + 8px);
+  overflow: visible;
+  background: linear-gradient(
+    to right,
+    var(--dsk-wysiwyg-code-bg) calc(50% - 1px),
+    var(--dsk-wysiwyg-border) calc(50% - 1px),
+    var(--dsk-wysiwyg-border) 50%,
+    transparent 50%
+  );
+}
+.dsk-wysiwyg__content pre[data-dsk-preview-state='edit'] + .dsk-wysiwyg__preview + * { clear: both; }
+/* The preview alone, in the frame: a click on it brings the code back. */
+pre[data-dsk-preview-state='preview'] + .dsk-wysiwyg__preview {
+  margin-top: 0;
+  border-color: var(--dsk-wysiwyg-border);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 .dsk-wysiwyg__preview {
   margin: 0.5em 0;

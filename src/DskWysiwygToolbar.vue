@@ -441,5 +441,7 @@ function onImage(): void {
         <span v-else>{{ fullscreenActive ? '⤡' : '⤢' }}</span>
       </button>
     </template>
+    <!-- The host's own buttons after the items (the bubble's actions). -->
+    <slot />
   </div>
 </template>
