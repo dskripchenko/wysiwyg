@@ -62,6 +62,10 @@ const html = ref('<p>你好 <strong>世界</strong>！</p>')
   `prefers-color-scheme: dark`。
 - **原地编辑** — `bubble`：浮在选区上方的小型深色工具栏；`frameless`：
   无边框、背景和内边距，内容看起来就是页面的一部分。
+- **块拖柄** — `blockHandles`：每个块旁边的「+」和「⋮⋮」拖柄，用于添加块、
+  拖动块，或通过菜单移动、复制和删除块。
+- **协同编辑** — 外部传入的值以补丁方式合入，光标不会丢失；`@caret` 报告光标
+  位置，`remoteCarets` 绘制他人的光标。
 - **可调整大小** — 用户可以垂直调整小部件大小（通过 props 设置
   min/max）。
 

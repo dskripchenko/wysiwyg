@@ -69,6 +69,11 @@ const html = ref('<p>Hello <strong>world</strong>!</p>')
 - **Edit in place** — `bubble`: a small dark toolbar floating above the
   selection; `frameless`: no border, background or padding, so the content
   reads as part of the page.
+- **Block handles** — `blockHandles`: a «+» and a «⋮⋮» grip beside each
+  block to add a block, drag it elsewhere, or move, duplicate and delete it
+  from a menu.
+- **Co-editing** — an outside value is patched in without losing the caret;
+  `@caret` reports the caret, `remoteCarets` draws other people's.
 - **Resizable** — user can resize the widget vertically (min/max via
   props).
 

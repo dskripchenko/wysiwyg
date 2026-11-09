@@ -164,6 +164,101 @@ Die Tokens der Leiste (im dunklen Theme eine Stufe heller, mit Rand):
 }
 ```
 
+### Eigene Aktionen in der schwebenden Toolbar
+
+`bubbleActions` fügt eigene Schaltflächen am Ende der schwebenden Toolbar
+hinzu, nach einem Trenner — etwa eine Schaltfläche «Kommentieren»:
+
+```vue
+<script setup lang="ts">
+import { MessageSquare } from 'lucide-vue-next'
+import type { BubbleAction } from '@dskripchenko/wysiwyg'
+
+const actions: BubbleAction[] = [
+  { key: 'comment', label: 'Kommentieren', icon: MessageSquare, run: ({ text, block }) => openComment(text, block) },
+]
+</script>
+
+<template>
+  <DskWysiwyg v-model="html" bubble :bubble-actions="actions" />
+</template>
+```
+
+Jede Schaltfläche zeigt ihr `icon` (jede Komponente mit einer `size`-Prop)
+und ihr `label`. Ein Druck behält die Auswahl, wie bei den anderen
+Schaltflächen; `run` erhält den markierten Text und `block`, den Index des
+Blocks der obersten Ebene (eines direkten Kindes des Inhalts), in dem die
+Auswahl beginnt. Ist `bubble` aus, zeigt die schwebende Toolbar nur die
+Aktionen.
+
+## Block-Griffe
+
+`blockHandles` setzt ein «+» und einen Griff «⋮⋮» in den Rand links vom
+Block unter dem Zeiger (oder, wenn der Zeiger woanders ist, vom Block mit
+dem Cursor):
+
+- «+» fügt darunter einen leeren Absatz ein und öffnet darin das
+  Slash-Menü: Der Absatz beginnt mit `/`, als wäre es getippt worden — Tippen
+  filtert also das Menü, und Escape lässt das `/` als Text stehen.
+- Das Ziehen am Griff (Maus, Stift oder Touch) verschiebt den Block; eine
+  Linie zeigt, wo er landet. Ein Diagramm wandert mit seinem Code.
+- Ein Klick auf den Griff (oder Enter / Leertaste darauf) öffnet ein Menü:
+  Nach oben, Nach unten, Duplizieren, Löschen. Pfeiltasten, Pos1 und Ende
+  bewegen sich darin; Escape schließt es.
+
+Jede Änderung ist ein Rückgängig-Schritt und sendet `update:modelValue`.
+Ein duplizierter Block behält seine Block-ID (`^id`) nicht: IDs sind
+eindeutig. Im Nur-Lese- und im Quelltextmodus sowie auf Bildschirmen unter
+600px werden die Griffe nicht gezeigt. Ein Editor mit Rahmen schafft ihnen
+Platz in seinem Innenabstand; ein `frameless`-Editor stellt sie in den
+Seitenrand, außerhalb seiner Box — lassen Sie links etwa
+`--dsk-wysiwyg-handles-gutter` (52px) frei. Die Einfügelinie nimmt
+`--dsk-wysiwyg-drop-color`; die Texte stehen in der Gruppe `blocks` (siehe
+[Sprache](#sprache)).
+
+Dieselben Operationen hat der Controller: `moveBlock(from, to)`,
+`duplicateBlock(index)`, `removeBlock(index)`.
+
+## Gemeinsames Bearbeiten: fremde Cursor und Änderungen von außen
+
+Für gemeinsames Bearbeiten in Echtzeit meldet der Editor, wo sein Cursor
+steht, übernimmt einen neuen Wert von außen, ohne den Cursor zu verlieren,
+und zeichnet die Cursor der anderen.
+
+- Ein neuer `modelValue` von außen (die Änderung einer anderen Person) wird
+  eingepatcht, nicht ersetzt: Die Blöcke der obersten Ebene, die alter und
+  neuer Wert am Anfang und am Ende teilen, bleiben dieselben DOM-Knoten, nur
+  die abweichende Mitte wird ersetzt. Ein Cursor in einem unberührten Block
+  bleibt genau, wo er war; ein Cursor in einem ersetzten Block wird über den
+  Index seines Blocks und den Versatz im Text des Blocks zurückgesetzt.
+  `controller.patchContent(html)` tut dasselbe aus Code.
+- `@caret` meldet `{ block, offset }` — den Index des Blocks der obersten
+  Ebene und den Zeichenversatz in seinem Text — höchstens alle 100 ms, und
+  `null`, wenn der Editor den Fokus verliert. Senden Sie es an die anderen.
+- `remoteCarets` zeichnet deren Cursor: eine dünne Linie in der Farbe der
+  Person, mit dem Namen in einem kleinen Fähnchen darüber.
+
+```vue
+<DskWysiwyg
+  v-model="html"
+  :remote-carets="[{ id: 'u2', name: 'Anna', color: '#e11d48', block: 3, offset: 12 }]"
+  @caret="(pos) => channel.send({ caret: pos })"
+/>
+```
+
+Ein Cursor ohne `color` erhält eine Farbe aus einer kleinen Palette nach
+seiner `id`; ohne `offset` oder hinter dem Text des Blocks steht er am Ende
+des Blocks; fehlt der Block, wird er nicht gezeichnet. Die Cursor sind eine
+Ebene über dem Inhalt: Sie nehmen keinen Zeiger an, berühren weder Inhalt
+noch Wert und folgen Tippen, Größenänderung und Scrollen, im hellen wie im
+dunklen Theme.
+
+**Der Verlauf nach einer Änderung von außen.** Das lokale Rückgängig darf
+die Änderung eines anderen nicht wie eine eigene zurücknehmen, deshalb baut
+ein Patch den Verlauf neu auf: Die Rückgängig- und Wiederholen-Stapel werden
+geleert und beginnen beim gepatchten Inhalt neu. Schritte vor einer Änderung
+von außen lassen sich nicht mehr rückgängig machen.
+
 ## Vollbild
 
 Das Toolbar-Element `fullscreen` (im Standardsatz, nach `source`) breitet den
@@ -217,3 +312,7 @@ einzeln verwendet werden.
 
 Das Kit ist ein optionaler Peer: Ohne es ist der Editor englisch, sofern
 nichts anderes angegeben ist.
+
+Die Texte der Block-Griffe stehen in der Gruppe `blocks` (`add`, `grip`,
+`menu`, `moveUp`, `moveDown`, `duplicate`, `remove`), der Umschalter eines
+geöffneten Blocks mit Vorschau in `preview` (`split`, `preview`).

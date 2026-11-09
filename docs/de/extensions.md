@@ -73,9 +73,15 @@ const slashCommands: SlashCommand[] = [{
 
 - Ein `<pre><code class="language-mermaid">` wird als sein Diagramm angezeigt;
   der Code ist verborgen.
-- Ein Klick auf das Diagramm öffnet den Code, darunter eine Live-Vorschau.
-  Nach einer kurzen Eingabepause wird neu gerendert. Escape oder das
-  Verlassen des Blocks mit dem Cursor schließt ihn.
+- Ein Klick auf das Diagramm öffnet es als gerahmten Block: eine Kopfzeile
+  mit der Sprache und dem ersten Wort des Codes («mermaid · stateDiagram-v2»)
+  und einem Umschalter *Quelltext und Vorschau* / *Nur Vorschau*. Mit
+  Quelltext wird der Code links bearbeitet, die Vorschau rechts folgt dem
+  Tippen nach einer kurzen Pause (250 ms); in einem Editor unter 600px Breite
+  stehen sie untereinander. *Nur Vorschau* blendet den Code aus; ein Klick
+  auf die Vorschau holt ihn zurück. Escape oder ein Cursor außerhalb
+  schließt den Block. Kopfzeile und Umschalter sind kein Inhalt: Das HTML
+  bleibt ein einfacher Codeblock.
 - Ein Renderer, der `{ error }` liefert, lässt den Code offen und zeigt die
   Meldung darunter an.
 - Backspace über einem angezeigten Diagramm löscht es zusammen mit seinem

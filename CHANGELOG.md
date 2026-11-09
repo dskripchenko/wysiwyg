@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.16.0
+
+### Added
+
+- `bubbleActions` — the host's own buttons at the end of the bubble, after a divider: an icon and a label each (`{ key, label, icon?, run }`). A press keeps the selection; `run({ text, block })` gets the selected text and the index of the top-level block the selection starts in. Without `bubble` the bubble shows the actions alone.
+- `blockHandles` — a «+» and a «⋮⋮» grip in the gutter left of the block under the pointer (or with the caret). «+» adds a paragraph below with the slash menu open; dragging the grip (pointer events: mouse, pen, touch) moves the block, with a line where it lands; a click on the grip opens a keyboard-operable menu — move up, move down, duplicate, delete. Each change is one undo step and emits `update:modelValue`. Not in readonly or source mode, nor on screens under 600px; a frameless editor puts the handles in the page's margin. Labels in the new `blocks` group; `--dsk-wysiwyg-handles-gutter`, `--dsk-wysiwyg-drop-color`.
+- An open block with a preview is a framed block: a header with the language and the code's first word (`mermaid · stateDiagram-v2`) and a toggle, *Source and preview* / *Preview only*. With the source, the code is beside its preview, which follows typing; under 600px they stack. *Preview only* hides the code until a click on the preview. The stored HTML is unchanged — still a plain code block. Labels in the new `preview` group.
+- Co-editing. A `modelValue` changed outside is patched in instead of set: only the top-level blocks that differ are replaced, so a caret in an untouched block stays where it is, and a caret in a replaced block is put back by its block index and offset (`controller.patchContent(html)`). The history is rebased on the patched content — the undo and redo stacks are cleared, so the local undo never takes back a change from outside, and steps before it can no longer be undone.
+- `caret` event — `{ block, offset } | null`, the top-level block and the character offset in its text, at most every 100ms; `null` when the editor loses the focus.
+- `remoteCarets` — other people's carets drawn in an overlay (`{ id, name, color?, block, offset? }`): a thin line in their colour with the name in a flag above it, a palette colour by `id` when none is given. It never touches the content or the value, and follows typing, resizing and scrolling.
+- Controller: `patchContent(html)`, `caretPosition()`, `moveBlock(from, to)`, `duplicateBlock(index)`, `removeBlock(index)`. Types: `BubbleAction`, `RemoteCaret`, `CaretPosition`, `WysiwygBlockLabels`, `WysiwygPreviewLabels`.
+
+### Changed
+
+- The previews follow typing after 250ms instead of 150ms.
+
 ## 0.15.0
 
 ### Added

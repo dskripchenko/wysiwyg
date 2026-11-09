@@ -44,6 +44,9 @@ HTML 在发出（emit）之前会经过内部基于 DOMParser 的白名单清洗
 | `toolbarTarget` | `string \| HTMLElement` | — | 在该元素（或选择器找到的元素）中显示工具栏，而不是在内容上方——宿主自己的栏或浮动面板。它仍是编辑器的工具栏；目标不在文档中时仍显示在内容上方。 |
 | `bubble` | `ToolbarItem[] \| boolean` | `false` | 在内容中的选区上方浮动的紧凑工具栏：`true` 为粗体、斜体、下划线、删除线、行内代码、链接、二级标题和无序列表，或指定要显示的项。参见[自定义](customization.md#原地编辑浮动工具栏与-frameless)。 |
 | `frameless` | `boolean` | `false` | 内容周围没有边框、圆角、背景和内边距；工具栏没有背景。内容看起来就是页面的一部分。 |
+| `bubbleActions` | `BubbleAction[]` | `[]` | 浮动工具栏末尾、分隔线之后的自定义按钮——每个按钮带图标和文字；`run({ text, block })` 接收所选文本以及选区起点所在顶层块的序号。参见[自定义](customization.md#浮动工具栏中的自定义操作)。 |
+| `blockHandles` | `boolean` | `false` | 指针所在块左侧的「+」和「⋮⋮」拖柄：在下方添加块、拖动块到别处，或打开块菜单。参见[自定义](customization.md#块拖柄)。 |
+| `remoteCarets` | `RemoteCaret[]` | `[]` | 绘制在内容上方的其他人的光标。参见[自定义](customization.md#协同编辑他人的光标与外部变更)。 |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | 作用于根元素的 CSS 长度。 |
 | `maxHeight` | `string` | `undefined` | 作用于根元素的 CSS 长度。 |
@@ -55,6 +58,8 @@ HTML 在发出（emit）之前会经过内部基于 DOMParser 的白名单清洗
 ## 事件
 
 `@update:modelValue` — 与 `v-model` 相同。
+
+`@caret` — `{ block, offset } | null`：光标所在位置——顶层块的序号及其文本内的字符偏移——最多每 100ms 一次；编辑器没有焦点时为 `null`。
 
 ## 默认工具栏
 

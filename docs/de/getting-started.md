@@ -45,6 +45,9 @@ interne DOMParser-Whitelist sanitisiert.
 | `toolbarTarget` | `string \| HTMLElement` | — | Zeigt die Toolbar in diesem Element (oder dem, das der Selektor findet) statt über dem Inhalt — in der eigenen Leiste oder einem schwebenden Panel der Anwendung. Es bleibt die Toolbar des Editors; fehlt das Ziel im Dokument, bleibt sie über dem Inhalt. |
 | `bubble` | `ToolbarItem[] \| boolean` | `false` | Eine kompakte Toolbar, die über einer Auswahl im Inhalt schwebt: `true` für Fett, Kursiv, Unterstrichen, Durchgestrichen, Inline-Code, Link, Überschrift 2 und Aufzählung, oder die gewünschten Elemente. Siehe [Anpassung](customization.md#bearbeiten-an-ort-und-stelle-schwebende-toolbar-und-frameless). |
 | `frameless` | `boolean` | `false` | Kein Rahmen, Radius, Hintergrund oder Innenabstand um den Inhalt; die Toolbar ohne Hintergrund. Der Inhalt wirkt wie ein Teil der Seite. |
+| `bubbleActions` | `BubbleAction[]` | `[]` | Eigene Schaltflächen am Ende der schwebenden Toolbar, nach einem Trenner — je ein Symbol und eine Beschriftung; `run({ text, block })` erhält den markierten Text und den Index des Blocks der obersten Ebene, in dem die Auswahl beginnt. Siehe [Anpassung](customization.md#eigene-aktionen-in-der-schwebenden-toolbar). |
+| `blockHandles` | `boolean` | `false` | Ein «+» und ein Griff «⋮⋮» links vom Block unter dem Zeiger: einen Block darunter einfügen, einen Block verschieben oder sein Menü öffnen. Siehe [Anpassung](customization.md#block-griffe). |
+| `remoteCarets` | `RemoteCaret[]` | `[]` | Die Cursor anderer Personen über dem Inhalt. Siehe [Anpassung](customization.md#gemeinsames-bearbeiten-fremde-cursor-und-änderungen-von-außen). |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS-Länge am Root-Element. |
 | `maxHeight` | `string` | `undefined` | CSS-Länge am Root-Element. |
@@ -56,6 +59,8 @@ interne DOMParser-Whitelist sanitisiert.
 ## Events
 
 `@update:modelValue` — dasselbe wie `v-model`.
+
+`@caret` — `{ block, offset } | null`: wo der Cursor steht — der Index des Blocks der obersten Ebene und der Zeichenversatz in seinem Text —, höchstens alle 100 ms; `null`, wenn der Editor keinen Fokus hat.
 
 ## Standard-Toolbar
 

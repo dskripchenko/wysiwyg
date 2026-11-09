@@ -69,6 +69,16 @@ function insertGreeting() {
 | `toggleSource()` | Schaltet zwischen WYSIWYG und Raw-HTML-Editor um. |
 | `isSource()` | Boolean. |
 
+## Inhalt, Cursor und Blöcke
+
+| Methode | |
+|---|---|
+| `patchContent(html: string)` | Den Inhalt auf `html` (bereinigt) bringen und nur die abweichenden Knoten der obersten Ebene ersetzen; die gemeinsamen am Anfang und am Ende bleiben dieselben DOM-Knoten, eine Auswahl darin bleibt also stehen, und eine Auswahl in einem ersetzten Block wird über Blockindex und Versatz zurückgesetzt. Leert die Rückgängig/Wiederholen-Stapel (der Verlauf beginnt beim Ergebnis neu). Gibt `false` zurück, wenn sich nichts geändert hat. Der Editor nutzt es für einen von außen geänderten `modelValue`. |
+| `caretPosition()` | `{ block, offset } \| null` — der Block der obersten Ebene, in dem die Auswahl beginnt, und der Zeichenversatz in seinem Text. |
+| `moveBlock(from: number, to: number)` | Einen Block der obersten Ebene (mit seiner Vorschau) an Index `to` verschieben. Ein Verlaufsschritt. |
+| `duplicateBlock(index: number)` | Eine Kopie des Blocks direkt dahinter, ohne seine Block-ID. Ein Verlaufsschritt. |
+| `removeBlock(index: number)` | Den Block löschen; der letzte wird stattdessen geleert. Ein Verlaufsschritt. |
+
 ## Imperative Verwendung ohne Chain
 
 ```js
