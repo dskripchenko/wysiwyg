@@ -64,6 +64,12 @@ const html = ref('<p>Hallo <strong>Welt</strong>!</p>')
 - **Bearbeiten an Ort und Stelle** — `bubble`: eine kleine dunkle Toolbar
   über der Auswahl; `frameless`: ohne Rahmen, Hintergrund und Innenabstand,
   sodass der Inhalt wie ein Teil der Seite wirkt.
+- **Block-Griffe** — `blockHandles`: ein «+» und ein Griff «⋮⋮» neben jedem
+  Block, um einen Block einzufügen, ihn zu verschieben oder ihn über ein
+  Menü zu verschieben, zu duplizieren und zu löschen.
+- **Gemeinsames Bearbeiten** — ein Wert von außen wird eingepatcht, ohne
+  den Cursor zu verlieren; `@caret` meldet den Cursor, `remoteCarets`
+  zeichnet die der anderen.
 - **Resizable** — Benutzer kann das Widget vertikal in der Größe
   ändern (min/max über Props).
 

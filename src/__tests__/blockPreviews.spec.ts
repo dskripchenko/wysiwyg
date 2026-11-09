@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { EditorController, sanitizeHtml, type BlockRenderers } from '../engine'
 import { htmlToMarkdown } from '../engine/htmlToMarkdown'
-import { PREVIEW_ATTR, STATE_ATTR } from '../engine/blockPreviews'
+import { HEAD_ATTR, PREVIEW_ATTR, STATE_ATTR, previewTitle } from '../engine/blockPreviews'
 
 const MERMAID = '<pre><code class="language-mermaid">flowchart LR\n  A --&gt; B</code></pre><p>after</p>'
 
@@ -260,5 +260,94 @@ describe('live block islands', () => {
     expect(log.filter((l) => l === 'destroy')).toHaveLength(1)
     c.destroy()
     expect(log.filter((l) => l === 'destroy')).toHaveLength(2)
+  })
+})
+
+describe('an open block: source and preview', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  const STATE = '<pre><code class="language-mermaid">stateDiagram-v2\n  A --&gt; B</code></pre><p>after</p>'
+
+  it('is framed by a header with the language, the first word and the toggle', () => {
+    const { host, c } = setup(STATE)
+    const pre = host.querySelector('pre')!
+    expect(host.querySelector(`[${HEAD_ATTR}]`)).toBeNull()
+    c.previews.edit(pre.nextElementSibling as HTMLElement)
+    const head = pre.previousElementSibling as HTMLElement
+    expect(head.hasAttribute(HEAD_ATTR)).toBe(true)
+    expect(head.getAttribute('contenteditable')).toBe('false')
+    expect(head.querySelector('.dsk-wysiwyg__live-title')!.textContent).toBe('mermaid · stateDiagram-v2')
+    const modes = Array.from(head.querySelectorAll('[data-mode]'))
+    expect(modes.map((b) => b.textContent)).toEqual(['Source and preview', 'Preview only'])
+    expect(modes.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false'])
+    // The header never reaches the HTML, nor does the frame's state.
+    expect(c.getHTML()).toBe(STATE)
+    // Closing drops the header.
+    c.previews.followSelection(caretIn(host.querySelector('p')!.firstChild!))
+    expect(host.querySelector(`[${HEAD_ATTR}]`)).toBeNull()
+  })
+
+  it('the title follows the code as it is typed', () => {
+    const { host, c } = setup(STATE)
+    const pre = host.querySelector('pre')!
+    c.previews.edit(pre.nextElementSibling as HTMLElement)
+    pre.querySelector('code')!.textContent = 'flowchart LR'
+    c.previews.sync()
+    expect(host.querySelector('.dsk-wysiwyg__live-title')!.textContent).toBe('mermaid · flowchart')
+    expect(host.querySelector(`[${PREVIEW_ATTR}] svg`)!.getAttribute('data-src')).toBe('12')
+    expect(previewTitle('mermaid', '  ')).toBe('mermaid')
+  })
+
+  it('«Preview only» hides the code and keeps the frame; a click on the preview brings the code back', () => {
+    const { host, c } = setup(STATE)
+    const pre = host.querySelector('pre')!
+    const island = pre.nextElementSibling as HTMLElement
+    c.previews.edit(island)
+    const head = pre.previousElementSibling as HTMLElement
+    ;(head.querySelector('[data-mode="preview"]') as HTMLElement).click()
+    expect(pre.getAttribute(STATE_ATTR)).toBe('preview')
+    expect(pre.previousElementSibling).toBe(head)
+    expect(Array.from(head.querySelectorAll('[data-mode]')).map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true'])
+    // The caret left the code; following it keeps the preview-only frame.
+    const caret = window.getSelection()!.getRangeAt(0)
+    expect(pre.contains(caret.startContainer)).toBe(false)
+    c.previews.followSelection(caret)
+    expect(pre.getAttribute(STATE_ATTR)).toBe('preview')
+    expect(c.getHTML()).toBe(STATE)
+
+    c.previews.edit(island)
+    expect(pre.getAttribute(STATE_ATTR)).toBe('edit')
+    ;(head.querySelector('[data-mode="preview"]') as HTMLElement).click()
+    ;(head.querySelector('[data-mode="split"]') as HTMLElement).click()
+    expect(pre.getAttribute(STATE_ATTR)).toBe('edit')
+    // A blur closes it.
+    c.previews.closeAll()
+    expect(pre.getAttribute(STATE_ATTR)).toBe('view')
+    expect(host.querySelector(`[${HEAD_ATTR}]`)).toBeNull()
+  })
+
+  it('a press on the header keeps the caret; the toggle takes the editor\'s words', () => {
+    const { host, c } = setup(STATE)
+    const pre = host.querySelector('pre')!
+    c.previews.edit(pre.nextElementSibling as HTMLElement)
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    pre.previousElementSibling!.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+    c.previews.setLabels({ split: 'Исходник и превью', preview: 'Только диаграмма' })
+    expect(Array.from(host.querySelectorAll('[data-mode]')).map((b) => b.textContent)).toEqual(['Исходник и превью', 'Только диаграмма'])
+  })
+
+  it('sanitize drops a copied header', () => {
+    const copied = `<div data-dsk-preview-head contenteditable="false"><span>mermaid · pie</span><button>Preview only</button></div><pre><code class="language-mermaid">pie</code></pre>`
+    expect(sanitizeHtml(copied)).toBe('<pre><code class="language-mermaid">pie</code></pre>')
+  })
+
+  it('a live widget block never gets the frame', () => {
+    const live: BlockRenderers = { api: () => ({ mount: (el) => { el.textContent = 'widget' } }) }
+    const { host, c } = setup('<pre><code class="language-api">GET /</code></pre>', live)
+    c.previews.edit(host.querySelector<HTMLElement>(`[${PREVIEW_ATTR}]`)!)
+    expect(host.querySelector(`[${HEAD_ATTR}]`)).toBeNull()
   })
 })

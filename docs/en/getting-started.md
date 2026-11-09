@@ -51,6 +51,9 @@ DOMParser whitelist before emitting.
 | `toolbarTarget` | `string \| HTMLElement` | — | Show the toolbar in this element (or the element this selector finds) instead of above the content — the host's own bar or a floating panel. Still the editor's toolbar; back above the content when the target is not in the document. |
 | `bubble` | `ToolbarItem[] \| boolean` | `false` | A compact toolbar floating above a selection in the content: `true` for bold, italic, underline, strike, inline code, link, heading 2 and bullet list, or the items to show. See [Customization](customization.md#edit-in-place-bubble-toolbar-and-frameless). |
 | `frameless` | `boolean` | `false` | No border, radius, background or padding around the content; the toolbar has no background. The content reads as part of the page. |
+| `bubbleActions` | `BubbleAction[]` | `[]` | Your own buttons at the end of the bubble, after a divider — an icon and a label each; `run({ text, block })` gets the selected text and the index of the top-level block the selection starts in. See [Customization](customization.md#host-actions-in-the-bubble). |
+| `blockHandles` | `boolean` | `false` | A «+» and a «⋮⋮» grip left of the block under the pointer: add a block below, drag a block elsewhere, or open its menu. See [Customization](customization.md#block-handles). |
+| `remoteCarets` | `RemoteCaret[]` | `[]` | Other people's carets drawn over the content. See [Customization](customization.md#co-editing-other-peoples-carets-and-outside-changes). |
 | `readonly` | `boolean` | `false` | |
 | `minHeight` | `string` | `'200px'` | CSS length on the root. |
 | `maxHeight` | `string` | `undefined` | CSS length on the root. |
@@ -62,6 +65,8 @@ DOMParser whitelist before emitting.
 ## Events
 
 `@update:modelValue` — same as `v-model`.
+
+`@caret` — `{ block, offset } | null`: where the caret is — the index of the top-level block and the character offset within its text — at most every 100ms; `null` when the editor has no focus.
 
 ## Default toolbar
 

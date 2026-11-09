@@ -18,6 +18,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { EditorController, sanitizeHtml, type AllowedAttributes, type BlockRenderers } from './engine'
 import { PREVIEW_ATTR, inLiveIsland } from './engine/blockPreviews'
+import { blockIndexOf, insertParagraphAfter, type CaretPosition } from './engine/blocks'
 import { MATH_ATTR, mathIslandOf } from './engine/mathIslands'
 import { applyMarkdownShortcut } from './engine/markdownShortcuts'
 import { toggleTask } from './engine/commands'
@@ -25,7 +26,10 @@ import { highlight } from './engine/highlight'
 import { beautifyHtml, minifyHtml } from './engine/format'
 import DskWysiwygToolbar, { type ToolbarItem } from './DskWysiwygToolbar.vue'
 import DskWysiwygSlashMenu, { type SlashCommand } from './DskWysiwygSlashMenu.vue'
+import DskWysiwygBlockHandles from './DskWysiwygBlockHandles.vue'
+import DskWysiwygRemoteCarets from './DskWysiwygRemoteCarets.vue'
 import { useWysiwygLabels, type WysiwygLocale, type WysiwygPartialLabels } from './locale'
+import type { BubbleAction, RemoteCaret } from './types'
 
 interface Props {
   modelValue?: string
@@ -77,6 +81,27 @@ interface Props {
    * of the page around it.
    */
   frameless?: boolean
+  /**
+   * The host's own buttons at the end of the bubble, after a divider — an
+   * icon and a label each. `run` gets the selected text and the index of the
+   * top-level block the selection starts in. Shown with the bubble's items,
+   * or alone when `bubble` is off.
+   */
+  bubbleActions?: BubbleAction[]
+  /**
+   * A «+» and a «⋮⋮» grip in the gutter left of the block under the pointer
+   * (or with the caret): «+» adds a block below with the slash menu open; the
+   * grip drags the block elsewhere, or, clicked, opens a menu — move up, move
+   * down, duplicate, delete. Not in readonly or source mode; hidden on
+   * screens narrower than 600px.
+   */
+  blockHandles?: boolean
+  /**
+   * Other people's carets, drawn over the content as a thin line in their
+   * colour with their name above it — at a top-level block and a character
+   * offset within its text. They never touch the content or the value.
+   */
+  remoteCarets?: RemoteCaret[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -96,6 +121,9 @@ const props = withDefaults(defineProps<Props>(), {
   slashCommands: () => [],
   bubble: false,
   frameless: false,
+  bubbleActions: () => [],
+  blockHandles: false,
+  remoteCarets: () => [],
 })
 
 const emit = defineEmits<{
@@ -104,6 +132,11 @@ const emit = defineEmits<{
   'link-request': [currentUrl: string | null]
   ready: [controller: EditorController]
   'fullscreen-change': [fullscreen: boolean]
+  /**
+   * Where the caret is — the top-level block and the character offset within
+   * its text — at most every 100ms; null when the editor has no focus.
+   */
+  caret: [position: CaretPosition | null]
 }>()
 
 const { locale: uiLocale, labels: text, KitLocaleProbe, probeKit } = useWysiwygLabels(props)
@@ -162,6 +195,7 @@ onMounted(() => {
     emit('update:modelValue', c.getHTML())
   }
   c.previews.setEditable(! props.readonly)
+  c.previews.setLabels(text.value.preview)
   c.setContent(props.modelValue)
   controller.value = c
   isEmpty.value = c.isEmpty()
@@ -175,17 +209,94 @@ onMounted(() => {
     } else if (bubbleRect.value) {
       hideBubble()
     }
+    scheduleCaret()
   }
   document.addEventListener('selectionchange', onSelectionChange)
+
+  // The layout follows the content, the editor's size and its scrolling: the
+  // handles, the other people's carets and the open blocks are placed anew.
+  if (typeof MutationObserver !== 'undefined') {
+    layoutObserver = new MutationObserver(bumpLayout)
+    layoutObserver.observe(hostRef.value, { childList: true, subtree: true, characterData: true })
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(onResize)
+    resizeObserver.observe(hostRef.value)
+  }
+  window.addEventListener('resize', onResize)
+  window.addEventListener('scroll', bumpLayout, true)
 })
 
 onBeforeUnmount(() => {
   if (previewTimer) clearTimeout(previewTimer)
+  if (caretTimer) clearTimeout(caretTimer)
   if (onSelectionChange) {
     document.removeEventListener('selectionchange', onSelectionChange)
   }
+  layoutObserver?.disconnect()
+  resizeObserver?.disconnect()
+  window.removeEventListener('resize', onResize)
+  window.removeEventListener('scroll', bumpLayout, true)
   controller.value?.destroy()
 })
+
+/** Bumped when the layout may have changed; at most once a frame. */
+const layoutVersion = ref<number>(0)
+let layoutObserver: MutationObserver | null = null
+let resizeObserver: ResizeObserver | null = null
+let layoutFrame = false
+function bumpLayout(): void {
+  if (layoutFrame) return
+  layoutFrame = true
+  const next = (): void => {
+    layoutFrame = false
+    layoutVersion.value++
+  }
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(next)
+  else setTimeout(next, 16)
+}
+function onResize(): void {
+  controller.value?.previews.fit()
+  bumpLayout()
+}
+
+/**
+ * The caret event: the position now, then at most one more per 100ms while
+ * the selection keeps moving; only a change is reported.
+ */
+const CARET_THROTTLE = 100
+let caretTimer: ReturnType<typeof setTimeout> | null = null
+let caretPending = false
+let lastCaret: CaretPosition | null = null
+function caretNow(): CaretPosition | null {
+  const host = hostRef.value
+  if (! host || ! controller.value || sourceMode.value) return null
+  const active = document.activeElement
+  if (active !== host && ! host.contains(active)) return null
+  return controller.value.caretPosition()
+}
+function reportCaret(): void {
+  const next = caretNow()
+  if (next === lastCaret || (next && lastCaret && next.block === lastCaret.block && next.offset === lastCaret.offset)) return
+  lastCaret = next
+  emit('caret', next)
+}
+function scheduleCaret(): void {
+  if (caretTimer) {
+    caretPending = true
+    return
+  }
+  reportCaret()
+  caretTimer = setTimeout(() => {
+    caretTimer = null
+    if (caretPending) {
+      caretPending = false
+      reportCaret()
+    }
+  }, CARET_THROTTLE)
+}
+
+watch(() => text.value.preview, (labels) => controller.value?.previews.setLabels(labels))
 
 watch(
   () => props.blockRenderers,
@@ -198,13 +309,14 @@ watch(
 )
 
 /** The previews follow typing, a beat behind: one render per pause, not per key. */
+const PREVIEW_DEBOUNCE = 250
 let previewTimer: ReturnType<typeof setTimeout> | null = null
 function schedulePreviews(): void {
   if (previewTimer) clearTimeout(previewTimer)
   previewTimer = setTimeout(() => {
     previewTimer = null
     controller.value?.previews.sync()
-  }, 150)
+  }, PREVIEW_DEBOUNCE)
 }
 
 function currentRange(): Range | null {
@@ -264,13 +376,16 @@ function insertTextAtCaret(text: string): void {
   hostRef.value?.dispatchEvent(new InputEvent('input', { bubbles: true }))
 }
 
+// A value from outside (another person's edit, say) is patched in: only the
+// blocks that differ are replaced, so the caret stays where it is.
 watch(
   () => props.modelValue,
   (next) => {
     if (!controller.value) return
     if (next === controller.value.getHTML()) return
-    controller.value.setContent(next)
+    controller.value.patchContent(next)
     isEmpty.value = controller.value.isEmpty()
+    scheduleCaret()
   },
 )
 
@@ -283,6 +398,8 @@ function onInput(e?: Event): void {
   const shortcut = applyMarkdownShortcut(hostRef.value)
   // Backspace over a shown diagram takes its hidden code along.
   if (controller.value.previews.dropOrphanedCode()) controller.value.history.commit()
+  // An open block's preview stays as tall as its code while the code grows.
+  controller.value.previews.fit()
   schedulePreviews()
   if (shortcut.applied) {
     controller.value.history.commit()
@@ -369,7 +486,7 @@ function textBeforeCaret(blockEl: HTMLElement, range: Range): string {
 }
 
 function caretRect(range: Range): DOMRect | null {
-  const rects = range.getClientRects()
+  const rects = typeof range.getClientRects === 'function' ? range.getClientRects() : []
   if (rects.length > 0) return rects[0]
   // A collapsed range with no rects — we insert a zero-width span.
   const span = document.createElement('span')
@@ -415,6 +532,7 @@ function onBlur(): void {
   closeSlashMenu()
   // The bubble's buttons keep the focus (mousedown.prevent): a blur means the user left.
   hideBubble()
+  scheduleCaret()
   controller.value.previews.closeAll()
   const codes = hostRef.value.querySelectorAll<HTMLElement>('pre > code[class*="language-"]')
   let dirty = false
@@ -721,7 +839,17 @@ const bubbleRef = ref<HTMLElement | null>(null)
 /** The selection's box relative to the root's padding box; null hides the bubble. */
 const bubbleRect = ref<{ top: number, bottom: number, center: number } | null>(null)
 const bubbleStyle = ref<Record<string, string>>({})
-const bubbleShown = computed<boolean>(() => bubbleItems.value !== null && bubbleRect.value !== null && ! props.readonly && ! sourceMode.value)
+/** The bubble has something to show: its items, the host's actions, or both. */
+const bubbleEnabled = computed<boolean>(() => bubbleItems.value !== null || props.bubbleActions.length > 0)
+const bubbleShown = computed<boolean>(() => bubbleEnabled.value && bubbleRect.value !== null && ! props.readonly && ! sourceMode.value)
+
+/** A host's action on the selection: its text and the block it starts in. */
+function runBubbleAction(action: BubbleAction): void {
+  const range = currentRange()
+  const host = hostRef.value
+  if (! range || ! host) return
+  action.run({ text: range.toString(), block: blockIndexOf(host, range.startContainer) })
+}
 
 function hideBubble(): void {
   bubbleRect.value = null
@@ -729,7 +857,7 @@ function hideBubble(): void {
 
 function updateBubble(): void {
   const root = rootRef.value
-  if (! bubbleItems.value || props.readonly || sourceMode.value || ! root || ! hostRef.value) { hideBubble(); return }
+  if (! bubbleEnabled.value || props.readonly || sourceMode.value || ! root || ! hostRef.value) { hideBubble(); return }
   const range = currentRange()
   if (! range || range.collapsed || ! hostRef.value.contains(range.endContainer)) { hideBubble(); return }
   // jsdom has no layout for ranges: the box then stays at the root's corner.
@@ -758,7 +886,40 @@ function placeBubble(): void {
 }
 
 watch(selectionVersion, updateBubble)
-watch([() => props.readonly, sourceMode, bubbleItems], updateBubble)
+watch([() => props.readonly, sourceMode, bubbleEnabled], updateBubble)
+
+/* ------------------------- Block handles ------------------------- */
+
+const handlesShown = computed<boolean>(() => props.blockHandles && ! props.readonly && ! sourceMode.value)
+
+/** «+»: a new paragraph below the block, opened with `/`, so the slash menu shows. */
+function onHandleAdd(index: number): void {
+  const c = controller.value
+  const host = hostRef.value
+  if (! c || ! host) return
+  host.focus()
+  const p = insertParagraphAfter(host, index, '/')
+  if (! p?.firstChild) return
+  const range = document.createRange()
+  range.setStart(p.firstChild, 1)
+  range.collapse(true)
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(range)
+  c.previews.sync()
+  c.history.commit()
+  isEmpty.value = c.isEmpty()
+  emit('update:modelValue', c.getHTML())
+  updateSlashMenu()
+}
+
+/** A block moved, was duplicated or deleted through the handles. */
+function onBlocksChange(): void {
+  const c = controller.value
+  if (! c) return
+  isEmpty.value = c.isEmpty()
+  emit('update:modelValue', c.getHTML())
+}
 
 /** The content scrolls inside a max-height: the bubble follows its selection. */
 function onContentScroll(): void {
@@ -779,7 +940,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="rootRef" :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen, 'dsk-wysiwyg--frameless': frameless }]" :style="wrapStyle">
+  <div ref="rootRef" :class="['dsk-wysiwyg', { 'dsk-wysiwyg--readonly': readonly, 'dsk-wysiwyg--empty': isEmpty, 'dsk-wysiwyg--resizable': resizable && !readonly && !fullscreen, 'dsk-wysiwyg--fullscreen': fullscreen, 'dsk-wysiwyg--frameless': frameless, 'dsk-wysiwyg--handles': handlesShown }]" :style="wrapStyle">
     <component :is="KitLocaleProbe" v-if="probeKit" />
     <Teleport :to="toolbarHost ?? 'body'" :disabled="!toolbarHost">
     <DskWysiwygToolbar
@@ -864,8 +1025,41 @@ defineExpose({
         @image-request="emit('image-request')"
         @link-request="(url) => emit('link-request', url)"
         @toggle-source="toggleSource"
-      />
+      >
+        <template v-if="bubbleActions.length > 0">
+          <span v-if="bubbleItems" class="dsk-wysiwyg-toolbar__divider" />
+          <button
+            v-for="action in bubbleActions"
+            :key="action.key"
+            type="button"
+            class="dsk-wysiwyg-toolbar__btn dsk-wysiwyg-bubble__action"
+            :data-action="action.key"
+            @click="runBubbleAction(action)"
+          >
+            <component :is="action.icon" v-if="action.icon" :size="14" aria-hidden="true" />
+            <span>{{ action.label }}</span>
+          </button>
+        </template>
+      </DskWysiwygToolbar>
     </div>
+    <DskWysiwygBlockHandles
+      v-if="handlesShown"
+      :controller="controller"
+      :host="hostRef"
+      :root="rootRef"
+      :labels="text.blocks"
+      :selection-version="selectionVersion"
+      :layout-version="layoutVersion"
+      @add="onHandleAdd"
+      @change="onBlocksChange"
+    />
+    <DskWysiwygRemoteCarets
+      v-if="remoteCarets.length > 0 && !sourceMode"
+      :carets="remoteCarets"
+      :host="hostRef"
+      :root="rootRef"
+      :layout-version="layoutVersion"
+    />
   </div>
 </template>
 

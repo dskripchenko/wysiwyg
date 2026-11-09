@@ -23,6 +23,17 @@ import {
 } from './commands'
 import { HistoryStack } from './history'
 import {
+  blockGroup,
+  duplicateBlock,
+  moveBlock,
+  positionOf,
+  rangeAt,
+  removeBlock,
+  topBlocks,
+  topNodes,
+  type CaretPosition,
+} from './blocks'
+import {
   currentBlockTag,
   findAncestorAnchor,
   isFormatActive,
@@ -44,6 +55,7 @@ import {
 export { sanitizeHtml } from './sanitize'
 export type { AllowedAttributes, SanitizeOptions } from './sanitize'
 export type { BlockRenderer, BlockRenderers, BlockRenderResult, BlockMountContext, BlockMountHandle } from './blockPreviews'
+export type { CaretPosition } from './blocks'
 
 export interface EditorOptions extends SanitizeOptions {
   /**
@@ -210,19 +222,143 @@ export class EditorController {
     // When the editor is empty we guarantee at least one block <p><br>, so that
     // the user's typing lands in a block context right away. Without it the
     // markdown shortcuts and handleEnter cannot find a blockAncestor.
-    if (this.host.firstElementChild === null && (this.host.textContent ?? '') === '') {
-      const p = document.createElement('p')
-      p.appendChild(document.createElement('br'))
-      this.host.appendChild(p)
-    }
+    ensureBlock(this.host)
     this.previews.sync()
     this.history.reset(serializeHost(this.host))
+  }
+
+  /**
+   * Brings the content to `html` (sanitized, as setContent does) by replacing
+   * only the top-level nodes that differ: the common leading and trailing
+   * nodes stay the same DOM nodes, so a selection in them stays exactly where
+   * it is. A selection in a replaced node is put back by its block's index
+   * and its character offset within the block.
+   *
+   * Meant for a value that changed elsewhere (another person's edit). The
+   * history is rebased on the result: the undo and redo stacks are cleared,
+   * so the local undo never takes back a change that came from outside.
+   * Returns false when the content already was `html`.
+   */
+  patchContent(html: string): boolean {
+    const fresh = document.createElement('div')
+    fresh.innerHTML = sanitizeHtml(html, this.sanitizeOptions)
+    dropBlockGaps(fresh)
+    ensureBlock(fresh)
+    const oldNodes = topNodes(this.host)
+    const newNodes = topNodes(fresh)
+    const oldKeys = oldNodes.map(nodeKey)
+    const newKeys = newNodes.map(nodeKey)
+    const shortest = Math.min(oldNodes.length, newNodes.length)
+    let head = 0
+    while (head < shortest && oldKeys[head] === newKeys[head]) head++
+    let tail = 0
+    while (tail < shortest - head && oldKeys[oldKeys.length - 1 - tail] === newKeys[newKeys.length - 1 - tail]) tail++
+    if (head === oldNodes.length && head === newNodes.length) return false
+
+    const replaced = oldNodes.slice(head, oldNodes.length - tail)
+    // The selection is saved as positions only when a replaced node holds it.
+    const sel = window.getSelection()
+    const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null
+    let saved: { start: CaretPosition | null; end: CaretPosition | null } | null = null
+    if (range && this.host.contains(range.startContainer)) {
+      const touched = (n: Node): boolean => n === this.host || replaced.some((r) => r.contains(n))
+      if (touched(range.startContainer) || touched(range.endContainer)) {
+        saved = {
+          start: positionOf(this.host, range.startContainer, range.startOffset),
+          end: positionOf(this.host, range.endContainer, range.endOffset),
+        }
+      }
+    }
+
+    const next = oldNodes[oldNodes.length - tail]
+    const anchor = tail > 0 && next ? (next instanceof HTMLElement ? blockGroup(next)[0]! : next) : null
+    for (const node of replaced) {
+      for (const n of node instanceof HTMLElement ? blockGroup(node) : [node]) n.remove()
+    }
+    const fragment = document.createDocumentFragment()
+    for (const node of newNodes.slice(head, newNodes.length - tail)) fragment.appendChild(node)
+    if (anchor) this.host.insertBefore(fragment, anchor)
+    else this.host.appendChild(fragment)
+    this.previews.sync()
+
+    if (saved?.start && sel) {
+      const start = rangeAt(this.host, saved.start)
+      const end = saved.end ? rangeAt(this.host, saved.end) : null
+      if (start) {
+        if (end && ! (saved.end!.block === saved.start.block && saved.end!.offset === saved.start.offset)) {
+          start.setEnd(end.startContainer, end.startOffset)
+        }
+        sel.removeAllRanges()
+        sel.addRange(start)
+      }
+    }
+    this.history.reset(serializeHost(this.host))
+    return true
+  }
+
+  /** Where the selection starts in the content, as a block index and an offset; null outside. */
+  caretPosition(): CaretPosition | null {
+    const range = rangeWithinHost(this.host)
+    return range ? positionOf(this.host, range.startContainer, range.startOffset) : null
+  }
+
+  /**
+   * Moves the top-level block at `from` to index `to`, with its preview.
+   * One history step; the caret goes to the start of the moved block.
+   */
+  moveBlock(from: number, to: number): boolean {
+    if (! moveBlock(this.host, from, to)) return false
+    this.afterBlockChange(Math.min(Math.max(0, to), topBlocks(this.host).length - 1))
+    return true
+  }
+
+  /** A copy of the top-level block right after it. One history step; the caret goes into the copy. */
+  duplicateBlock(index: number): boolean {
+    if (! duplicateBlock(this.host, index)) return false
+    this.afterBlockChange(index + 1)
+    return true
+  }
+
+  /** Removes the top-level block (the last one is emptied instead). One history step. */
+  removeBlock(index: number): boolean {
+    const next = removeBlock(this.host, index)
+    if (next < 0) return false
+    this.afterBlockChange(next)
+    return true
+  }
+
+  private afterBlockChange(caretBlock: number): void {
+    this.previews.sync()
+    const range = rangeAt(this.host, { block: caretBlock, offset: 0 })
+    const sel = window.getSelection()
+    if (range && sel) {
+      sel.removeAllRanges()
+      sel.addRange(range)
+    }
+    this.history.commit()
   }
 
   /** Release the resources (the live block widgets); a host calls this on unmount. */
   destroy(): void {
     this.previews.destroy()
   }
+}
+
+/** An empty host gets one `<p><br></p>`: typing then lands in a block. */
+function ensureBlock(root: HTMLElement): void {
+  if (root.firstElementChild === null && (root.textContent ?? '') === '') {
+    const p = document.createElement('p')
+    p.appendChild(document.createElement('br'))
+    root.appendChild(p)
+  }
+}
+
+/** A top-level node as the stored HTML has it: without the editor's drawings and zero-width spaces. */
+function nodeKey(node: ChildNode): string {
+  if (! (node instanceof Element)) return `#text:${vacuumZwsp(node.textContent ?? '')}`
+  const wrap = document.createElement('div')
+  wrap.appendChild(node.cloneNode(true))
+  return vacuumZwsp(serializeHost(wrap))
 }
 
 const GAP_PARENTS = new Set(['UL', 'OL', 'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'BLOCKQUOTE', 'DETAILS'])

@@ -46,7 +46,10 @@ export type {
   WysiwygPartialLabels,
   WysiwygToolbarLabels,
   WysiwygSlashLabels,
+  WysiwygBlockLabels,
+  WysiwygPreviewLabels,
 } from './locale'
+export type { BubbleAction, RemoteCaret, CaretPosition } from './types'
 export { EditorController, sanitizeHtml } from './engine'
 export { htmlToMarkdown } from './engine/htmlToMarkdown'
 export { highlight } from './engine/highlight'

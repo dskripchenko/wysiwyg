@@ -165,6 +165,95 @@ The bar's tokens (a darker shade with an edge in the dark theme):
 }
 ```
 
+### Host actions in the bubble
+
+`bubbleActions` adds your own buttons at the end of the bubble, after a
+divider — a «Comment» button, say:
+
+```vue
+<script setup lang="ts">
+import { MessageSquare } from 'lucide-vue-next'
+import type { BubbleAction } from '@dskripchenko/wysiwyg'
+
+const actions: BubbleAction[] = [
+  { key: 'comment', label: 'Comment', icon: MessageSquare, run: ({ text, block }) => openComment(text, block) },
+]
+</script>
+
+<template>
+  <DskWysiwyg v-model="html" bubble :bubble-actions="actions" />
+</template>
+```
+
+Each button shows its `icon` (any component that takes a `size` prop) and
+its `label`. A press keeps the selection, as on the other buttons; `run`
+gets the selected text and `block`, the index of the top-level block (a
+direct child of the content) the selection starts in. With `bubble` off the
+bubble shows the actions alone.
+
+## Block handles
+
+`blockHandles` puts a «+» and a «⋮⋮» grip in the gutter left of the block
+under the pointer (or, when the pointer is elsewhere, of the block with the
+caret):
+
+- «+» adds an empty paragraph below and opens the slash menu in it: the
+  paragraph starts with `/`, as if it had been typed, so typing filters the
+  menu and Escape leaves the `/` as text.
+- Dragging the grip (mouse, pen or touch) moves the block; a line shows where
+  it lands. A diagram moves together with its code.
+- A click on the grip (or Enter / Space on it) opens a menu: Move up, Move
+  down, Duplicate, Delete. The arrows, Home and End move in it; Escape
+  closes it.
+
+Each change is one undo step and emits `update:modelValue`. A duplicated
+block does not keep its block id (`^id`): ids are unique. The handles are
+not shown in readonly or source mode, nor on screens narrower than 600px. A
+framed editor makes room for them inside its padding; a `frameless` one puts
+them in the page's margin, outside its own box — leave about
+`--dsk-wysiwyg-handles-gutter` (52px) free to its left. The drop line takes
+`--dsk-wysiwyg-drop-color`; the strings are in the `blocks` group of the
+labels (see [Language](#language)).
+
+The same operations are on the controller: `moveBlock(from, to)`,
+`duplicateBlock(index)`, `removeBlock(index)`.
+
+## Co-editing: other people's carets and outside changes
+
+For real-time co-editing the editor reports where its caret is, takes a new
+value from outside without losing the caret, and draws the carets of others.
+
+- A new `modelValue` from outside (another person's edit) is patched in,
+  not set: the top-level blocks the old and the new value share at the start
+  and at the end stay the same DOM nodes, and only the differing middle is
+  replaced. A caret in an untouched block stays exactly where it was; a caret
+  in a replaced block is put back by its block's index and its offset in the
+  block's text. `controller.patchContent(html)` does the same from code.
+- `@caret` reports `{ block, offset }` — the index of the top-level block and
+  the character offset in its text — at most every 100ms, and `null` when the
+  editor loses the focus. Send it to the others.
+- `remoteCarets` draws theirs: a thin line in each person's colour with the
+  name in a small flag above it.
+
+```vue
+<DskWysiwyg
+  v-model="html"
+  :remote-carets="[{ id: 'u2', name: 'Anna', color: '#e11d48', block: 3, offset: 12 }]"
+  @caret="(pos) => channel.send({ caret: pos })"
+/>
+```
+
+A caret without `color` takes one from a small palette by its `id`; without
+`offset`, or past the block's text, it stands at the block's end; a block
+that is not there hides it. The carets are an overlay: they take no pointer,
+never touch the content or the value, and follow typing, resizing and
+scrolling, in the light and the dark theme alike.
+
+**The history after an outside change.** The local undo must not take back
+someone else's edit as if it were one's own, so a patch rebases the history:
+the undo and redo stacks are cleared and start again from the patched
+content. Steps made before an outside change can no longer be undone.
+
 ## Fullscreen
 
 The `fullscreen` toolbar item (in the default set, after `source`) spreads
@@ -216,3 +305,7 @@ the same `locale` and `labels` when used on their own.
 
 The kit is an optional peer: without it the editor is English unless told
 otherwise.
+
+The block handles' strings are in the `blocks` group (`add`, `grip`, `menu`,
+`moveUp`, `moveDown`, `duplicate`, `remove`), and the toggle of an open block
+with a preview in `preview` (`split`, `preview`).

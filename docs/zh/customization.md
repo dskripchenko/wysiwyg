@@ -153,6 +153,79 @@ function insertSignature() {
 }
 ```
 
+### 浮动工具栏中的自定义操作
+
+`bubbleActions` 在浮动工具栏末尾、分隔线之后添加你自己的按钮——例如「评论」按钮：
+
+```vue
+<script setup lang="ts">
+import { MessageSquare } from 'lucide-vue-next'
+import type { BubbleAction } from '@dskripchenko/wysiwyg'
+
+const actions: BubbleAction[] = [
+  { key: 'comment', label: '评论', icon: MessageSquare, run: ({ text, block }) => openComment(text, block) },
+]
+</script>
+
+<template>
+  <DskWysiwyg v-model="html" bubble :bubble-actions="actions" />
+</template>
+```
+
+每个按钮显示其 `icon`（任何接受 `size` 属性的组件）和 `label`。与其他按钮一样，
+按下时保留选区；`run` 接收所选文本和 `block`——选区起点所在顶层块（内容的直接子元素）
+的序号。关闭 `bubble` 时，浮动工具栏只显示这些操作。
+
+## 块拖柄
+
+`blockHandles` 在指针所在块（指针不在内容上时为光标所在块）左侧的边栏中放置「+」和
+「⋮⋮」拖柄：
+
+- 「+」在下方添加一个空段落并在其中打开斜杠菜单：段落以 `/` 开头，就像刚输入的一样，
+  因此继续输入会过滤菜单，按 Escape 则保留 `/` 作为文本。
+- 拖动拖柄（鼠标、触控笔或触摸）可移动块；一条线显示块将落下的位置。图表会连同其
+  代码一起移动。
+- 点击拖柄（或在其上按 Enter / 空格）打开菜单：上移、下移、复制、删除。用方向键、
+  Home 和 End 在菜单中移动，Escape 关闭菜单。
+
+每次更改都是一个撤销步骤，并触发 `update:modelValue`。复制的块不保留其块 ID
+（`^id`）：ID 是唯一的。只读模式、源代码模式以及宽度小于 600px 的屏幕上不显示拖柄。
+带边框的编辑器在内边距中为拖柄留出空间；`frameless` 编辑器则把拖柄放在页面边距中、
+自身盒子之外——请在其左侧留出约 `--dsk-wysiwyg-handles-gutter`（52px）的空间。
+插入线使用 `--dsk-wysiwyg-drop-color`；文案位于 `blocks` 组（参见[界面语言](#界面语言)）。
+
+控制器上也有相同的操作：`moveBlock(from, to)`、`duplicateBlock(index)`、
+`removeBlock(index)`。
+
+## 协同编辑：他人的光标与外部变更
+
+为了实时协同编辑，编辑器会报告自己的光标位置，在不丢失光标的情况下接受外部传入的
+新值，并绘制他人的光标。
+
+- 外部传入的新 `modelValue`（他人的编辑）以补丁方式合入，而不是整体替换：新旧值
+  在开头和结尾共有的顶层块保持为同一批 DOM 节点，只替换中间不同的部分。位于未改动
+  块中的光标保持原位；位于被替换块中的光标按块序号和块文本中的偏移恢复。
+  `controller.patchContent(html)` 可在代码中做同样的事。
+- `@caret` 报告 `{ block, offset }`——顶层块的序号及其文本中的字符偏移——最多每
+  100ms 一次；编辑器失去焦点时报告 `null`。把它发送给其他人。
+- `remoteCarets` 绘制他们的光标：一条该用户颜色的细线，上方的小旗显示其名字。
+
+```vue
+<DskWysiwyg
+  v-model="html"
+  :remote-carets="[{ id: 'u2', name: 'Anna', color: '#e11d48', block: 3, offset: 12 }]"
+  @caret="(pos) => channel.send({ caret: pos })"
+/>
+```
+
+未指定 `color` 的光标按其 `id` 从一个小调色板中取色；未指定 `offset` 或超出块文本
+时，光标位于块末尾；块不存在时不绘制。光标是内容上方的一层：不接收指针事件，不触碰
+内容和值，并随输入、尺寸变化和滚动而更新，浅色和深色主题下都清晰可见。
+
+**外部变更之后的历史。** 本地撤销不应把他人的编辑当作自己的编辑撤回，因此补丁会
+重建历史：撤销和重做栈被清空，并从合入后的内容重新开始。外部变更之前的步骤将无法
+再撤销。
+
 ## 全屏
 
 工具栏项 `fullscreen`（位于默认集合中 `source` 之后）让编辑器铺满整个窗口——
@@ -200,3 +273,7 @@ prompt 的 `linkPrompt`）和 `slash`（内置菜单项及其提示）；完整�
 时，它们接受相同的 `locale` 和 `labels`。
 
 组件库是可选的 peer 依赖：没有它时，除非另行指定，编辑器界面为英文。
+
+块拖柄的文案位于 `blocks` 组（`add`、`grip`、`menu`、`moveUp`、`moveDown`、
+`duplicate`、`remove`），带预览的已打开块的切换按钮位于 `preview` 组（`split`、
+`preview`）。

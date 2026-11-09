@@ -69,6 +69,16 @@ function insertGreeting() {
 | `toggleSource()` | 在 WYSIWYG 和原始 HTML 编辑器之间切换。 |
 | `isSource()` | 布尔值。 |
 
+## 内容、光标与块
+
+| 方法 | |
+|---|---|
+| `patchContent(html: string)` | 将内容更新为 `html`（经过清理），只替换不同的顶层节点；开头和结尾共有的节点保持为同一批 DOM 节点，因此其中的选区保持不动，位于被替换块中的选区按块序号和偏移恢复。会清空撤销/重做栈（历史从结果重新开始）。没有任何变化时返回 `false`。编辑器对外部变更的 `modelValue` 使用此方法。 |
+| `caretPosition()` | `{ block, offset } \| null`——选区起点所在的顶层块及其文本中的字符偏移。 |
+| `moveBlock(from: number, to: number)` | 将顶层块（连同其预览）移动到序号 `to`。一个历史步骤。 |
+| `duplicateBlock(index: number)` | 在块之后紧接着插入其副本，不带块 ID。一个历史步骤。 |
+| `removeBlock(index: number)` | 删除该块；若为最后一个块则改为清空。一个历史步骤。 |
+
 ## 不使用链式调用的命令式用法
 
 ```js

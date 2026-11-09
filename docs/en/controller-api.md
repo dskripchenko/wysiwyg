@@ -75,6 +75,16 @@ function insertGreeting() {
 | `toggleSource()` | Switch between WYSIWYG and raw HTML editor. |
 | `isSource()` | Boolean. |
 
+## Content, caret and blocks
+
+| Method | |
+|---|---|
+| `patchContent(html: string)` | Bring the content to `html` (sanitized) by replacing only the top-level nodes that differ; the common leading and trailing ones stay the same DOM nodes, so a selection in them stays put, and a selection in a replaced block is put back by block index and offset. Clears the undo/redo stacks (the history is rebased on the result). Returns `false` when nothing changed. The editor uses it for a `modelValue` that changed outside. |
+| `caretPosition()` | `{ block, offset } \| null` — the top-level block the selection starts in and the character offset in its text. |
+| `moveBlock(from: number, to: number)` | Move a top-level block (with its preview) to index `to`. One history step. |
+| `duplicateBlock(index: number)` | A copy of the block right after it, without its block id. One history step. |
+| `removeBlock(index: number)` | Delete the block; the last one is emptied instead. One history step. |
+
 ## Imperative usage without chain
 
 ```js
