@@ -74,7 +74,7 @@ export function sanitizeHtml(input: string, options: SanitizeOptions = {}): stri
   if (!root) return ''
   // The editor's own preview islands (copied along with a diagram) are
   // dropped whole: unwrapped, their SVG labels would turn into stray text.
-  for (const island of Array.from(root.querySelectorAll('[data-dsk-preview]'))) island.remove()
+  for (const island of Array.from(root.querySelectorAll('[data-dsk-preview], [data-dsk-preview-head]'))) island.remove()
   // Drawn formulas (MathML with its TeX) become islands holding the TeX alone.
   mathToIslands(root)
   // Block ids (` ^id`, or the renderer's attributes) become islands holding the id alone.
